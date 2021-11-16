@@ -254,7 +254,6 @@ function initJCMap() {
 				} else {
 					// args[0] instanceof Marker && this.getVectorSource().addFeature(args[0])
 					args[0] instanceof Overlay && map.addOverlay(args[0])
-					console.log(args[0] instanceof Overlay, args[0])
 				}
 			} else {
 				// const markers = args.filter(marker => marker instanceof Marker)
@@ -474,10 +473,9 @@ function initJCMap() {
 		Marker.prototype.getStyle = function () {
 			return this.options.style
 		}
-
 		const marker = new Marker(options)
-		const overlayMarker = createOverlayMarker('22112', content, position)
-		return !content ? marker : overlayMarker
+
+		return new Marker(options)
 	}
 
 	function _MarkerClusterer(map, options, features = []) {

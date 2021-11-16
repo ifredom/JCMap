@@ -14,7 +14,7 @@ map.addControl(new JC.ZoomSlider())
 
 let marker = new JC.Marker({
 	position: [91.132212, 29.660361],
-	content: '<div class="marker-overlays" style="background-color:red">我的一个marker</div>'
+	content: '<div class="marker-overlays" style="background-color:reds">我的一个marker</div>'
 })
 
 map.addMarker(marker)

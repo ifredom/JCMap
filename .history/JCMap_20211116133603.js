@@ -477,7 +477,7 @@ function initJCMap() {
 
 		const marker = new Marker(options)
 		const overlayMarker = createOverlayMarker('22112', content, position)
-		return !content ? marker : overlayMarker
+		return content ? marker : overlayMarker
 	}
 
 	function _MarkerClusterer(map, options, features = []) {

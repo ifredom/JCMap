@@ -244,57 +244,6 @@ function initJCMap() {
 
 		this.hasFeatureAtPixel = map.hasFeatureAtPixel.bind(map) // 判断是否点击了 Feature
 
-		// 添加Marker
-		this.addMarker = (...args) => {
-			if (args.length === 1) {
-				if (Array.isArray(args[0])) {
-					// console.log(args[0])
-					// const markers = args[0].filter(marker => marker instanceof Marker)
-					// this.getVectorSource().addFeatures(markers)
-				} else {
-					// args[0] instanceof Marker && this.getVectorSource().addFeature(args[0])
-					args[0] instanceof Overlay && map.addOverlay(args[0])
-					console.log(args[0] instanceof Overlay, args[0])
-				}
-			} else {
-				// const markers = args.filter(marker => marker instanceof Marker)
-				// this.getVectorSource().addFeatures(markers)
-			}
-		}
-
-		/**
-		 * 添加所有marker 不用聚合
-		 * @param {*} features
-		 */
-		this.setAllMarker = features => {
-			const commonStyle = option => {
-				const singleStyle = option.getStyle()
-				return new Style({
-					image: new Icon({
-						src: singleStyle.img
-					}),
-					text: new Text({
-						text: singleStyle.label,
-						offsetY: singleStyle.offsetY,
-						offsetX: singleStyle.offsetX,
-						padding: singleStyle.padding,
-						backgroundFill: new Fill({
-							color: singleStyle.backgroundFill
-						}),
-						font: singleStyle.font
-					}),
-					zIndex: 2
-				})
-			}
-
-			const source = new VectorSource({ features: features })
-			const pointLayer = new VectorLayer({
-				source: source,
-				style: feature => commonStyle(feature)
-			})
-			this.map.addLayer(pointLayer)
-		}
-
 		// 卫星地图图层
 		this.getSatelliteLayer = () => {
 			return this.getLayers()
@@ -474,10 +423,9 @@ function initJCMap() {
 		Marker.prototype.getStyle = function () {
 			return this.options.style
 		}
-
 		const marker = new Marker(options)
-		const overlayMarker = createOverlayMarker('22112', content, position)
-		return !content ? marker : overlayMarker
+
+		return new Marker(options)
 	}
 
 	function _MarkerClusterer(map, options, features = []) {

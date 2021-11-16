@@ -474,10 +474,10 @@ function initJCMap() {
 		Marker.prototype.getStyle = function () {
 			return this.options.style
 		}
-
 		const marker = new Marker(options)
-		const overlayMarker = createOverlayMarker('22112', content, position)
-		return !content ? marker : overlayMarker
+		const overlayMarker = createOverlayMarker(id, content, position)
+
+		return content ? marker : overlayMarker
 	}
 
 	function _MarkerClusterer(map, options, features = []) {
