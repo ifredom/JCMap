@@ -8,7 +8,6 @@ const map = new JC.Map('map', {
 	maxZoom: 23
 })
 let marker = null
-
 map.on('complete', function () {
 	// 地图图块加载完成后触发
 
@@ -42,9 +41,8 @@ map.on('complete', function () {
 		console.log('click-------1')
 		// marker.setTop()
 	})
-
-	marker.on('dblclick', function (ev) {
-		console.log('dblclick-------dblclick')
+	marker.on('click', function (ev) {
+		console.log('click-------2')
 	})
 	// marker.on('dblclick', function (ev) {
 	// 	console.log('dblclick')

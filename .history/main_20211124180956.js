@@ -42,9 +42,8 @@ map.on('complete', function () {
 		console.log('click-------1')
 		// marker.setTop()
 	})
-
-	marker.on('dblclick', function (ev) {
-		console.log('dblclick-------dblclick')
+	marker.on('click', function (ev) {
+		console.log('click-------2')
 	})
 	// marker.on('dblclick', function (ev) {
 	// 	console.log('dblclick')

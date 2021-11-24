@@ -99,7 +99,7 @@ function JCMap(...args) {
 	const JCTYPE = 'MAP'
 	const map = initJCMap(...args) // 继承this属性
 
-	const events = ['complete', 'click', 'dblclick', 'contextmenu'] // 支持的事件
+	const events = ['click', 'dblclick', 'contextmenu'] // 支持的事件
 
 	let clickTimeId = null //单击事件定时器
 
@@ -201,8 +201,6 @@ function JCMap(...args) {
 							type: eventName,
 							event: e
 						})
-					} else {
-						callBack && callBack(e)
 					}
 				}
 			})

@@ -267,8 +267,8 @@ function JCMarker({ map, ...options }) {
 				callBack,
 				listener: () => {}
 			}
-			const currentEventObject = this.markerEvents.find(e => e.eventName === eventName)
 
+			const currentEventObject = this.markerEvents.find(e => e.eventName === eventName)
 			// 未绑定过事件
 			if (!currentEventObject) {
 				//注册事件

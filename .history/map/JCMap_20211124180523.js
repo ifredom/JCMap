@@ -98,13 +98,7 @@ function initJCMap(target = 'map', options = {}) {
 function JCMap(...args) {
 	const JCTYPE = 'MAP'
 	const map = initJCMap(...args) // 继承this属性
-
-	const events = ['complete', 'click', 'dblclick', 'contextmenu'] // 支持的事件
-
-	let clickTimeId = null //单击事件定时器
-
 	this.JCTYPE = JCTYPE
-
 	this[JCTYPE] = map
 
 	this.markerClusterer = null // 聚合图层对象
@@ -168,41 +162,19 @@ function JCMap(...args) {
 	// 事件监听
 	this.on = (eventName, callBack) => {
 		if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
-		if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
 		if (eventName === 'complete') {
 			//添加 complete事件
 			eventName = 'rendercomplete'
 			map.once(eventName, e => callBack && callBack(e))
-		} else if (eventName === 'click' || eventName === 'singleclick') {
+		} else if (eventName === 'click' || eventName === 'singleClick') {
 			map.on(eventName, e => {
-				clickTimeId && clearTimeout(clickTimeId)
-				clickTimeId = setTimeout(() => {
-					if (map.hasFeatureAtPixel(e.pixel)) {
-						const olMarker = map.forEachFeatureAtPixel(e.pixel, olMarker => olMarker)
-						if (olMarker) {
-							olMarker.dispatchEvent({
-								type: eventName,
-								event: e
-							})
-						} else {
-						}
-					} else {
-						callBack && callBack(e)
-					}
-				}, 200)
-			})
-		} else if (eventName === 'dblclick') {
-			map.on(eventName, e => {
-				clickTimeId && clearTimeout(clickTimeId)
 				if (map.hasFeatureAtPixel(e.pixel)) {
 					const olMarker = map.forEachFeatureAtPixel(e.pixel, olMarker => olMarker)
 					if (olMarker) {
 						olMarker.dispatchEvent({
-							type: eventName,
+							type: 'click',
 							event: e
 						})
-					} else {
-						callBack && callBack(e)
 					}
 				}
 			})

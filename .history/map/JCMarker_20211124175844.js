@@ -178,7 +178,12 @@ function createOverlayMarkerElement(content, id) {
 }
 
 function createOverlayMarker(options) {
-	const { content = '', position = [0, 0], offset = [0, 0], id = '' } = options
+	const {
+		content = '',
+		position = [0, 0],
+		offset = [0, 0],
+		id = ''
+	} = options
 
 	// console.log(options)
 	const element = createOverlayMarkerElement(content, id)
@@ -259,29 +264,59 @@ function JCMarker({ map, ...options }) {
 		this.markerEvents = [] // 存储事件
 		//事件监听
 		this.on = (eventName, callBack) => {
-			if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
-			if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
+			if (!eventName || typeof eventName !== 'string')
+				throw new Error('请传入正确的 eventName！')
+			if (!events.includes(eventName))
+				return console.warn('无效的事件：' + eventName)
 
 			const eventObject = {
 				eventName,
 				callBack,
 				listener: () => {}
 			}
-			const currentEventObject = this.markerEvents.find(e => e.eventName === eventName)
 
+			const currentEventObject = this.markerEvents.find(
+				(e) => e.eventName === eventName
+			)
 			// 未绑定过事件
 			if (!currentEventObject) {
 				//注册事件
 				map.on(eventObject.eventName)
 				this.markerEvents.push(eventObject)
-				eventObject.listener = e => callBack && callBack(e)
+				eventObject.listener = (e) => callBack && callBack(e)
 				//监听事件
 				this[JCTYPE].on(eventObject.eventName, eventObject.listener)
 			} else {
 				//移除相同的事件
-				this[JCTYPE].un(currentEventObject.eventName, currentEventObject.listener)
+				this[JCTYPE].un(
+					currentEventObject.eventName,
+					currentEventObject.listener
+				)
 				//监听事件
-				this[JCTYPE].on(eventObject.eventName, e => eventObject.callBack && eventObject.callBack(e))
+				this[JCTYPE].on(
+					eventObject.eventName,
+					(e) => eventObject.callBack && eventObject.callBack(e)
+				)
+
+				// //绑定过事件
+
+				// const currentEventArray = this.markerEvents.get(element)
+				// const currentEventObject = currentEventArray.find(
+				// 	(e) => e.eventName === eventName
+				// )
+				// // 未绑定过此事件
+				// if (!currentEventObject) {
+				// 	currentEventArray.push(eventObject)
+				// 	bindEvent(eventObject)
+				// } else {
+				// 	//绑定过此事件，移除之前事件绑定再覆盖
+				// 	element.removeEventListener(
+				// 		eventName,
+				// 		currentEventObject.handler
+				// 	)
+				// 	this.markerEvents.set(element, [eventObject]) //保存监听事件并执行
+				// 	bindEvent(eventObject) //绑定事件
+				// }
 			}
 		}
 
@@ -328,8 +363,10 @@ function JCMarker({ map, ...options }) {
 
 		//事件注册
 		this.on = (eventName, callBack) => {
-			if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
-			if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
+			if (!eventName || typeof eventName !== 'string')
+				throw new Error('请传入正确的 eventName！')
+			if (!events.includes(eventName))
+				return console.warn('无效的事件：' + eventName)
 			const element = this.getElement()
 			const eventObject = {
 				eventName,
@@ -342,12 +379,14 @@ function JCMarker({ map, ...options }) {
 				clickTimeId && clearTimeout(clickTimeId)
 				clickTimeId = setTimeout(() => {
 					callBack && callBack(e)
-				}, 200)
+				}, 300)
 			}
 
 			const dblclickHandler = (e, callBack) => {
 				clickTimeId && clearTimeout(clickTimeId)
-				callBack && callBack(e)
+				clickTimeId = setTimeout(() => {
+					callBack && callBack(e)
+				}, 300)
 			}
 
 			const contextmenuHandler = (e, callBack) => {
@@ -355,18 +394,20 @@ function JCMarker({ map, ...options }) {
 			}
 
 			//事件绑定函数
-			const bindEvent = eventObject => {
+			const bindEvent = (eventObject) => {
 				const { eventName, target, callBack } = eventObject
 
 				switch (eventName) {
 					case 'click':
-						eventObject.handler = e => clickHandler(e, callBack)
+						eventObject.handler = (e) => clickHandler(e, callBack)
 						break
 					case 'dblclick':
-						eventObject.handler = e => dblclickHandler(e, callBack)
+						eventObject.handler = (e) =>
+							dblclickHandler(e, callBack)
 						break
 					case 'contextmenu':
-						eventObject.handler = e => contextmenuHandler(e, callBack)
+						eventObject.handler = (e) =>
+							contextmenuHandler(e, callBack)
 						break
 					default:
 						break
@@ -381,27 +422,39 @@ function JCMarker({ map, ...options }) {
 			} else {
 				//绑定过事件
 				const currentEventArray = this.overlayMarkerEvents.get(element)
-				const currentEventObject = currentEventArray.find(e => e.eventName === eventName)
+				const currentEventObject = currentEventArray.find(
+					(e) => e.eventName === eventName
+				)
 				// 未绑定过此事件
 				if (!currentEventObject) {
 					currentEventArray.push(eventObject)
 					bindEvent(eventObject)
 				} else {
 					//绑定过此事件，移除之前事件绑定再覆盖
-					element.removeEventListener(eventName, currentEventObject.handler)
+					element.removeEventListener(
+						eventName,
+						currentEventObject.handler
+					)
 					this.overlayMarkerEvents.set(element, [eventObject]) //保存监听事件并执行
 					bindEvent(eventObject) //绑定事件
 				}
 			}
 		}
 		//事件移除
-		this.off = eventName => {
+		this.off = (eventName) => {
 			const element = this.getElement()
 			if (this.overlayMarkerEvents.has(element)) {
 				const currentEventArray = this.overlayMarkerEvents.get(element)
-				const currentEventObject = currentEventArray.find(e => e.eventName === eventName)
-				element.removeEventListener(eventName, currentEventObject.handler)
-				const newEventArray = currentEventArray.filter(e => e.eventName !== eventName)
+				const currentEventObject = currentEventArray.find(
+					(e) => e.eventName === eventName
+				)
+				element.removeEventListener(
+					eventName,
+					currentEventObject.handler
+				)
+				const newEventArray = currentEventArray.filter(
+					(e) => e.eventName !== eventName
+				)
 				this.overlayMarkerEvents.set(element, newEventArray)
 			}
 			// console.log(this.overlayMarkerEvents, element)
@@ -428,7 +481,9 @@ function JCMarker({ map, ...options }) {
 		this.setElement = function (content = '') {
 			this.options.content = content // 目前无效
 			const id = this.options.id
-			this.options.overlayMarker.setElement(createOverlayMarkerElement(content, id))
+			this.options.overlayMarker.setElement(
+				createOverlayMarkerElement(content, id)
+			)
 		}
 		/**
 		 * 获取 content str

@@ -8,8 +8,10 @@ import { defaults as DefaultInteraction } from 'ol/interaction'
 import { ZoomSlider, FullScreen, defaults as defaultControls } from 'ol/control'
 import { OlMap, OlView } from './inherit'
 // 底图链接
-const standardTileLayerUrl = 'https://www.qqearth.com/engine?st=GetImage&box={x},{y}&lev={z}&type=vect&uid=xzjc'
-const satelliteTileLayerUrl = 'https://www.qqearth.com/engine?st=GetImage&box={x},{y}&lev={z}&type=sate&uid=xzjc'
+const standardTileLayerUrl =
+	'https://www.qqearth.com/engine?st=GetImage&box={x},{y}&lev={z}&type=vect&uid=xzjc'
+const satelliteTileLayerUrl =
+	'https://www.qqearth.com/engine?st=GetImage&box={x},{y}&lev={z}&type=sate&uid=xzjc'
 
 //创建矢量标注图层
 function createVectorLayer(features) {
@@ -66,7 +68,10 @@ function initJCMap(target = 'map', options = {}) {
 		[171.31664592155698, 81.65358702968221]
 	])
 	//默认控件
-	const controlsExtend = [fullScreen ? new FullScreen() : null, zoomSlider ? new ZoomSlider() : null]
+	const controlsExtend = [
+		fullScreen ? new FullScreen() : null,
+		zoomSlider ? new ZoomSlider() : null
+	]
 
 	// 默认的矢量图层
 	const vectorLayer = createVectorLayer()
@@ -90,7 +95,9 @@ function initJCMap(target = 'map', options = {}) {
 			attribution: true,
 			doubleClickZoom // 屏蔽默认双击放大事件
 		}),
-		controls: defaultControls({ zoom: zoomShow }).extend(controlsExtend.filter(c => c))
+		controls: defaultControls({ zoom: zoomShow }).extend(
+			controlsExtend.filter((c) => c)
+		)
 	})
 }
 
@@ -98,13 +105,7 @@ function initJCMap(target = 'map', options = {}) {
 function JCMap(...args) {
 	const JCTYPE = 'MAP'
 	const map = initJCMap(...args) // 继承this属性
-
-	const events = ['complete', 'click', 'dblclick', 'contextmenu'] // 支持的事件
-
-	let clickTimeId = null //单击事件定时器
-
 	this.JCTYPE = JCTYPE
-
 	this[JCTYPE] = map
 
 	this.markerClusterer = null // 聚合图层对象
@@ -149,60 +150,45 @@ function JCMap(...args) {
 	this.getMarkerVectorLayer = () => {
 		return this.getLayers()
 			.getArray()
-			.find(layer => layer.getClassName().indexOf('markerVectorLayer') !== -1)
+			.find(
+				(layer) =>
+					layer.getClassName().indexOf('markerVectorLayer') !== -1
+			)
 	}
 
 	// 卫星地图图层
 	this.getSatelliteLayer = () => {
 		return this.getLayers()
 			.getArray()
-			.find(layer => layer.getClassName().indexOf('satellite') !== -1)
+			.find((layer) => layer.getClassName().indexOf('satellite') !== -1)
 	}
 	// 标准地图图层
 	this.getStandardLayer = () => {
 		return this.getLayers()
 			.getArray()
-			.find(layer => layer.getClassName().indexOf('standard') !== -1)
+			.find((layer) => layer.getClassName().indexOf('standard') !== -1)
 	}
 
 	// 事件监听
 	this.on = (eventName, callBack) => {
-		if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
-		if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
+		if (!eventName || typeof eventName !== 'string')
+			throw new Error('请传入正确的 eventName！')
 		if (eventName === 'complete') {
 			//添加 complete事件
 			eventName = 'rendercomplete'
-			map.once(eventName, e => callBack && callBack(e))
-		} else if (eventName === 'click' || eventName === 'singleclick') {
-			map.on(eventName, e => {
-				clickTimeId && clearTimeout(clickTimeId)
-				clickTimeId = setTimeout(() => {
-					if (map.hasFeatureAtPixel(e.pixel)) {
-						const olMarker = map.forEachFeatureAtPixel(e.pixel, olMarker => olMarker)
-						if (olMarker) {
-							olMarker.dispatchEvent({
-								type: eventName,
-								event: e
-							})
-						} else {
-						}
-					} else {
-						callBack && callBack(e)
-					}
-				}, 200)
-			})
-		} else if (eventName === 'dblclick') {
-			map.on(eventName, e => {
-				clickTimeId && clearTimeout(clickTimeId)
+			map.once(eventName, (e) => callBack && callBack(e))
+		} else if (eventName === 'click') {
+			map.on(eventName, (e) => {
 				if (map.hasFeatureAtPixel(e.pixel)) {
-					const olMarker = map.forEachFeatureAtPixel(e.pixel, olMarker => olMarker)
+					const olMarker = map.forEachFeatureAtPixel(
+						e.pixel,
+						(olMarker) => olMarker
+					)
 					if (olMarker) {
 						olMarker.dispatchEvent({
-							type: eventName,
+							type: 'click',
 							event: e
 						})
-					} else {
-						callBack && callBack(e)
 					}
 				}
 			})
@@ -210,7 +196,7 @@ function JCMap(...args) {
 	}
 
 	// 切换地图类型
-	this.setBaseLayer = layerName => {
+	this.setBaseLayer = (layerName) => {
 		if (layerName === 'satellite') {
 			this.getStandardLayer().setVisible(false)
 			this.getSatelliteLayer().setVisible(true)
@@ -219,7 +205,8 @@ function JCMap(...args) {
 			this.getStandardLayer().setVisible(true)
 		} else {
 			this.getSatelliteLayer().setVisible(false)
-			!this.getStandardLayer().getVisible() && this.getStandardLayer().setVisible(true)
+			!this.getStandardLayer().getVisible() &&
+				this.getStandardLayer().setVisible(true)
 		}
 	}
 
@@ -239,9 +226,9 @@ function JCMap(...args) {
 	 * 添加单个或多个覆盖物
 	 * @param {*} markers
 	 */
-	this.addOverlays = markers => {
+	this.addOverlays = (markers) => {
 		const flag = Object.prototype.toString.call(markers)
-		const commonStyle = option => {
+		const commonStyle = (option) => {
 			const singleStyle = option.getStyle()
 			return new Style({
 				image: new Icon({
@@ -268,7 +255,7 @@ function JCMap(...args) {
 		// 添加多个覆盖物
 		if (flag === '[object Array]') {
 			// console.log(markers);
-			markers.forEach(item => {
+			markers.forEach((item) => {
 				const style = commonStyle(item)
 				item.setStyle(style)
 			})
@@ -285,7 +272,7 @@ function JCMap(...args) {
 	this.addMarker = (...args) => {
 		if (args.length === 1) {
 			if (Array.isArray(args[0])) {
-				args[0].forEach(marker => this.addMarker(marker))
+				args[0].forEach((marker) => this.addMarker(marker))
 			} else if (args[0].JCTYPE === 'MARKER') {
 				const markerVectorLayer = this.getMarkerVectorLayer()
 				markerVectorLayer.getSource().addFeature(args[0].MARKER)
@@ -294,7 +281,7 @@ function JCMap(...args) {
 				this.addOverlay(args[0].getOverlayMarker())
 			}
 		} else {
-			args.forEach(marker => this.addMarker(marker))
+			args.forEach((marker) => this.addMarker(marker))
 		}
 	}
 
@@ -303,7 +290,7 @@ function JCMap(...args) {
 		if (args.length === 1) {
 			// 单参数或者数组
 			if (Array.isArray(args[0])) {
-				args[0].forEach(marker => this.removeMarker(marker))
+				args[0].forEach((marker) => this.removeMarker(marker))
 			} else if (args[0].JCTYPE === 'MARKER') {
 				const markerVectorLayer = this.getMarkerVectorLayer()
 				markerVectorLayer.getSource().removeFeature(args[0].MARKER)
@@ -312,7 +299,7 @@ function JCMap(...args) {
 			}
 		} else {
 			// 多个参数
-			args.forEach(marker => {
+			args.forEach((marker) => {
 				this.removeMarker(marker)
 			})
 		}
@@ -336,7 +323,7 @@ function JCMap(...args) {
 	 */
 	this.clearOverlays = () => {
 		const overlays = map.getOverlays()
-		overlays.forEach(item => this.removeOverlay(item))
+		overlays.forEach((item) => this.removeOverlay(item))
 	}
 
 	// 获取当前层级
@@ -406,7 +393,7 @@ function JCMap(...args) {
 		const vectorGraph = map
 			.getLayers()
 			.getArray()
-			.find(layer => layer.getClassName().indexOf('VectorLayer') !== -1)
+			.find((layer) => layer.getClassName().indexOf('VectorLayer') !== -1)
 		if (vectorGraph) {
 			const rectangleBox = {
 				minLng: Infinity,
@@ -417,20 +404,28 @@ function JCMap(...args) {
 			vectorGraph
 				.getSource()
 				.getFeatures()
-				.forEach(item => {
+				.forEach((item) => {
 					// 矢量图形是 圆形
 					// if (item.getGeometry().getType() === 'Circle') {
 					//   getExtent 获取左上角 和 右上角坐标方法 分别代表最小经纬和最大经纬
-					if (rectangleBox.minLng > item.getGeometry().getExtent()[0]) {
+					if (
+						rectangleBox.minLng > item.getGeometry().getExtent()[0]
+					) {
 						rectangleBox.minLng = item.getGeometry().getExtent()[0]
 					}
-					if (rectangleBox.minLat > item.getGeometry().getExtent()[1]) {
+					if (
+						rectangleBox.minLat > item.getGeometry().getExtent()[1]
+					) {
 						rectangleBox.minLat = item.getGeometry().getExtent()[1]
 					}
-					if (rectangleBox.maxLng < item.getGeometry().getExtent()[2]) {
+					if (
+						rectangleBox.maxLng < item.getGeometry().getExtent()[2]
+					) {
 						rectangleBox.maxLng = item.getGeometry().getExtent()[2]
 					}
-					if (rectangleBox.maxLat < item.getGeometry().getExtent()[3]) {
+					if (
+						rectangleBox.maxLat < item.getGeometry().getExtent()[3]
+					) {
 						rectangleBox.maxLat = item.getGeometry().getExtent()[3]
 					}
 					// }

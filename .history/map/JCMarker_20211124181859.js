@@ -267,8 +267,8 @@ function JCMarker({ map, ...options }) {
 				callBack,
 				listener: () => {}
 			}
-			const currentEventObject = this.markerEvents.find(e => e.eventName === eventName)
 
+			const currentEventObject = this.markerEvents.find(e => e.eventName === eventName)
 			// 未绑定过事件
 			if (!currentEventObject) {
 				//注册事件
@@ -342,11 +342,12 @@ function JCMarker({ map, ...options }) {
 				clickTimeId && clearTimeout(clickTimeId)
 				clickTimeId = setTimeout(() => {
 					callBack && callBack(e)
-				}, 200)
+				}, 300)
 			}
 
 			const dblclickHandler = (e, callBack) => {
 				clickTimeId && clearTimeout(clickTimeId)
+
 				callBack && callBack(e)
 			}
 
