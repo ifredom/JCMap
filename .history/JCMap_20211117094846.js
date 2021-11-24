@@ -239,7 +239,9 @@ function initJCMap() {
 		}
 		this.forEachFeatureAtPixel = map.forEachFeatureAtPixel.bind(map)
 		this.addControl = map.addControl.bind(map) // 添加控件
+
 		this.addLayer = map.addLayer.bind(map) // 添加图层
+
 		this.removeLayer = map.removeLayer.bind(map) // 移除图层
 		this.addOverlay = map.addOverlay.bind(map) // 添加overlay 衍生自map类，此处为内置函数，不暴露给外部
 		/**
@@ -295,7 +297,10 @@ function initJCMap() {
 					// const markers = args[0].filter(marker => marker instanceof Marker)
 					// this.getVectorSource().addFeatures(markers)
 				} else {
-					args[0] instanceof Marker && map.addOverlay(args[0].get('overlayMarker'))
+					// args[0] instanceof Marker && this.getVectorSource().addFeature(args[0])
+					if (args[0] instanceof Marker) {
+						console.log(args[0].get('overlayMarker'))
+					}
 				}
 			} else {
 				// const markers = args.filter(marker => marker instanceof Marker)
@@ -308,8 +313,7 @@ function initJCMap() {
 		 * @param {*} marker
 		 */
 		this.removeOverlays = marker => {
-			marker instanceof Overlay && map.removeOverlay(marker)
-			marker instanceof Marker && map.removeOverlay(marker.get('overlayMarker'))
+			this.map.removeOverlay(marker)
 		}
 		/**
 		 * 清除地图上所有覆盖物
@@ -1005,7 +1009,7 @@ function initJCMap() {
 	inheritPrototype(_JCGraph, Draw)
 
 	function Event() {
-		this.addListener = (target, type, callBack) => {
+		this.addListener = function (target, type, callBack) {
 			let timeoutID = null // 单击事件
 			if (type === 'click') {
 				target.on(type, e => {

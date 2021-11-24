@@ -20,10 +20,10 @@ import Modify from 'ol/interaction/Modify'
 import Snap from 'ol/interaction/Snap'
 import Select from 'ol/interaction/Select'
 
-import img0 from './assets/image/map/m0.png'
-import img1 from './assets/image/map/m1.png'
-import img2 from './assets/image/map/m2.png'
-import img3 from './assets/image/map/m3.png'
+import img0 from '../assets/image/map/m0.png'
+import img1 from '../assets/image/map/m1.png'
+import img2 from '../assets/image/map/m2.png'
+import img3 from '../assets/image/map/m3.png'
 
 function initJCMap() {
 	const defaulticonStyle = () => ({
@@ -239,7 +239,9 @@ function initJCMap() {
 		}
 		this.forEachFeatureAtPixel = map.forEachFeatureAtPixel.bind(map)
 		this.addControl = map.addControl.bind(map) // 添加控件
+
 		this.addLayer = map.addLayer.bind(map) // 添加图层
+
 		this.removeLayer = map.removeLayer.bind(map) // 移除图层
 		this.addOverlay = map.addOverlay.bind(map) // 添加overlay 衍生自map类，此处为内置函数，不暴露给外部
 		/**
@@ -288,28 +290,13 @@ function initJCMap() {
 			}
 		}
 
-		this.addMarker = (...args) => {
-			if (args.length === 1) {
-				if (Array.isArray(args[0])) {
-					// console.log(args[0])
-					// const markers = args[0].filter(marker => marker instanceof Marker)
-					// this.getVectorSource().addFeatures(markers)
-				} else {
-					args[0] instanceof Marker && map.addOverlay(args[0].get('overlayMarker'))
-				}
-			} else {
-				// const markers = args.filter(marker => marker instanceof Marker)
-				// this.getVectorSource().addFeatures(markers)
-			}
-		}
-
+		// this.addMarker
 		/**
 		 * 移除对应的覆盖物
 		 * @param {*} marker
 		 */
 		this.removeOverlays = marker => {
-			marker instanceof Overlay && map.removeOverlay(marker)
-			marker instanceof Marker && map.removeOverlay(marker.get('overlayMarker'))
+			this.map.removeOverlay(marker)
 		}
 		/**
 		 * 清除地图上所有覆盖物
@@ -361,18 +348,18 @@ function initJCMap() {
 		}
 
 		// 获取当前层级
-		this.getZoom = function () {
+		this.getZoom = function() {
 			return this.view.getZoom()
 		}
 
 		// 设置当前层级
-		this.setZoom = function (zoom) {
+		this.setZoom = function(zoom) {
 			// console.log(this.getZoom(), maxZoom, minZoom)
 			this.view.animate({ zoom, duration: 500 })
 		}
 
 		// 设置地图中心
-		this.setCenter = function (coord, zoom = 0) {
+		this.setCenter = function(coord, zoom = 0) {
 			const viewCenter = coord || (this.center ? this.center : [0, 0])
 			zoom = zoom || this.getZoom()
 			this.view.setCenter(viewCenter)
@@ -380,7 +367,7 @@ function initJCMap() {
 		}
 
 		// 定位到目标位置
-		this.panTo = function (coord) {
+		this.panTo = function(coord) {
 			this.view.animate({
 				// 只设置需要的属性即可
 				center: coord, // 中心点
@@ -399,7 +386,7 @@ function initJCMap() {
 		 *@return {object} target
 		 *@存在问题，会使zoom出现小数
 		 */
-		this.setClusterExtentView = function (target, options) {
+		this.setClusterExtentView = function(target, options) {
 			options = {
 				maxZoom: 28,
 				duration: 300,
@@ -417,14 +404,14 @@ function initJCMap() {
 			return target
 		}
 		// 地图缩小
-		this.setZoomOut = function (zoomNum = 1) {
+		this.setZoomOut = function(zoomNum = 1) {
 			// 获取地图当前缩放等级
 			const zoom = this.getZoom()
 			// 每单击一次地图的缩放等级减一，以实现地图缩小
 			this.setZoom(zoom - zoomNum)
 		}
 		// 地图放大
-		this.setZoomIn = function (zoomNum = 1) {
+		this.setZoomIn = function(zoomNum = 1) {
 			// 获取地图当前缩放等级
 			const zoom = this.getZoom()
 			// 每单击一次地图的缩放等级减一，以实现地图缩小
@@ -432,11 +419,11 @@ function initJCMap() {
 		}
 
 		// 删除 矢量图形
-		this.removeGraph = function (draw) {
+		this.removeGraph = function(draw) {
 			map.removeInteraction(draw)
 		}
 		// 添加 矢量图形
-		this.addGraph = function (draw) {
+		this.addGraph = function(draw) {
 			map.addInteraction(draw)
 		}
 	}
@@ -465,17 +452,17 @@ function initJCMap() {
 			style: JSON.parse(JSON.stringify(option))
 		}
 		// 获取自定义信息
-		Marker.prototype.getExtentData = function () {
+		Marker.prototype.getExtentData = function() {
 			return this.options.extData
 		}
 
 		// 获取Marker 坐标
-		Marker.prototype.getPosition = function () {
+		Marker.prototype.getPosition = function() {
 			return this.options.position
 		}
 
 		// 置顶
-		Marker.prototype.setTop = function () {
+		Marker.prototype.setTop = function() {
 			// return this.getGeometry().getCoordinates()
 			console.log(this)
 		}
@@ -483,13 +470,13 @@ function initJCMap() {
 		 * 获取html dom结构
 		 * @returns
 		 */
-		Marker.prototype.getContent = function () {
+		Marker.prototype.getContent = function() {
 			return this.options.content
 		}
 		/**
 		 * 获取样式
 		 */
-		Marker.prototype.getStyle = function () {
+		Marker.prototype.getStyle = function() {
 			return this.options.style
 		}
 
@@ -566,7 +553,7 @@ function initJCMap() {
 			/**
 			 * 监听聚合层级变化 ，用于清除聚合状态下 自定义overlays数量
 			 */
-			clusterSource.on('change', function (e) {
+			clusterSource.on('change', function(e) {
 				clusterSource.overlaysList.forEach(item => {
 					const over = map.getOverlayById(item)
 					map.removeOverlays(over)
@@ -721,7 +708,7 @@ function initJCMap() {
 		 * @param {*} Circle
 		 * @returns
 		 */
-		this.formatRadiusToMeters = function (Circle) {
+		this.formatRadiusToMeters = function(Circle) {
 			let radius
 			const flag = true
 			// geodesicCheckbox.checked
@@ -742,8 +729,11 @@ function initJCMap() {
 		 * @param {*} meters
 		 * @returns
 		 */
-		this.formatMetersToRadius = function (meters) {
-			const metersPerUnit = map.getView().getProjection().getMetersPerUnit()
+		this.formatMetersToRadius = function(meters) {
+			const metersPerUnit = map
+				.getView()
+				.getProjection()
+				.getMetersPerUnit()
 			const circleRadius = meters / metersPerUnit
 			return circleRadius
 		}
@@ -751,7 +741,7 @@ function initJCMap() {
 		 * 激活矢量图绘制
 		 * @param {*} graphName
 		 */
-		this.activate = function (graphName) {
+		this.activate = function(graphName) {
 			if (graphTool[graphName]) {
 				this.beginPaint(graphName) // 开始绘图
 			} else {
@@ -761,13 +751,13 @@ function initJCMap() {
 		/**
 		 * 失活矢量图绘制
 		 */
-		this.deactivate = function () {
+		this.deactivate = function() {
 			this.draw.setActive(false)
 		}
 		/**
 		 * 圆形
 		 */
-		this.Circle = function (center, radius, option = {}) {
+		this.Circle = function(center, radius, option = {}) {
 			const circle = new Feature(new Circle(center, radius))
 			this.source.addFeature(circle)
 			return circle
@@ -775,7 +765,7 @@ function initJCMap() {
 		/**
 		 * 多边形
 		 */
-		this.Polygon = function (path, option = {}) {
+		this.Polygon = function(path, option = {}) {
 			const polygon = new Feature(new Polygon([path]))
 			this.source.addFeature(polygon)
 			return polygon
@@ -783,7 +773,7 @@ function initJCMap() {
 		/**
 		 * 矩形
 		 */
-		this.Rectangle = function (path, option = {}) {
+		this.Rectangle = function(path, option = {}) {
 			const rectangle = new Feature({
 				geometry: fromExtent(path)
 			})
@@ -807,13 +797,16 @@ function initJCMap() {
 			this.map.addInteraction(modify)
 			this.map.addInteraction(snap)
 			modify.on('modifyend', evt => {
-				const extent = evt.features.item(0).getGeometry().getCoordinates()[0] // 这样是拿新几何图形的坐标。
+				const extent = evt.features
+					.item(0)
+					.getGeometry()
+					.getCoordinates()[0] // 这样是拿新几何图形的坐标。
 			})
 		}
 		/**
 		 * 初始化矢量图形
 		 */
-		this.initGraph = function () {
+		this.initGraph = function() {
 			this.source = new VectorSource({ wrapX: false })
 			this.vector = new VectorLayer({
 				// 数据源
@@ -828,7 +821,7 @@ function initJCMap() {
 		 * 清除图层上的数据源（矢量图形）
 		 * @param {*} e
 		 */
-		this.clearVector = function () {
+		this.clearVector = function() {
 			// this.source = null;
 			// //设置矢量图层的数据源为空
 			// this.vector.setSource(this.source);
@@ -842,7 +835,7 @@ function initJCMap() {
 		 * 计算矢量图形几何特征
 		 * @returns
 		 */
-		this.fetureGeo = function (e) {
+		this.fetureGeo = function(e) {
 			const geo = e.feature.getGeometry()
 			const type = geo.getType()
 			if (type === 'Circle') {
@@ -870,7 +863,7 @@ function initJCMap() {
 		 * 获取绘制矢量图形几何特征属性
 		 * @param {*}
 		 */
-		this.getFeture = function (e) {
+		this.getFeture = function(e) {
 			if (!this.fetureData) {
 				this.fetureGeo(e)
 			}
@@ -879,7 +872,7 @@ function initJCMap() {
 		/**
 		 * 停止绘制
 		 */
-		this.stopPaint = function (e) {
+		this.stopPaint = function(e) {
 			// new Draw.finishDrawing()
 			const geo = e.feature.getGeometry()
 			const type = geo.getType() // 获取类型
@@ -905,7 +898,7 @@ function initJCMap() {
 		/**
 		 * 开始绘制
 		 */
-		this.beginPaint = function (type) {
+		this.beginPaint = function(type) {
 			this.status = false // 状态初始化
 			this.fetureData = null // 矢量图特征清空初始化
 			// this.initGraph()
@@ -984,13 +977,13 @@ function initJCMap() {
 	function _JCSearch(map) {
 		// Ev 搜索服务
 		const searchBase = new EV.ServiceLS(map)
-		this.search = function (city, searchKeyWord, callBack) {
+		this.search = function(city, searchKeyWord, callBack) {
 			searchBase.search(
 				{
 					city: city, // 城市名称
 					keyword: searchKeyWord // 搜索关键字
 				},
-				function (data) {
+				function(data) {
 					callBack && callBack(data.points)
 					// ls.render();  //在地图上显示
 				}
@@ -1005,7 +998,7 @@ function initJCMap() {
 	inheritPrototype(_JCGraph, Draw)
 
 	function Event() {
-		this.addListener = (target, type, callBack) => {
+		this.addListener = function(target, type, callBack) {
 			let timeoutID = null // 单击事件
 			if (type === 'click') {
 				target.on(type, e => {
@@ -1019,7 +1012,10 @@ function initJCMap() {
 						}
 						if (target instanceof _JCMap) {
 							if (target.hasFeatureAtPixel(e.pixel)) {
-								const typeName = target.getFeaturesAtPixel(e.pixel)[0].getGeometry().getType()
+								const typeName = target
+									.getFeaturesAtPixel(e.pixel)[0]
+									.getGeometry()
+									.getType()
 								// Point => 聚合那一块的逻辑
 								if (typeName === 'Point') {
 									const features = target.getFeaturesAtPixel(e.pixel)[0].get('features')
@@ -1077,7 +1073,7 @@ function initJCMap() {
 			} else if (type === 'done') {
 				if (target instanceof _JCGraph) {
 					Object.defineProperty(target, 'status', {
-						set: function (val) {
+						set: function(val) {
 							if (val) {
 								callBack && callBack(target)
 							}
