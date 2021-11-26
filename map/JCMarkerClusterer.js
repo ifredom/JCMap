@@ -198,8 +198,9 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
 	// console.log(viewGeometry.getBottomLeft())
 	features.forEach(feature => {
 		if (!feature.get('features')) {
-			//不存在 features 即为 单个 feature 应该 添加overlayMarker
+			//不存在 features 即为 单个  overlayMarker
 			const overlayMarker = feature.get('overlayMarker')
+			// console.log(clusterSource.overlaysList)
 			if (overlayMarker) {
 				// 获取 overlayMarker id
 				const id = overlayMarker.getId()
@@ -224,6 +225,8 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
 					}
 				}
 			}
+		} else {
+			console.log(feature)
 		}
 	}, 100)
 }
@@ -239,7 +242,6 @@ function createClusterSource(map, vectorSource, options) {
 		source: vectorSource,
 		createCluster(point, features) {
 			if (features.length == 1) {
-				console.log(features[0])
 				const overlayMarker = features[0].get('overlayMarker')
 				// 创建聚合对象时候，只有一个聚合物情况
 				return overlayMarker
@@ -261,6 +263,7 @@ function createClusterSource(map, vectorSource, options) {
 	})
 
 	// 拖动变化-主动触发 clusterSource  change
+	// 拖动时，判断Feature是否有变化，可优化
 	map.on('moveend', e => clusterSource.changed(e))
 
 	/**
@@ -299,6 +302,9 @@ function createMarkerClusterer(map, markers, options) {
 
 	const features = markers.map(marker => {
 		let olMarker = marker[marker.JCTYPE]
+		// 聚合对象单个矢量对象需要重新注册
+		marker.mapOn = map.on.bind(map)
+		marker.isClustererMarker = true
 		return olMarker
 	})
 

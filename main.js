@@ -37,25 +37,25 @@ map.on('complete', function () {
 		markers.push(marker)
 	}
 
-	for (let i = 1; i <= 200; i++) {
-		let coordinates = [110.07 + Math.random(), 31.07 + Math.random()]
-		let marker = new JC.Marker({
-			position: coordinates,
-			offset: [-30, -20],
-			content: buildContent()
-		})
-		markers.push(marker)
-	}
+	// for (let i = 1; i <= 200; i++) {
+	// 	let coordinates = [110.07 + Math.random(), 31.07 + Math.random()]
+	// 	let marker = new JC.Marker({
+	// 		position: coordinates,
+	// 		offset: [-30, -20],
+	// 		content: buildContent()
+	// 	})
+	// 	markers.push(marker)
+	// }
 
-	for (let i = 1; i <= 200; i++) {
-		let coordinates = [111.07 + Math.random(), 30.07 + Math.random()]
-		let marker = new JC.Marker({
-			position: coordinates,
-			offset: [-30, -20],
-			content: buildContent()
-		})
-		markers.push(marker)
-	}
+	// for (let i = 1; i <= 200; i++) {
+	// 	let coordinates = [111.07 + Math.random(), 30.07 + Math.random()]
+	// 	let marker = new JC.Marker({
+	// 		position: coordinates,
+	// 		offset: [-30, -20],
+	// 		content: buildContent()
+	// 	})
+	// 	markers.push(marker)
+	// }
 
 	// for (let i = 1; i <= 10000; i++) {
 	// 	let coordinates = [101.07 + Math.random(), 31.07 + Math.random()]
@@ -68,8 +68,15 @@ map.on('complete', function () {
 	// }
 
 	const markerClusterer = new JC.MarkerClusterer(map, markers)
+
 	// markerClusterer.setMarkers(markerList)
 
+	markers.forEach(marker => {
+		// !marker.on && console.log(marker)
+		marker.on('click', e => {
+			console.log(e)
+		})
+	})
 	let marker2 = new JC.Marker({
 		position: [118.44524715557696, 33.461747354231065],
 		offset: [-30, -20],

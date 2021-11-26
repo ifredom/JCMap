@@ -281,6 +281,14 @@ function JCMap(...args) {
 			map.on(eventName, e => {
 				clickTimeId && clearTimeout(clickTimeId)
 				clickTimeId = setTimeout(() => {
+					const vectorSource = this.markerCluster ? this.markerCluster.getVectorSource() : null
+					const vectorSourceFeatures = vectorSource ? vectorSource.getFeaturesAtCoordinate(e.coordinate) : null
+					// console.log(vectorSourceFeatures, e)
+					// console.log(this.markerCluster, this.markerCluster.getVectorSource())
+					console.log(this.markerCluster.getClusterSource())
+					// this.markerCluster.getVectorSource().forEachFeature(features => {
+					// 	console.log(features)
+					// })
 					if (map.hasFeatureAtPixel(e.pixel)) {
 						const olMarker = map.forEachFeatureAtPixel(e.pixel, olMarker => olMarker)
 						if (olMarker) {

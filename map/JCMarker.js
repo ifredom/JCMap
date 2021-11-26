@@ -235,6 +235,8 @@ function JCMarker({ map, ...options }) {
 
 	this[JCTYPE] = createMarker(this.options, JCTYPE)
 
+	this.isClustererMarker = false
+
 	this.getId = function () {
 		return this.options.id
 	}
@@ -282,8 +284,10 @@ function JCMarker({ map, ...options }) {
 
 			// 未绑定过事件
 			if (!currentEventObject) {
-				//注册事件
-				map.on(eventObject.eventName)
+				//注册事件- 聚合类中的maker，map 可能不存在
+
+				map ? map.on(eventObject.eventName) : this.mapOn(eventObject.eventName)
+
 				this.markerEvents.push(eventObject)
 				eventObject.listener = e => callBack && callBack(e)
 				//监听事件
