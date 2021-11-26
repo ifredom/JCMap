@@ -1,14 +1,15 @@
 import JCMap from './JCMap'
 import JCMarker from './JCMarker'
 import JCMarkerClusterer from './JCMarkerClusterer'
+import JCGraph from './JCGraph'
 
 export default {
 	Map: JCMap,
 	// Point: _JCPoint,
 	Marker: JCMarker,
-	MarkerClusterer: JCMarkerClusterer
+	MarkerClusterer: JCMarkerClusterer,
 	// ZoomSlider: ZoomSlider,
 	// Event: new Event(),
-	// VectorGraph: _JCGraph, // 矢量图形类
+	VectorGraph: JCGraph, // 矢量图形类
 	// Search: _JCSearch // 搜索类
 }

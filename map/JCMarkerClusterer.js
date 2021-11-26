@@ -239,7 +239,6 @@ function createClusterSource(map, vectorSource, options) {
 		source: vectorSource,
 		createCluster(point, features) {
 			if (features.length == 1) {
-				console.log(features[0])
 				const overlayMarker = features[0].get('overlayMarker')
 				// 创建聚合对象时候，只有一个聚合物情况
 				return overlayMarker

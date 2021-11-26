@@ -68,8 +68,8 @@ map.on('complete', function () {
 	// }
 
 	const markerClusterer = new JC.MarkerClusterer(map, markers)
-	// markerClusterer.setMarkers(markerList)
-
+	// markerClusterer.setMarkers(markers)
+  map.setFitView()
 	let marker2 = new JC.Marker({
 		position: [118.44524715557696, 33.461747354231065],
 		offset: [-30, -20],

@@ -71,7 +71,7 @@ function initJCMap(target = 'map', options = {}) {
 		zoomShow = false, // 是否显示缩放控件
 		zoomSlider = false, // 是否显示滑块缩放控件
 		fullScreen = false, // 是否显示全屏控件
-		maxExtent = true //限制地图可拖动范围
+		maxExtent = false //限制地图可拖动范围
 	} = options
 
 	//创建天地图矢量底图
@@ -146,8 +146,8 @@ function initJCMap(target = 'map', options = {}) {
 
 	//默认拖动范围范围
 	const defalutExtent = boundingExtent([
-		[-179.84441381173258, -15.1171875],
-		[179.56108964370492, 89.82421875]
+		[55.923433618652325, 3.359091468750009],
+		[171.31664592155698, 81.65358702968221]
 	])
 	//默认控件
 	const controlsExtend = [fullScreen ? new FullScreen() : null, zoomSlider ? new ZoomSlider() : null]
@@ -167,7 +167,7 @@ function initJCMap(target = 'map', options = {}) {
 			minZoom, // 最小缩放
 			maxZoom, // 最大缩放0
 			multiWorld: false, // 控制无法边缘平移
-			constrainResolution: true, // 可控制缩放为整数
+			constrainResolution: true, // 控制缩放为整数
 			extent: !maxExtent ? undefined : defalutExtent
 		}),
 		interactions: new DefaultInteraction({
@@ -188,13 +188,19 @@ function JCMap(...args) {
 
 	let clickTimeId = null //单击事件定时器
 
-	this.JCTYPE = JCTYPE
+	this.JCName = JCTYPE
 
 	this[JCTYPE] = map
 
 	this.markerCluster = null // 聚合图层对象
 
 	this.view = map.getView() // 获取地图的初始化 View 信息
+
+	this.center = () => this.view.getCenter() // 获取地图的中心位置
+
+	this.getMaxZoom = () => this.view.getMaxZoom() // 获取地图设置的最大放大
+
+	this.getMinZoom = () => this.view.getMinZoom() // 获取地图设置的最小缩放
 
 	this.getOverlayById = map.getOverlayById.bind(map) // 根据ID获取覆盖物
 
@@ -225,27 +231,6 @@ function JCMap(...args) {
 	this.removeOverlay = map.removeOverlay.bind(map) // 移除覆盖物
 
 	this.getKeys = map.getKeys.bind(map)
-
-	this.center = () => this.view.getCenter() // 获取地图的中心位置
-
-	this.getMaxZoom = () => this.view.getMaxZoom() // 获取地图设置的最大放大
-
-	this.getMinZoom = () => this.view.getMinZoom() // 获取地图设置的最小缩放
-
-	this.getZoom = () => this.view.getZoom() // 获取当前层级
-
-	// 设置当前层级
-	this.setZoom = function (zoom) {
-		this.view.animate({ zoom, duration: 500 })
-	}
-
-	// 设置地图中心
-	this.setCenter = function (coord, zoom = 0) {
-		const viewCenter = coord || (this.center() ? this.center() : [0, 0])
-		zoom = zoom || this.getZoom()
-		this.view.setCenter(viewCenter)
-		this.setZoom(zoom)
-	}
 
 	// 获取默认marker图层
 	this.getMarkerVectorLayer = () => {
@@ -372,14 +357,12 @@ function JCMap(...args) {
 	// map 添加 Marker
 	this.addMarker = (...args) => {
 		if (args.length === 1) {
-			console.log(args[0])
 			if (Array.isArray(args[0])) {
 				args[0].forEach(marker => this.addMarker(marker))
 			} else if (args[0].JCTYPE === 'MARKER') {
 				const markerVectorLayer = this.getMarkerVectorLayer()
 				markerVectorLayer.getSource().addFeature(args[0].MARKER)
 			} else if (args[0].JCTYPE === 'OVERLAYMARKER') {
-				console.log(args[0].getOverlayMarker())
 				this.addOverlay(args[0].getOverlayMarker())
 			}
 		} else {
@@ -394,12 +377,12 @@ function JCMap(...args) {
 			const target = args[0]
 			if (Array.isArray(target)) {
 				target.forEach(marker => this.removeMarker(marker))
-			} else if (target.JCTYPE === 'MARKER') {
+			} else if (target.JCName === 'MARKER') {
 				const markerVectorLayer = this.getMarkerVectorLayer()
 				markerVectorLayer.getSource().removeFeature(target.MARKER)
-			} else if (target.JCTYPE === 'OVERLAYMARKER') {
+			} else if (target.JCName === 'OVERLAYMARKER') {
 				map.removeOverlay(target.getOverlayMarker())
-			} else if (target.JCTYPE === 'OverlayMarker') {
+			} else if (target.JCName === 'OverlayMarker') {
 				// 此处只处理了聚合物变换的添加的 OverlayMarker, 对 Feature 不做处理
 				map.removeOverlay(target)
 			}
@@ -415,6 +398,25 @@ function JCMap(...args) {
 	this.clearOverlays = () => {
 		const overlays = map.getOverlays()
 		overlays.forEach(item => this.removeOverlay(item))
+	}
+
+	// 获取当前层级
+	this.getZoom = function () {
+		return this.view.getZoom()
+	}
+
+	// 设置当前层级
+	this.setZoom = function (zoom) {
+		// console.log(this.getZoom(), maxZoom, minZoom)
+		this.view.animate({ zoom, duration: 500 })
+	}
+
+	// 设置地图中心
+	this.setCenter = function (coord, zoom = 0) {
+		const viewCenter = coord || (this.center() ? this.center() : [0, 0])
+		zoom = zoom || this.getZoom()
+		this.view.setCenter(viewCenter)
+		this.setZoom(zoom)
 	}
 
 	// 定位到目标位置
@@ -454,62 +456,79 @@ function JCMap(...args) {
 	// 	!isMarker && this.view.fit(boundingExtent(coordinates), options)
 	// 	return target
 	// }
-
+  /**
+   * 判断是否有此图层, 并返回
+   * @param {*} layer 
+   * @returns 
+   */
+  this.hasLayer = layerName => {
+    return map.getLayers().getArray().find(layer => layer.getClassName().indexOf(layerName) !== -1)
+  }
 	/**
 	 * 让地图自动适应覆盖
 	 * 获取覆盖物群里的 总的最小经纬度和最大经纬度，以此来生成矩形框，然后视图调用fit()方法来适应层级
 	 * @param {*} overlay
 	 */
 	this.setFitView = () => {
-		// 矢量图形所使用图层，聚合图层后续再做添加
-		const vectorGraph = map
-			.getLayers()
-			.getArray()
-			.find(layer => layer.getClassName().indexOf('VectorLayer') !== -1)
-		if (vectorGraph) {
-			const rectangleBox = {
-				minLng: Infinity,
-				minLat: Infinity,
-				maxLng: -Infinity,
-				maxLat: -Infinity
-			}
-			vectorGraph
-				.getSource()
-				.getFeatures()
-				.forEach(item => {
-					// 矢量图形是 圆形
-					// if (item.getGeometry().getType() === 'Circle') {
-					//   getExtent 获取左上角 和 右上角坐标方法 分别代表最小经纬和最大经纬
-					if (rectangleBox.minLng > item.getGeometry().getExtent()[0]) {
-						rectangleBox.minLng = item.getGeometry().getExtent()[0]
-					}
-					if (rectangleBox.minLat > item.getGeometry().getExtent()[1]) {
-						rectangleBox.minLat = item.getGeometry().getExtent()[1]
-					}
-					if (rectangleBox.maxLng < item.getGeometry().getExtent()[2]) {
-						rectangleBox.maxLng = item.getGeometry().getExtent()[2]
-					}
-					if (rectangleBox.maxLat < item.getGeometry().getExtent()[3]) {
-						rectangleBox.maxLat = item.getGeometry().getExtent()[3]
-					}
-					// }
-				})
-
-			const p1 = rectangleBox.minLng
-			const p2 = rectangleBox.minLat
-			const p3 = rectangleBox.maxLng
-			const p4 = rectangleBox.maxLat
-			const polygon = new Polygon([
-				[
-					[p1, p2],
-					[p3, p2],
-					[p3, p4],
-					[p1, p4],
-					[p1, p2]
-				]
-			])
-			map.getView().fit(polygon, { padding: [5, 5, 5, 5] })
+		const vectorGraph = this.hasLayer('VectorLayer') // 判断是否有矢量图层
+    const clusterLayer = this.hasLayer('jc-clusterer-layer') // 判断是否有聚合图层
+    const rectangleBox = {
+      minLng: Infinity,
+      minLat: Infinity,
+      maxLng: -Infinity,
+      maxLat: -Infinity
+    }
+		if (vectorGraph && vectorGraph.getSource().getFeatures().length) {
+      vectorGraph
+        .getSource()
+        .getFeatures()
+        .forEach(item => {
+          //   getExtent 获取左上角 和 右上角坐标方法 分别代表最小经纬和最大经纬
+          if (rectangleBox.minLng > item.getGeometry().getExtent()[0]) {
+            rectangleBox.minLng = item.getGeometry().getExtent()[0]
+          }
+          if (rectangleBox.minLat > item.getGeometry().getExtent()[1]) {
+            rectangleBox.minLat = item.getGeometry().getExtent()[1]
+          }
+          if (rectangleBox.maxLng < item.getGeometry().getExtent()[2]) {
+            rectangleBox.maxLng = item.getGeometry().getExtent()[2]
+          }
+          if (rectangleBox.maxLat < item.getGeometry().getExtent()[3]) {
+            rectangleBox.maxLat = item.getGeometry().getExtent()[3]
+          }
+        })
 		}
+    if (clusterLayer && clusterLayer.getSource().getSource().getFeatures().length) {
+      this.markerCluster.getMarkers().forEach(item => {
+        let flag = item.get('position')
+        if (rectangleBox.minLng > flag[0]) {
+          rectangleBox.minLng = flag[0]
+        }
+        if (rectangleBox.minLat > flag[1]) {
+          rectangleBox.minLat = flag[1]
+        }
+        if (rectangleBox.maxLng < flag[0]) {
+          rectangleBox.maxLng = flag[0]
+        }
+        if (rectangleBox.maxLat < flag[1]) {
+          rectangleBox.maxLat = flag[1]
+        }
+      })
+    }
+    const p1 = rectangleBox.minLng
+    const p2 = rectangleBox.minLat
+    const p3 = rectangleBox.maxLng
+    const p4 = rectangleBox.maxLat
+    const polygon = new Polygon([
+      [
+        [p1, p2],
+        [p3, p2],
+        [p3, p4],
+        [p1, p4],
+        [p1, p2]
+      ]
+    ])
+    map.getView().fit(polygon, { padding: [5, 5, 5, 5] })
 	}
 
 	// 地图缩小
@@ -528,12 +547,12 @@ function JCMap(...args) {
 		this.setZoom(zoom + zoomNum)
 	}
 
-	// 删除 矢量图形
+	// 删除 矢量交互图
 	this.removeGraph = function (draw) {
 		map.removeInteraction(draw)
 	}
 
-	// 添加 矢量图形
+	// 添加 矢量交互图
 	this.addGraph = function (draw) {
 		map.addInteraction(draw)
 	}
