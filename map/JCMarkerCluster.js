@@ -2,20 +2,45 @@ import { boundingExtent } from 'ol/extent'
 import { fromExtent } from 'ol/geom/Polygon'
 import { Vector as VectorLayer } from 'ol/layer'
 import VectorSource from 'ol/source/Vector'
-import { Fill, Icon, Style, Text } from 'ol/style'
+import { Fill, Icon, Stroke, Style, Text } from 'ol/style'
 import img0 from '../assets/image/map/m0.png'
 import img1 from '../assets/image/map/m1.png'
 import img2 from '../assets/image/map/m2.png'
 import img3 from '../assets/image/map/m3.png'
 import { OlCluster, OlFeature } from './inherit'
 
-const defaultClusterOptions = {
+const defaultOptions = {
   distance: 40, // 要素将聚集在一起的距离（以像素为单位）
   minDistance: 30, //  簇之间的最小距离（以像素为单位）
   showViewExtent: true, // 只展示可视区域 Marker
   isClusterFitView: true, // 是否点击展开 Cluster
   icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAZCAYAAADe1WXtAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHrSURBVEjHrdW9a1NxFMbxT9qmNWmaRqlFhE6CLuIL1DcUHDqJm/0HBEUk3RQXpW7dXdysWlAEHQSlo4IoIoggFCko4lJEEaq296aNtvk5JIG2NGmSOjzbuV9+9zzPOUcIwUbCvg7uYGtD9RsVdDCSJh7iT5ofONEyFLkeJvcw/5EQCE8JvRTSjKG9KSiOdvMtz0KxAqzqK+E4cZZ3GNgQikQXV7PET9bAVmqZMMbfNPM4UxOK/iwvB5mfqQNcqTeEHcQ93EVqFRRDaWZHKS41CKzqN2GYQoYv2BtCoJNrvRRe1PnwPeFGpZ+1am5TSrGQ5CJc2E1UqlH8nJCuKFN5WS3wIIUko5DIMjVOab3CEUIbASFLeFwD+Kgct09or/b0cI54rsWXRoQ+Yhxb5X4PDy9TbKWnlyj28mC9SO1MEX9u0v0P5b+YQ9+64e/i+iniZqBHiJLk603Ulm6+P2sQeI9Slmm01Z19DO8iWmog9LmyOYcaWihZ3t5kuR40z2KWiWa21P4eCj/rTFjFnG1N7dMME3kW1wJLhANE7ZxvZUlvTxFNr4GOl82ZQqKlc9LJlZNEVeBseVRjHGz5RiGZYWayAj3HQoZbmz58OD1A9JqQ4hdym4ZWIvaqn8UEZ//Lia5GrJP79cxZqX+cR1gC9S9TwAAAAABJRU5ErkJggg==', // 默认 marker icon 图标
 }
+
+// 默认 marker  样式
+const getDefaultStyle = () => ({
+  //icon style
+  img: defaultOptions.src,
+  rotateWithView: true,
+  rotation: 0,
+  //text style
+  font: 'normal 12px sans-serif',
+  label: '',
+  fontSize: '12px',
+  fontFamily: 'sans-serif',
+  fontWeight: 'normal',
+  fontColor: '#fff',
+  placement: 'point', // 默认为point
+  labelBgColor: 'transparent',
+  borderColor: 'transparent', // 边框颜色
+  borderWidth: '0', // 边框宽度
+  labelXOffset: 0, // 水平文本偏移量
+  labelYOffset: 3, // 垂直文本偏移量
+  padding: [0, 0, 0, 0],
+  textBaseline: 'middle', //
+  textAlign: 'center', //文本对齐方式
+})
+// marker Text样式处理
 
 // 默认 marker text 样式
 const defaultLabelStyle = () => ({
@@ -29,21 +54,90 @@ const defaultLabelStyle = () => ({
   padding: [0, 0, 0, 0],
   fill: new Fill({
     // 文字颜色
-    color: '#000',
+    color: '#fff',
   }),
 })
 
+// marker Text样式处理
+function createSingleTextStyle(style) {
+  // console.log(style)
+
+  return {
+    placement: style.placement, // 默认为point
+    text: style.label,
+    offsetX: style.labelXOffset,
+    offsetY: style.labelYOffset,
+    fill: new Fill({
+      // 字体颜色
+      color: style.fontColor,
+    }),
+    font: style.font || `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`, // 字体样式
+    backgroundFill: new Fill({
+      // 背景颜色
+      color: style.labelBgColor,
+    }),
+    backgroundStroke: new Stroke({
+      // 边框样式
+      color: style.borderColor,
+      width: style.borderWidth,
+      lineCap: 'square', // 线帽风格  butt, round, 或者 square 默认 round
+      lineJoin: 'bevel', // 线连接方式 bevel, round, 或者 miter 默认 round
+      lineDash: [], // 线间隔模式 这个变化与分辨率有关 默认为undefined Internet Explorer 10和更低版本不支持
+      lineDashOffset: 0, // 线段间隔偏移 默认0
+      miterLimit: 10, // 默认10
+    }),
+    padding: style.padding,
+    textBaseline: style.textBaseline, // 似乎无效
+    textAlign: style.textAlign, //文本对齐方式,似乎无效，设置会让文本消失
+  }
+}
+function createSingleIconStyle(style) {
+  const sIconStyle = {
+    crossOrigin: 'anonymous', // 图片跨域允许
+    anchor: [0.5, 0.5], // 原点位置
+    anchorOrigin: 'top-left', // 原点位置偏移方向
+    anchorXUnits: 'fraction', // 基于原点位置百分比
+    anchorYUnits: 'fraction', // 基于原点位置像素
+    offset: [0, 0], // 偏移量设置，相对于原点
+    scale: 1, // 图标缩放比例
+    opacity: 1, // 透明度
+    src: style.img,
+    // img: style.img, // 图标的url
+    rotateWithView: style.rotateWithView, // 是否旋转
+    rotation: style.rotation, // 旋转角度
+  }
+
+  return sIconStyle
+}
 // 设置聚合要素样式
 function createClusterStyle(styleCache, assignOptions, feature, resolution) {
   const size = feature.get('features').length // 获取该要素所在聚合群的要素数量
   let style = styleCache[size]
-
+  const defaultStyle = getDefaultStyle()
   if (!style) {
-    const labelStyle = defaultLabelStyle()
-    const iconStyle = {
-      src: assignOptions.icon,
-    }
-    labelStyle.text = size.toString()
+    const textStyle = createSingleTextStyle({
+      label: size.toString() || defaultStyle.label,
+      font: defaultStyle.font,
+      fontSize: defaultStyle.fontSize,
+      fontFamily: defaultStyle.fontFamily,
+      fontWeight: defaultStyle.fontWeight,
+      fontColor: defaultStyle.fontColor,
+      labelXOffset: defaultStyle.labelXOffset,
+      labelYOffset: defaultStyle.labelYOffset,
+      labelBgColor: defaultStyle.labelBgColor,
+      borderColor: defaultStyle.borderColor,
+      borderWidth: defaultStyle.borderWidth,
+      padding: defaultStyle.padding,
+      placement: defaultStyle.placement,
+      textBaseline: defaultStyle.textBaseline,
+      textAlign: defaultStyle.textAlign,
+    })
+
+    const iconStyle = createSingleIconStyle({
+      src: defaultStyle.img,
+      rotateWithView: defaultStyle.rotateWithView,
+      rotation: defaultStyle.rotation,
+    })
 
     if (size == 1) {
       // 处理 overlayMarker 和 正常 Marker
@@ -62,7 +156,7 @@ function createClusterStyle(styleCache, assignOptions, feature, resolution) {
     style = [
       new Style({
         image: new Icon(iconStyle),
-        text: new Text(labelStyle),
+        text: new Text(textStyle),
         zIndex: 1, // 设置层级
       }),
     ]
@@ -80,6 +174,7 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
   // console.log(viewGeometry.getBottomLeft())
   features.forEach((feature) => {
     const markers = feature.get('features')
+
     if (!markers) {
       //不存在 features 即为 单个  overlayMarker
       const overlayMarker = feature.get('overlayMarker')
@@ -126,6 +221,7 @@ function createClusterSource(map, vectorSource, options) {
       if (features.length == 1) {
         const overlayMarker = features[0].get('overlayMarker')
         // 创建聚合对象时候，只有一个聚合物情况
+
         cluster = overlayMarker
           ? new OlFeature({
               overlayMarker,
@@ -133,13 +229,18 @@ function createClusterSource(map, vectorSource, options) {
           : new OlFeature({
               geometry: point,
               features,
+              JCEvents: features[0].get('JCEvents'),
             })
       } else {
         cluster = new OlFeature({
           geometry: point,
           features,
+          JCEvents: clusterSource.get('JCEvents'),
         })
+        // console.log('cluster-------', cluster)
+        cluster.setId(cluster.ol_uid)
       }
+
       cluster.JCTYPE = 'ClusterMarker'
       return cluster
     },
@@ -183,7 +284,7 @@ function createClusterSource(map, vectorSource, options) {
  */
 function createMarkerCluster(map, markers, options) {
   const styleCache = {}
-  const assignOptions = Object.assign({}, defaultClusterOptions, options)
+  const assignOptions = Object.assign({}, defaultOptions, options)
 
   const features = markers.map((marker) => {
     let olMarker = marker[marker.JCTYPE]
@@ -192,6 +293,7 @@ function createMarkerCluster(map, markers, options) {
     marker.mapOff = map.off.bind(map)
     return olMarker
   })
+  console.log(features)
 
   // 创建要素数据来源
   const vectorSource = new VectorSource({
@@ -340,6 +442,7 @@ function JCMarkerCluster(map, features = [], options) {
       maxZoom: this.getMaxZoom(),
       duration: 300,
       padding: [100, 100, 100, 100], // 点要素距离视野边距
+      nearest: true,
       ...options,
     })
     return target
@@ -349,23 +452,20 @@ function JCMarkerCluster(map, features = [], options) {
   this.on = (eventName, callBack = () => {}) => {
     if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
     if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
-    const JCMarkerEventName = 'JCCluster(' + eventName + ')'
+    const clusterSource = this.getClusterSource()
+    const JCClusterEventName = 'JCCluster(' + eventName + ')' + clusterSource.ol_uid
     const eventObject = {
-      eventName: JCMarkerEventName,
+      eventName: JCClusterEventName,
       callBack,
       handler: () => {},
     }
-    const currentEventObject = this.JCEvents.find((e) => e.eventName === eventName)
+    const index = this.JCEvents.findIndex((eventName) => eventName === JCClusterEventName)
+
     // 未绑定过事件
-    if (!currentEventObject) {
+    if (index === -1) {
       //注册事件-  传递如：JCMarkerCluster(cliclk)
-      // this.map
-      //   ? this.map.on(eventObject.eventName, eventObject.callBack)
-      //   : this.mapOn(eventObject.eventName, eventObject.callBack)
       this.map.on(eventObject.eventName, eventObject.callBack)
-
-      this.JCEvents.push(eventObject)
-
+      // 给所有 clusterSource添加 JCEvents
       eventObject.handler = (e) => {
         this.options.isClusterFitView && this.setClusterExtentView(e.event)
         eventObject.callBack({
@@ -375,6 +475,8 @@ function JCMarkerCluster(map, features = [], options) {
         })
       }
 
+      this.JCEvents.push(eventObject.eventName)
+
       //监听事件 - JCMap 处理成 cliclk
       this[JCTYPE].on(eventName, eventObject.handler)
     } else {
@@ -382,6 +484,30 @@ function JCMarkerCluster(map, features = [], options) {
       this[JCTYPE].un(eventName, currentEventObject.handler)
       // //监听事件
       this[JCTYPE].on(eventName, currentEventObject.handler)
+    }
+    //设置 JCEvents
+    clusterSource.set('JCEvents', this.JCEvents)
+  }
+
+  //事件移除
+  this.off = (eventName, callBack = () => {}) => {
+    let currentEventObject = null
+    eventName = 'JCCluster(' + eventName + ')' + this.getId()
+    const index = this.JCEvents.findIndex((e) => {
+      if (e.eventName === eventName) {
+        currentEventObject = e
+        return true
+      }
+    })
+    console.log(index)
+
+    if (index !== -1) {
+      this.map ? this.map.off(currentEventObject.eventName) : this.mapOff(currentEventObject.eventName)
+      this[JCTYPE].un(eventName, currentEventObject.callBack)
+      this[JCTYPE].unset('JCEvents')
+      this.JCEvents.splice(index, 1)
+      clusterSource.set('JCEvents', this.JCEvents)
+      callBack && callBack()
     }
   }
 }

@@ -101,7 +101,7 @@ map.on('complete', function () {
     })
   })
 
-  markerClusterer.on('click', function (ev) {
+  markerClusterer.on('dblclick', function (ev) {
     console.log('markerClusterer-------')
   })
   // marker3.on('click', (e) => {
@@ -109,7 +109,7 @@ map.on('complete', function () {
   // })
   // console.log(markerClusterer.getMarkers())
 
-  map.on('click', function (ev) {
+  map.on('dblclick', function (ev) {
     console.log('map---2222222222222', ev.coordinate, map.getZoom())
 
     // const marker = new JC.Marker({
@@ -128,9 +128,11 @@ map.on('complete', function () {
     markerClusterer.removeMarker(marker2, marker3)
     // markerClusterer.clearMarkers()
     // console.log(markerClusterer.getMarkers())
-
+    markerClusterer.on('click')
+    markerClusterer.on('contextmenu', (e) => {
+      console.log('contextmenu--------', e)
+    })
     // markers.forEach((marker) => {
-    //   // !marker.on && console.log(marker)
     //   marker.off('click')
     // })
 

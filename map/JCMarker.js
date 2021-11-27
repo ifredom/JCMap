@@ -278,12 +278,14 @@ function JCMarker({ map, ...options }) {
       }
       const currentEventObject = this.JCEvents.find((e) => e.eventName === eventName)
 
+      const index = this.JCEvents.findIndex((eventName) => eventName === JCMarkerEventName)
+
       // 未绑定过事件
-      if (!currentEventObject) {
+      if (index === -1) {
         //注册事件- 聚合类中的maker，map 可能不存在, 传递如：JCMarker(cliclk)
         this.map ? this.map.on(eventObject.eventName, eventObject.callBack) : this.mapOn(eventObject.eventName, eventObject.callBack)
 
-        this.JCEvents.push(eventObject)
+        this.JCEvents.push(eventObject.eventName)
 
         //监听事件 - JCMap 处理成 cliclk
         this[JCTYPE].on(eventName, eventObject.callBack)
@@ -293,10 +295,11 @@ function JCMarker({ map, ...options }) {
         //监听事件
         this[JCTYPE].on(eventName, currentEventObject.callBack)
       }
+      this[JCTYPE].set('JCEvents', this.JCEvents)
     }
 
     //事件移除
-    this.off = (eventName, callBack) => {
+    this.off = (eventName, callBack = () => {}) => {
       let currentEventObject = null
       eventName = 'JCMarker(' + eventName + ')' + this.getId()
       const index = this.JCEvents.findIndex((e) => {
@@ -307,11 +310,11 @@ function JCMarker({ map, ...options }) {
       })
 
       if (index !== -1) {
-        console.log(currentEventObject.eventName)
-
         this.map ? this.map.off(currentEventObject.eventName) : this.mapOff(currentEventObject.eventName)
-        this[JCTYPE].un(currentEventObject.eventName, currentEventObject.callBack)
+        this[JCTYPE].un(eventName, currentEventObject.callBack)
+        this[JCTYPE].unset('JCEvents')
         this.JCEvents.splice(index, 1)
+        this[JCTYPE].set('JCEvents', this.JCEvents)
         callBack && callBack()
       }
     }

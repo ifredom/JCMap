@@ -310,40 +310,36 @@ function JCMap(target = 'map', options = {}) {
       const eventHandler = (e, olMap, eventObject, callBack) => {
         clickTimeId && clearTimeout(clickTimeId)
         clickTimeId = setTimeout(() => {
-          console.log(this.JCEvents)
-          console.log(eventObject)
-
-          const isMapClick = this.JCEvents.some((event) => {
-            return event.eventName !== 'complete' && event.eventName !== 'moveend' && events.includes(event.eventName)
-          })
-
-          const JCMarkerEvent = this.JCEvents.find((event) => event.eventName.substring(0, 8) === 'JCMarker')
-          const JCClusterEvent = this.JCEvents.some((event) => event.eventName.substring(0, 9) === 'JCCluster')
-
           if (olMap.hasFeatureAtPixel(e.pixel)) {
             // 地图要素 事件处理
             const olFeature = olMap.forEachFeatureAtPixel(e.pixel, (m) => m)
-
+            // console.log(olFeature)
             if (olFeature.JCTYPE === 'ClusterMarker') {
               //点击聚合物内的单个矢量图形
               const features = olFeature.get('features')
-
+              const JCEvents = olFeature.get('JCEvents') || []
               if (features.length === 1) {
-                features[0].dispatchEvent({
-                  type: eventObject.eventName,
-                  event: e,
-                })
+                //是否存在对应的事件监听
+                //判断事件是否对应
+                const isJCMarkerEvent = JCEvents.some((JCMarkerEventName) => JCMarkerEventName && /\((.+)\)/.exec(JCMarkerEventName)[1] === e.type)
+                // console.log(isJCMarkerEvent)
+                isJCMarkerEvent &&
+                  features[0].dispatchEvent({
+                    type: e.type, // 相应的事件
+                    event: e,
+                  })
               } else {
                 //聚合矢量图形
-                console.log(features.length, {
-                  type: eventObject.eventName,
-                  event: olFeature,
-                })
-
-                this.markerCluster.MARKERCLUSTER.dispatchEvent({
-                  type: eventObject.eventName,
-                  event: olFeature,
-                })
+                //判断事件是否对应
+                const isJCClusterEventName = JCEvents.some(
+                  (JCClusterEventName) => JCClusterEventName && /\((.+)\)/.exec(JCClusterEventName)[1] === e.type
+                )
+                // console.log(isJCClusterEventName, e.type)
+                isJCClusterEventName &&
+                  this.markerCluster.MARKERCLUSTER.dispatchEvent({
+                    type: e.type,
+                    event: olFeature,
+                  })
               }
             } else {
               olFeature.dispatchEvent({
@@ -351,15 +347,15 @@ function JCMap(target = 'map', options = {}) {
                 event: e,
               })
             }
-          } else if (isMapClick) {
+          } else if (e.type === eventObject.eventName) {
             callBack(e)
           }
         }, 200)
       }
 
-      eventObject.handler = (e, map, eventObject, callBack) => eventHandler(e, map, eventObject, callBack)
-
-      map.on(eventName, (e) => eventObject.handler(e, map, eventObject, callBack))
+      eventObject.handler = (e) => eventHandler(e, map, eventObject, callBack)
+      eventObject.getEventObject = (e) => eventObject
+      map.on(eventName, eventObject.handler)
     }
     this.JCEvents.push(eventObject)
   }
@@ -380,7 +376,7 @@ function JCMap(target = 'map', options = {}) {
       const mapEventName = /\((.+)\)/.exec(currentEventObject.eventName)
       console.log(isJCMarkerEvent ? mapEventName[1] : currentEventObject.eventName)
       map.un(isJCMarkerEvent ? mapEventName[1] : currentEventObject.eventName, currentEventObject.handler)
-
+      // map.unset('JCMarkerEventName')
       this.JCEvents.splice(index, 1)
       callBack && callBack()
     }
