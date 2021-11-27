@@ -254,6 +254,34 @@ function JCMap(target = 'map', options = {}) {
 
   this.getKeys = map.getKeys.bind(map)
 
+  // 获取当前层级
+  this.getZoom = function () {
+    return this.view.getZoom()
+  }
+
+  // 设置当前层级
+  this.setZoom = function (zoom) {
+    // console.log(this.getZoom(), maxZoom, minZoom)
+    this.view.animate({ zoom, duration: 500 })
+  }
+
+  // 设置地图中心
+  this.setCenter = function (coord, zoom = 0) {
+    const viewCenter = coord || (this.center() ? this.center() : [0, 0])
+    zoom = zoom || this.getZoom()
+    this.view.setCenter(viewCenter)
+    this.setZoom(zoom)
+  }
+
+  // 定位到目标位置
+  this.panTo = function (coord) {
+    this.view.animate({
+      // 只设置需要的属性即可
+      center: coord, // 中心点
+      // zoom: this.getZoom(), // 缩放级别
+      duration: 400, // 缩放持续时间，默认不需要设置
+    })
+  }
   // 获取默认marker图层
   this.getMarkerVectorLayer = () => {
     return this.getLayers()
@@ -499,35 +527,6 @@ function JCMap(target = 'map', options = {}) {
   this.clearOverlays = () => {
     const overlays = map.getOverlays()
     overlays.forEach((item) => this.removeOverlay(item))
-  }
-
-  // 获取当前层级
-  this.getZoom = function () {
-    return this.view.getZoom()
-  }
-
-  // 设置当前层级
-  this.setZoom = function (zoom) {
-    // console.log(this.getZoom(), maxZoom, minZoom)
-    this.view.animate({ zoom, duration: 500 })
-  }
-
-  // 设置地图中心
-  this.setCenter = function (coord, zoom = 0) {
-    const viewCenter = coord || (this.center() ? this.center() : [0, 0])
-    zoom = zoom || this.getZoom()
-    this.view.setCenter(viewCenter)
-    this.setZoom(zoom)
-  }
-
-  // 定位到目标位置
-  this.panTo = function (coord) {
-    this.view.animate({
-      // 只设置需要的属性即可
-      center: coord, // 中心点
-      // zoom: this.getZoom(), // 缩放级别
-      duration: 400, // 缩放持续时间，默认不需要设置
-    })
   }
 
   /**

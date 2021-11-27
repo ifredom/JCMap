@@ -10,6 +10,7 @@ import img3 from '../assets/image/map/m3.png'
 import { OlCluster, OlFeature } from './inherit'
 
 const defaultOptions = {
+  noClusterZoom: 18, // 在zoom及以上不聚合
   distance: 40, // 要素将聚集在一起的距离（以像素为单位）
   minDistance: 30, //  簇之间的最小距离（以像素为单位）
   showViewExtent: true, // 只展示可视区域 Marker
@@ -61,7 +62,6 @@ const defaultLabelStyle = () => ({
 // marker Text样式处理
 function createSingleTextStyle(style) {
   // console.log(style)
-
   return {
     placement: style.placement, // 默认为point
     text: style.label,
@@ -114,6 +114,7 @@ function createClusterStyle(styleCache, assignOptions, feature, resolution) {
   const size = feature.get('features').length // 获取该要素所在聚合群的要素数量
   let style = styleCache[size]
   const defaultStyle = getDefaultStyle()
+
   if (!style) {
     const textStyle = createSingleTextStyle({
       label: size.toString() || defaultStyle.label,
@@ -172,9 +173,10 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
   //获取可视区域范围的几何对象
   const viewGeometry = fromExtent(extent)
   // console.log(viewGeometry.getBottomLeft())
+
   features.forEach((feature) => {
     const markers = feature.get('features')
-
+    const showFeature = feature.get('showFeature')
     if (!markers) {
       //不存在 features 即为 单个  overlayMarker
       const overlayMarker = feature.get('overlayMarker')
@@ -203,13 +205,15 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
           }
         }
       }
+    } else if (showFeature) {
+      addOverlaysAction(map, clusterSource, markers, showViewExtent)
     }
   }, 100)
 }
 
 //创建要素聚合数据来源
 function createClusterSource(map, vectorSource, options) {
-  const { distance, minDistance, showViewExtent } = options
+  const { distance, minDistance, showViewExtent, noClusterZoom } = options
 
   // 创建要素聚合数据来源
   const clusterSource = new OlCluster({
@@ -217,7 +221,12 @@ function createClusterSource(map, vectorSource, options) {
     minDistance: parseInt(minDistance, 10),
     source: vectorSource,
     createCluster(point, features) {
-      let cluster
+      let cluster = null
+      // console.log('createCluster---------')
+      const zoom = map.getZoom()
+      const showFeature = zoom >= noClusterZoom
+      console.log(zoom)
+
       if (features.length == 1) {
         const overlayMarker = features[0].get('overlayMarker')
         // 创建聚合对象时候，只有一个聚合物情况
@@ -229,12 +238,14 @@ function createClusterSource(map, vectorSource, options) {
           : new OlFeature({
               geometry: point,
               features,
+              // showFeature,
               JCEvents: features[0].get('JCEvents'),
             })
       } else {
         cluster = new OlFeature({
           geometry: point,
           features,
+          showFeature,
           JCEvents: clusterSource.get('JCEvents'),
         })
         // console.log('cluster-------', cluster)
@@ -293,7 +304,7 @@ function createMarkerCluster(map, markers, options) {
     marker.mapOff = map.off.bind(map)
     return olMarker
   })
-  console.log(features)
+  // console.log(features)
 
   // 创建要素数据来源
   const vectorSource = new VectorSource({
@@ -499,7 +510,7 @@ function JCMarkerCluster(map, features = [], options) {
         return true
       }
     })
-    console.log(index)
+    // console.log(index)
 
     if (index !== -1) {
       this.map ? this.map.off(currentEventObject.eventName) : this.mapOff(currentEventObject.eventName)

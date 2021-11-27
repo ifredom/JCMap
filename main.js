@@ -37,25 +37,25 @@ map.on('complete', function () {
     markers.push(marker)
   }
 
-  // for (let i = 1; i <= 200; i++) {
-  // 	let coordinates = [110.07 + Math.random(), 31.07 + Math.random()]
-  // 	let marker = new JC.Marker({
-  // 		position: coordinates,
-  // 		offset: [-30, -20],
-  // 		content: buildContent()
-  // 	})
-  // 	markers.push(marker)
-  // }
+  for (let i = 1; i <= 200; i++) {
+    let coordinates = [110.07 + Math.random(), 31.07 + Math.random()]
+    let marker = new JC.Marker({
+      position: coordinates,
+      offset: [-30, -20],
+      content: buildContent(),
+    })
+    markers.push(marker)
+  }
 
-  // for (let i = 1; i <= 200; i++) {
-  //   let coordinates = [111.07 + Math.random(), 30.07 + Math.random()]
-  //   let marker = new JC.Marker({
-  //     position: coordinates,
-  //     offset: [-30, -20],
-  //     content: buildContent(),
-  //   })
-  //   markers.push(marker)
-  // }
+  for (let i = 1; i <= 200; i++) {
+    let coordinates = [111.07 + Math.random(), 30.07 + Math.random()]
+    let marker = new JC.Marker({
+      position: coordinates,
+      offset: [-30, -20],
+      content: buildContent(),
+    })
+    markers.push(marker)
+  }
 
   // for (let i = 1; i <= 10000; i++) {
   // 	let coordinates = [101.07 + Math.random(), 31.07 + Math.random()]
