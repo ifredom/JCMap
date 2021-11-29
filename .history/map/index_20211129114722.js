@@ -1,4 +1,3 @@
-import 'ol/ol.css'
 import JCGraph from './JCGraph'
 import JCMap from './JCMap'
 import JCMarker from './JCMarker'

@@ -1,21 +1,6 @@
-import 'ol/ol.css'
-
-import {  Vector as VectorLayer } from 'ol/layer'
-import { Circle as CircleStyle, Fill, Stroke, Style, RegularShape } from 'ol/style'
-import Draw, { createBox, createRegularPolygon } from 'ol/interaction/Draw'
-import Polygon, { fromExtent } from 'ol/geom/Polygon' //
-import Circle from 'ol/geom/Circle' // 圆形
-import Point from 'ol/geom/Point'
-import { MultiPoint } from 'ol/geom'
-import VectorSource from 'ol/source/Vector'
-import {  getCenter, getHeight, getWidth } from 'ol/extent'
-import { Translate } from 'ol/interaction'
-import { transform, fromLonLat } from 'ol/proj'
-import { getDistance } from 'ol/sphere'
-import Modify from 'ol/interaction/Modify'
-import { never, platformModifierKeyOnly, primaryAction } from 'ol/events/condition'
-import {  OlFeature } from './inherit'
-
+import { Fill, Icon, Stroke, Style, Text } from 'ol/style'
+import RegularShape from 'ol/style/RegularShape';
+import CircleStyle from 'ol/style/Circle';
 /**
 	 * 矢量图形类
 	 * @param {*} map 地图实例
@@ -229,7 +214,7 @@ import {  OlFeature } from './inherit'
     this.featureData = null
     const tmp = new Circle(finalPath, finalRadius)
     tmp.set('extData', extData)
-    const circle = new OlFeature(tmp)
+    const circle = new Feature(tmp)
     circle.setStyle(commonStyle(option))
     graphTool.Circle.style = commonStyle(option)
     this.source.addFeature(circle)
@@ -248,7 +233,7 @@ import {  OlFeature } from './inherit'
     }
     const tmp = new Polygon([finalPath])
     tmp.set('extData', extData)
-    const polygon = new OlFeature(tmp)
+    const polygon = new Feature(tmp)
     polygon.setStyle(commonStyle(option))
     graphTool.Polygon.style = commonStyle(option)
     this.source.addFeature(polygon)
@@ -275,7 +260,7 @@ import {  OlFeature } from './inherit'
     }
     const tmp = fromExtent(finalPath.flat())
     tmp.set('extData', extData)
-    const rectangle = new OlFeature({
+    const rectangle = new Feature({
       geometry: tmp
     })
     rectangle.setStyle(commonStyle(option))

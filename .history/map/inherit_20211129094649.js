@@ -1,5 +1,6 @@
 import { Feature, Map as _Map, View } from 'ol'
 import { Point } from 'ol/geom'
+import 'ol/ol.css'
 import Overlay from 'ol/Overlay'
 import Cluster from 'ol/source/Cluster'
 
