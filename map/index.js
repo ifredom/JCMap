@@ -3,7 +3,7 @@ import JCGraph from './JCGraph'
 import JCMap from './JCMap'
 import JCMarker from './JCMarker'
 import JCMarkerCluster from './JCMarkerCluster'
- 
+import JCOverlay from './JCOverlay'
 
 export default {
   Map: JCMap,
@@ -13,5 +13,6 @@ export default {
   // ZoomSlider: ZoomSlider,
   // Event: new Event(),
   VectorGraph: JCGraph, // 矢量图形类
-  // Search: _JCSearch // 搜索类
+  // Search: _JCSearch, // 搜索类
+  InfoOverlay: JCOverlay // 信息框覆盖物类
 }
