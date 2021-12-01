@@ -329,7 +329,7 @@ function JCMarker({ map, ...options }) {
       if (!position) return
       this.options.position = position
       this[JCTYPE].set('position', position)
-      marker.getGeometry().setCoordinates(position)
+      this[JCTYPE].getGeometry().setCoordinates(position)
     }
 
     // 设置自定义信息

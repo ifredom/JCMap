@@ -21,6 +21,16 @@ const marker = new JC.Marker({
 	rotation: -90,
 });
 
+// 按照此轨迹线行驶
+// marker.moveAlong(options.datas, 200);
+let index = 0
+ 
+setInterval(()=>{
+	const position = options.datas[index++]
+	console.log(position);
+	marker.setPosition(position)
+},300)
+
 // 高德地图例子
 // https://lbs.amap.com/demo/javascript-api/example/marker/replaying-historical-running-data/
 // marker.on('moving', function (e) {
