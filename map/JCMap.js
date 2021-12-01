@@ -475,9 +475,17 @@ function JCMap(target = 'map', options = {}) {
       this.markerLayer.getSource().addFeatures(markers)
     } else {
       // 添加单个覆盖物
-      const style = commonStyle(markers)
-      markers.setStyle(style)
-      this.markerLayer.getSource().addFeature(markers)
+      // const style = commonStyle(markers)
+      // markers.setStyle(style)
+      // this.markerLayer.getSource().addFeature(markers)
+      // 添加自定义覆盖物(有content的html字符串形式)
+      if (markers.get('overlayMarker')) {
+        let overlay = markers.get('overlayMarker')
+        map.addOverlay(overlay)
+      } else {
+        // 添加常规覆盖物，通过传img等数据进来
+        map.addOverlay(markers)
+      }
     }
   }
 

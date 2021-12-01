@@ -100,7 +100,20 @@ map.on('complete', function () {
       console.log('markers---click', e)
     })
   })
-
+  let Single = new JC.InfoOverlay({
+    center: [91.132212, 30.860361],
+    content: document.querySelector('#single-box').outerHTML,
+    offset: [-100, -146]
+  })
+  map.addOverlays(Single)
+  Single.on('click', (e) => {
+    console.log(e, e.getDisplay());
+    if (e.getDisplay() === 'block') {
+      e.hide()
+    } else {
+      e.show()
+    }
+  })
   markerClusterer.on('dblclick', function (ev) {
     console.log('markerClusterer-------')
   })

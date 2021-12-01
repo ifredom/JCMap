@@ -53,6 +53,11 @@ function OlCluster(options) {
   this.overlayIds = [] // 聚合物，单个 overlayMarker 容器
 }
 
+function OlOverlay(options) {
+  Overlay.call(this, options)
+  this.JCTYPE = 'OlOverlay'
+}
+
 inheritPrototype(OlCluster, Cluster)
 inheritPrototype(OlPoint, Point)
 inheritPrototype(OverlayMarker, Overlay)
@@ -60,5 +65,6 @@ inheritPrototype(Marker, Feature)
 inheritPrototype(OlFeature, Feature)
 inheritPrototype(OlView, View)
 inheritPrototype(OlMap, _Map)
+inheritPrototype(OlOverlay, Overlay)
 
-export { OlMap, OlView, OlFeature, OlPoint, Marker, OverlayMarker, OlCluster }
+export { OlMap, OlView, OlFeature, OlPoint, Marker, OverlayMarker, OlCluster, OlOverlay }
