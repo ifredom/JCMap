@@ -168,8 +168,9 @@ function createClusterStyle(styleCache, assignOptions, feature, resolution) {
 
 // Cluster change 单个 maker 添加
 const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
-  //获取可视区域范围
-  const extent = map.getView().calculateExtent(map.getSize())
+  //获取可视区域范围的1.2倍
+  const mapsize = map.getSize().map( it_ => it_ * 1.1 )
+  const extent = map.getView().calculateExtent(mapsize)
   //获取可视区域范围的几何对象
   const viewGeometry = fromExtent(extent)
   // console.log(viewGeometry.getBottomLeft())

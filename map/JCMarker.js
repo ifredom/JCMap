@@ -54,9 +54,8 @@ function createSingleIconStyle(style) {
     src: style.img,
     // img: style.img, // 图标的url
     rotateWithView: style.rotateWithView, // 是否旋转
-    rotation: style.rotation, // 旋转角度
+    rotation: (Math.PI / 180) * style.rotation , // 旋转角度
   }
-
   return sIconStyle
 }
 

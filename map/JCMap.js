@@ -631,6 +631,13 @@ function JCMap(target = 'map', options = {}) {
     this.setZoom(zoom + zoomNum)
   }
 
+  //获取当前屏幕的 extent
+	this.getPointExtent= function (n) {
+		n = n ? n : 1;
+		let mapsize = this.getSize().map( it_ => it_ * n )
+		return this.view.calculateExtent(mapsize)
+	}
+
   // 删除 矢量交互图
   this.removeGraph = function (draw) {
     map.removeInteraction(draw)
