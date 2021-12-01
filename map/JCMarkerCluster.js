@@ -14,7 +14,7 @@ const defaultOptions = {
   distance: 40, // 要素将聚集在一起的距离（以像素为单位）
   minDistance: 30, //  簇之间的最小距离（以像素为单位）
   showViewExtent: true, // 只展示可视区域 Marker
-  isClusterFitView: true, // 是否点击展开 Cluster
+  zoomOnClick: true, // 是否点击展开 Cluster
   icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAZCAYAAADe1WXtAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHrSURBVEjHrdW9a1NxFMbxT9qmNWmaRqlFhE6CLuIL1DcUHDqJm/0HBEUk3RQXpW7dXdysWlAEHQSlo4IoIoggFCko4lJEEaq296aNtvk5JIG2NGmSOjzbuV9+9zzPOUcIwUbCvg7uYGtD9RsVdDCSJh7iT5ofONEyFLkeJvcw/5EQCE8JvRTSjKG9KSiOdvMtz0KxAqzqK+E4cZZ3GNgQikQXV7PET9bAVmqZMMbfNPM4UxOK/iwvB5mfqQNcqTeEHcQ93EVqFRRDaWZHKS41CKzqN2GYQoYv2BtCoJNrvRRe1PnwPeFGpZ+1am5TSrGQ5CJc2E1UqlH8nJCuKFN5WS3wIIUko5DIMjVOab3CEUIbASFLeFwD+Kgct09or/b0cI54rsWXRoQ+Yhxb5X4PDy9TbKWnlyj28mC9SO1MEX9u0v0P5b+YQ9+64e/i+iniZqBHiJLk603Ulm6+P2sQeI9Slmm01Z19DO8iWmog9LmyOYcaWihZ3t5kuR40z2KWiWa21P4eCj/rTFjFnG1N7dMME3kW1wJLhANE7ZxvZUlvTxFNr4GOl82ZQqKlc9LJlZNEVeBseVRjHGz5RiGZYWayAj3HQoZbmz58OD1A9JqQ4hdym4ZWIvaqn8UEZ//Lia5GrJP79cxZqX+cR1gC9S9TwAAAAABJRU5ErkJggg==', // 默认 marker icon 图标
 }
 
@@ -169,7 +169,7 @@ function createClusterStyle(styleCache, assignOptions, feature, resolution) {
 // Cluster change 单个 maker 添加
 const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
   //获取可视区域范围的1.2倍
-  const mapsize = map.getSize().map( it_ => it_ * 1.1 )
+  const mapsize = map.getSize().map((it_) => it_ * 1.2)
   const extent = map.getView().calculateExtent(mapsize)
   //获取可视区域范围的几何对象
   const viewGeometry = fromExtent(extent)
@@ -177,7 +177,8 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
 
   features.forEach((feature) => {
     const markers = feature.get('features')
-    const showFeature = feature.get('showFeature')
+    const showZoomFeature = feature.get('showZoomFeature')
+
     if (!markers) {
       //不存在 features 即为 单个  overlayMarker
       const overlayMarker = feature.get('overlayMarker')
@@ -206,7 +207,8 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
           }
         }
       }
-    } else if (showFeature) {
+    } else if (showZoomFeature) {
+      //处理zoom 不聚合情况
       addOverlaysAction(map, clusterSource, markers, showViewExtent)
     }
   }, 100)
@@ -225,13 +227,12 @@ function createClusterSource(map, vectorSource, options) {
       let cluster = null
       // console.log('createCluster---------')
       const zoom = map.getZoom()
-      const showFeature = zoom >= noClusterZoom
-      console.log(zoom)
+      const showZoomFeature = zoom >= noClusterZoom
+      // console.log(zoom)
 
       if (features.length == 1) {
         const overlayMarker = features[0].get('overlayMarker')
         // 创建聚合对象时候，只有一个聚合物情况
-
         cluster = overlayMarker
           ? new OlFeature({
               overlayMarker,
@@ -239,14 +240,13 @@ function createClusterSource(map, vectorSource, options) {
           : new OlFeature({
               geometry: point,
               features,
-              // showFeature,
               JCEvents: features[0].get('JCEvents'),
             })
       } else {
         cluster = new OlFeature({
           geometry: point,
           features,
-          showFeature,
+          showZoomFeature,
           JCEvents: clusterSource.get('JCEvents'),
         })
         // console.log('cluster-------', cluster)
@@ -331,7 +331,7 @@ function createMarkerCluster(map, markers, options) {
 }
 
 function JCMarkerCluster(map, features = [], options) {
-  map.markerCluster = this
+  if (!map || map.JCTYPE !== 'MAP') throw new Error('JCMarkerCluster warn: 请传入正确的map对象~')
 
   const JCTYPE = 'MARKERCLUSTER'
 
@@ -339,9 +339,11 @@ function JCMarkerCluster(map, features = [], options) {
 
   const { clusterLayer, assignOptions } = createMarkerCluster(map, features, options) // 聚合图层
 
+  map.markerCluster = this // map 上添加 markerCluster
+
   this.JCTYPE = JCTYPE
 
-  this[JCTYPE] = clusterLayer // 聚合图层
+  this.olTarget = clusterLayer // 聚合图层
 
   this.options = assignOptions
 
@@ -353,17 +355,17 @@ function JCMarkerCluster(map, features = [], options) {
 
   this.getMaxZoom = () => this.getView().getMaxZoom() // 获取地图设置的最大放大
 
-  this.getVectorSource = () => this[JCTYPE].getSource().getSource() //  Marker集合数据对象
+  this.getVectorSource = () => this.olTarget.getSource().getSource() //  Marker集合数据对象
 
-  this.getClusterSource = () => this[JCTYPE].getSource() //  聚合物集合数据对象
+  this.getClusterSource = () => this.olTarget.getSource() //  聚合物集合数据对象
 
   this.getDistance = () => this.getClusterSource().getDistance() // 聚合的距离
 
-  this.setDistance = (distance) => this[JCTYPE].getSource().setDistance(distance)
+  this.setDistance = (distance) => this.olTarget.getSource().setDistance(distance)
 
-  this.getMinDistance = () => this[JCTYPE].getSource().getMinDistance() // 聚合物的最小间距
+  this.getMinDistance = () => this.olTarget.getSource().getMinDistance() // 聚合物的最小间距
 
-  this.setMinDistance = (minDistance) => this[JCTYPE].getSource().setMinDistance(minDistance)
+  this.setMinDistance = (minDistance) => this.olTarget.getSource().setMinDistance(minDistance)
 
   // 获取聚合类的所有基础Marker集合
   this.getMarkers = () => {
@@ -375,7 +377,7 @@ function JCMarkerCluster(map, features = [], options) {
     const distance = this.getDistance()
     const minDistance = this.getMinDistance()
     if (Array.isArray(features) && features.length > 0) {
-      this[JCTYPE] && this.map.removeLayer(this[JCTYPE])
+      this.olTarget && this.map.removeLayer(this.olTarget)
 
       const { clusterLayer, assignOptions } = createMarkerCluster(this.map, features, {
         distance,
@@ -384,9 +386,9 @@ function JCMarkerCluster(map, features = [], options) {
 
       this.options = assignOptions
 
-      this[JCTYPE] = clusterLayer
+      this.olTarget = clusterLayer
 
-      return this[JCTYPE]
+      return this.olTarget
     }
   }
 
@@ -479,7 +481,7 @@ function JCMarkerCluster(map, features = [], options) {
       this.map.on(eventObject.eventName, eventObject.callBack)
       // 给所有 clusterSource添加 JCEvents
       eventObject.handler = (e) => {
-        this.options.isClusterFitView && this.setClusterExtentView(e.event)
+        this.options.zoomOnClick && this.setClusterExtentView(e.event)
         eventObject.callBack({
           type: e.type,
           layer: e.target,
@@ -490,12 +492,12 @@ function JCMarkerCluster(map, features = [], options) {
       this.JCEvents.push(eventObject.eventName)
 
       //监听事件 - JCMap 处理成 cliclk
-      this[JCTYPE].on(eventName, eventObject.handler)
+      this.olTarget.on(eventName, eventObject.handler)
     } else {
       // // //移除相同的事件
-      this[JCTYPE].un(eventName, currentEventObject.handler)
+      this.olTarget.un(eventName, currentEventObject.handler)
       // //监听事件
-      this[JCTYPE].on(eventName, currentEventObject.handler)
+      this.olTarget.on(eventName, currentEventObject.handler)
     }
     //设置 JCEvents
     clusterSource.set('JCEvents', this.JCEvents)
@@ -515,8 +517,8 @@ function JCMarkerCluster(map, features = [], options) {
 
     if (index !== -1) {
       this.map ? this.map.off(currentEventObject.eventName) : this.mapOff(currentEventObject.eventName)
-      this[JCTYPE].un(eventName, currentEventObject.callBack)
-      this[JCTYPE].unset('JCEvents')
+      this.olTarget.un(eventName, currentEventObject.callBack)
+      this.olTarget.unset('JCEvents')
       this.JCEvents.splice(index, 1)
       clusterSource.set('JCEvents', this.JCEvents)
       callBack && callBack()

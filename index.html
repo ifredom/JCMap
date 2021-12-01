@@ -1,61 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JCMap</title>
+    <style>
+      .box-container {
+        position: absolute;
+        text-align: center;
+      }
+      .single-box {
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        background-color: #fff;
+        z-index: 999;
+        border: 1px solid #eee;
+        font-size: 12px;
+        width: 200px;
+        height: 121px;
+      }
+      .title {
+        background-color: #ddd;
+        border-bottom: #eee;
+        line-height: 25px;
+        height: 25px;
+        font-size: 15px;
+        margin-bottom: 10px;
+        padding: 0 10px;
+      }
+    </style>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JCMap</title>
-  <style>
-  .box-container {
-  position: absolute;
-  text-align: center;
-  }
-  .single-box {
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  background-color: #fff;
-  z-index: 999;
-  border: 1px solid #eee;
-  font-size: 12px;
-  width: 200px;
-  height: 121px;
-
-  }
-  .title {
-  background-color: #ddd;
-  border-bottom: #eee;
-  line-height: 25px;
-  height: 25px;
-  font-size: 15px;
-  margin-bottom: 10px;
-  padding: 0 10px;
-  }
-  </style>
-</head>
-
-<body>
-  <div id="app">
-    <div style="display: none;">
-      <div class="single-box" id="single-box">
-        <div class="title">
-        添加标记
+  <body>
+    <div id="app">
+      <div style="display: none">
+        <div class="single-box" id="single-box">
+          <div class="title">添加标记</div>
         </div>
       </div>
+      <div id="map" style="height: 600px"></div>
     </div>
-    <div id="map" style=" height: 600px;"></div>
-  </div>
-
-  <!-- <script type="module" src="/main.js"></script> -->
-  <!-- <script type="module" src="/ol.js"></script> -->
-  <label for="speed">
-    speed:&nbsp;
-    <input id="speed" type="range" min="10" max="999" step="10" value="60">
-  </label>
-  <button id="start-animation">Start Animation</button>
-  <!-- <script type="module" src="/markerAnimation.js"></script> -->
-  <script type="module" src="/NavigationLine.js"></script>
-   
- 
-</body>
-
+    <label for="speed">
+      speed:&nbsp;
+      <input id="speed" type="range" min="10" max="999" step="10" value="60" />
+    </label>
+    <button id="start-animation">Start Animation</button>
+    <script type="module" src="/main.js"></script>
+    <!-- <script type="module" src="/ol.js"></script> -->
+    <!-- <script type="module" src="/markerAnimation.js"></script> -->
+    <!-- <script type="module" src="/NavigationLine.js"></script> -->
+  </body>
 </html>

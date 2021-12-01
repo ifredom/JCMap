@@ -103,18 +103,18 @@ map.on('complete', function () {
   let Single = new JC.InfoOverlay({
     center: [91.132212, 30.860361],
     content: document.querySelector('#single-box').outerHTML,
-    offset: [-100, -146]
+    offset: [-100, -146],
   })
   map.addOverlays(Single)
   Single.on('click', (e) => {
-    console.log(e, e.getDisplay());
+    console.log(e, e.getDisplay())
     if (e.getDisplay() === 'block') {
       e.hide()
     } else {
       e.show()
     }
   })
-  markerClusterer.on('dblclick', function (ev) {
+  markerClusterer.on('click', function (ev) {
     console.log('markerClusterer-------')
   })
   // marker3.on('click', (e) => {
@@ -141,10 +141,10 @@ map.on('complete', function () {
     markerClusterer.removeMarker(marker2, marker3)
     // markerClusterer.clearMarkers()
     // console.log(markerClusterer.getMarkers())
-    markerClusterer.on('click')
-    markerClusterer.on('contextmenu', (e) => {
-      console.log('contextmenu--------', e)
-    })
+    // markerClusterer.on('click')
+    // markerClusterer.on('contextmenu', (e) => {
+    //   console.log('contextmenu--------', e)
+    // })
     // markers.forEach((marker) => {
     //   marker.off('click')
     // })

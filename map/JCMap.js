@@ -364,7 +364,7 @@ function JCMap(target = 'map', options = {}) {
                 )
                 // console.log(isJCClusterEventName, e.type)
                 isJCClusterEventName &&
-                  this.markerCluster.MARKERCLUSTER.dispatchEvent({
+                  this.markerCluster.olTarget.dispatchEvent({
                     type: e.type,
                     event: olFeature,
                   })
@@ -632,11 +632,11 @@ function JCMap(target = 'map', options = {}) {
   }
 
   //获取当前屏幕的 extent
-	this.getPointExtent= function (n) {
-		n = n ? n : 1;
-		let mapsize = this.getSize().map( it_ => it_ * n )
-		return this.view.calculateExtent(mapsize)
-	}
+  this.getPointExtent = function (n) {
+    n = n ? n : 1
+    let mapsize = this.getSize().map((it_) => it_ * n)
+    return this.view.calculateExtent(mapsize)
+  }
 
   // 删除 矢量交互图
   this.removeGraph = function (draw) {
