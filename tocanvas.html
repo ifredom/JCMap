@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+
+<body>
+
+</body>
+<script type="module">
+
+  // const arrowright = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAS5JREFUWEft1i9rQlEYgPHnNuuqeV/AbF0WGUNXBFkybCCGWQazLMwyRItBxmAgsy2YDVbb2urKPoAsjxfecDlc5n3POXAn3Bvvv+d3XriHm1DwkRTcpwSUEziqCYwyvpisc6YPyzqBR+A2VegDE1PRudkKkMenwHXqPV3gxRfhA5DWArhKRZvAuw/CFyCtJXCp0T3QADZWRAigArxpWLpfwDmwsyBCANI5AVbAmUY/gAvgMy8iFCCdqiLqGt0CLeA7DyIGQDqniqhpdK2In0OIWADpyKZ0nwq2FfWnIRbAjXeA10Orl+sxAG5c9ofnPPEYADfeA+Z546EAN34DzCzxEIAbHwBP1rgvwI0PgbFP3Afgxu+AB9+4FfAvfkhCFpv5bIx9IAhVAsoJFD6BX7gUJyGR1u7TAAAAAElFTkSuQmCC"
+  const arrowright = "https://pic4.zhimg.com/869cf812c5a1beb827d723e6332748a1_m.jpg";
+  // const arrowright = "./assets/arrowright.svg";
+  async function imgToCanvas(src){
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const img = new Image();
+    img.crossOrigin = 'anonymous';  //图片转canvas
+    img.src = src
+ 
+        context.drawImage(img, 0, 0);
+        context.getImageData(0, 0, img.width, img.height);
+
+    // return new Promise((resolve,reject)=>{
+    //   img.onload = function () {
+    //     context.drawImage(img, 0, 0);
+    //     context.getImageData(0, 0, img.width, img.height);
+    //     resolve(canvas)
+    //   };
+    //   img.onerror = function () {
+    //     reject()
+    //   };
+    // })
+
+  }
+
+  const canvas =  await imgToCanvas(arrowright) 
+  
+console.log(canvas);
+
+</script>
+
+</html>
