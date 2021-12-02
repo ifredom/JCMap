@@ -381,7 +381,7 @@ function JCMarkerCluster(map, features = [], options) {
       if (Array.isArray(args[0])) {
         this.addMarker(...args[0])
       } else {
-        args[0].JCTYPE === 'OVERLAYMARKER' && this.getVectorSource().addFeature(args[0].olTarget)
+        (args[0].JCTYPE === 'OVERLAYMARKER' || args[0].JCTYPE === 'MARKER') && this.getVectorSource().addFeature(args[0].olTarget)
       }
     } else {
       const markers = args.map((marker) => {
@@ -400,13 +400,10 @@ function JCMarkerCluster(map, features = [], options) {
       // 单参数或者数组
       if (Array.isArray(args[0])) {
         this.removeMarker(...args[0])
-      } else if (args[0].JCTYPE === 'MARKER') {
+      } else if (args[0].JCTYPE === 'MARKER' || args[0].JCTYPE === 'OVERLAYMARKER') {
         // removeFeature 时候 触发 change 事件，并且会 remove overlayMarker
         this.getVectorSource().removeFeature(args[0].olTarget)
-      } else if (args[0].JCTYPE === 'OVERLAYMARKER') {
-        // removeFeature 时候 触发 change 事件，并且会 remove overlayMarker
-        this.getVectorSource().removeFeature(args[0].olTarget)
-      }
+      }  
     } else {
       // 多个参数
       args.forEach((marker) => this.removeMarker(marker))

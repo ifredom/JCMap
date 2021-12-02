@@ -6,7 +6,6 @@ function createOverlay(center, content, extData, img, offset, position) {
   container.innerHTML = content // 用户自定义盒子
   let imgBox = document.createElement("img") // overlay图标
   imgBox.src = img
-  // this.resetOffset = [-Math.floor(imgBox.naturalWidth / 2), -imgBox.naturalHeight]
   container.appendChild(imgBox)
   container.style.zIndex = 10
   const over = new OlOverlay({
@@ -163,13 +162,6 @@ function createOverlay(center, content, extData, img, offset, position) {
           bindEvent(eventObject) //绑定事件
         }
       }
-
-    
-
-    // 点击图片 进行后续操作
-    // dom.querySelector('img').addEventListener(type, e => {
-    //   callBack && callBack(target, 'overlay')
-    // })
   }
   //事件移除
   this.off = (eventName) => {
