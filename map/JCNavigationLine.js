@@ -20,7 +20,7 @@ class JCNavigationLine {
 	constructor(opt, map) {
 		this.id = opt.id ? opt.id : getUid(opt)
 		this.datas = opt.datas
-		this.olMap = map['MAP']
+		this.olMap = map.olTarget
 		this.points_extent = new Array(4)
 		this.viewZoom = map.getView().getZoom()
 		this.default_style_opt = {

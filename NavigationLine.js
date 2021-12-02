@@ -25,11 +25,16 @@ const marker = new JC.Marker({
 // marker.moveAlong(options.datas, 200);
 let index = 0
  
-setInterval(()=>{
-	const position = options.datas[index++]
-	console.log(position);
-	marker.setPosition(position)
-},300)
+// setInterval(()=>{
+// 	const position = options.datas[index++]
+// 	console.log(position);
+// 	marker.setPosition(position)
+// },300)
+
+// marker.on('moving', function (e) {
+// 	// passedPolyline.setPath(e.passedPath);
+// });
+
 
 // 高德地图例子
 // https://lbs.amap.com/demo/javascript-api/example/marker/replaying-historical-running-data/
