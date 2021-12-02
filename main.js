@@ -91,7 +91,6 @@ map.on('complete', function () {
 		}'>overlayMarker </div>`, //设置文本标注内容
   })
 
-  // markerClusterer.addMarker(marker2, marker3)
   markerClusterer.addMarker([marker2, marker3])
 
   markers.forEach((marker) => {
@@ -121,7 +120,13 @@ map.on('complete', function () {
   //   console.log('marker3--------', e)
   // })
   // console.log(markerClusterer.getMarkers())
-
+  map.on('click', (e) => {
+    let marker = new JC.Marker({
+      position: e.coordinate,
+      offset: [-30, -20]
+    })
+    map.addMarker(marker)
+  })
   map.on('dblclick', function (ev) {
     console.log('map---2222222222222', ev.coordinate, map.getZoom())
 
