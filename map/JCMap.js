@@ -474,18 +474,45 @@ function JCMap(target = 'map', options = {}) {
       })
       this.markerLayer.getSource().addFeatures(markers)
     } else {
-      // 添加单个覆盖物
-      // const style = commonStyle(markers)
-      // markers.setStyle(style)
-      // this.markerLayer.getSource().addFeature(markers)
-      // 添加自定义覆盖物(有content的html字符串形式)
-      if (markers.get('overlayMarker')) {
-        let overlay = markers.get('overlayMarker')
-        map.addOverlay(overlay)
-      } else {
-        // 添加常规覆盖物，通过传img等数据进来
-        map.addOverlay(markers)
+      // MARKER => 普通覆盖物, OVERLAYMARKER => 聚合覆盖物
+			if (markers.JCTYPE !== 'MARKER') {
+				const overlay = markers.get('overlayMarker')
+				map.addOverlay(overlay)
+			} else {
+				// 添加常规覆盖物，通过传img等数据进来
+				// map.addOverlay(markers)
+        this.markerLayer.getSource().addFeature(markers.olTarget)
+			}
+
+    }
+  }
+
+  /**
+   * 移除对应的覆盖物
+   * @param {*} marker
+   */
+
+   this.removeOverlays = marker => {
+    if (marker.JCTYPE === 'MARKER') {
+      this.markerLayer.getSource().removeFeature(marker.olTarget)
+    } else {
+      if (marker.get('overlayMarker')) {
+        map.removeOverlay(marker.get('overlayMarker'))
+        map.getMarkerClusterer() && map.getMarkerClusterer().removeMarker(marker)
       }
+    }
+  }
+
+
+  /**
+   * 清除地图上所有覆盖物
+   */
+   this.clearOverlays = () => {
+    const overlays = map.getOverlays()
+    overlays.getArray().forEach(item => this.removeOverlays(item))
+    // 清除常用配置 feature
+    if (this.markerLayer) {
+      this.markerLayer.getSource().clear()
     }
   }
 
@@ -527,14 +554,6 @@ function JCMap(target = 'map', options = {}) {
       // 多个参数
       args.forEach((marker) => this.removeMarker(marker))
     }
-  }
-
-  /**
-   * 清除地图上所有覆盖物
-   */
-  this.clearOverlays = () => {
-    const overlays = map.getOverlays()
-    overlays.forEach((item) => this.removeOverlay(item))
   }
 
   /**
