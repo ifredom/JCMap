@@ -2,14 +2,15 @@
 
 import { Fill, Icon, Stroke, Style, Text } from 'ol/style'
 import { Marker, OlPoint, OverlayMarker } from './inherit'
-
+import { Point } from 'ol/geom'
+ 
 const defaultOptions = {
 	// 坐标系
 	id: null, //id
 	position: [0, 0], // 坐标经纬度
 	content: '', // overlayMarker 内容
 	offset: [0, 0], //偏移量
-	zIndex: 2, // 层级
+	zIndex: 2, // 矢量图形层级
 	extData: {}, //自定义信息
 	projection: 'EPSG:4326',
 	overlayMarker:{
@@ -164,19 +165,20 @@ function createMarkerStyle(style) {
 }
 
 // 创建 OverlayMarker Element
-function createOverlayMarkerElement(content, id) {
+function createOverlayMarkerElement(content, id , style) {
 	const container = document.createElement('div')
 	container.innerHTML = content
-	container.style.zIndex = defaultOptions.overlayMarker.zIndex
+	container.style.zIndex = style.zIndex
 	container.setAttribute('id', `jcmap-marker-${id}`)
 	return container
 }
 
 // 创建 OverlayMarker
 function createOverlayMarker(options) {
-	const { content = '', position = [0, 0], offset = [0, 0], id = '' } = options
+ 
+	const { content = '', position = [0, 0], offset = [0, 0], id = '', } = options
 
-	const element = createOverlayMarkerElement(content, id)
+	const element = createOverlayMarkerElement(content, id, options.style.overlayMarker )
 	const overlayMarker = new OverlayMarker({
 		id,
 		position,
@@ -188,10 +190,10 @@ function createOverlayMarker(options) {
 		autoPanAnimation: {
 			duration: 250
 		},
+		positioning: 'center-center', // 图形位于点的中心
 		autoPanMargin: 20, // 平移动画开启后，距离可视区域边距
 		className: 'ol-overlay-container ol-selectable' // all OverlayMarker className
 	})
-
 	return overlayMarker
 }
 
@@ -214,15 +216,32 @@ function createMarker(options, type) {
 		const overlayMarker = createOverlayMarker(options)
 		options.overlayMarker = overlayMarker
 		marker.set('overlayMarker', overlayMarker)
+		// 去除原本 geometry
+		// marker.setGeometry(new Point([options.position]))
+		// console.log(marker);
 	}
 
 	return marker
 }
 
+// JCMarker 共享数据
+
+function JCMarkerBus(){
+
+	this.zIndexs = {}
+
+	this.maxZIndex = 1
+
+}
+
+let _JCMarkerBus = new JCMarkerBus()
+
 function JCMarker({ map, ...options }) {
+
 	const assignOptions = Object.assign({}, defaultOptions, { ...options })
 
 	const markerOptions = setMarkerOptions(assignOptions)
+
 
 	this.JCTYPE = !!markerOptions.content ? 'OVERLAYMARKER' : 'MARKER'
 
@@ -231,6 +250,8 @@ function JCMarker({ map, ...options }) {
 	this.options = markerOptions
 
 	this.map = map
+
+	this._listion = ''
 
 	this.getId = function () {
 		return this.options.id
@@ -262,6 +283,7 @@ function JCMarker({ map, ...options }) {
 		this.olTarget.set('overlayMarker', null)
 	}
 
+	
 	if (this.JCTYPE === 'MARKER') {
 		//矢量marker
 		const events = ['singleclick', 'click', 'dblclick', 'contextmenu'] // 支持的事件
@@ -460,17 +482,36 @@ function JCMarker({ map, ...options }) {
 			}
 		}
 
-		// 置顶-待完善
+		// 置顶
 		this.setTop = function () {
-			// const element = this.getElement()
-			// let zIndex = element.style.zIndex
-			// element.style.zIndex = ++zIndex
-			// if(this.zIndex < JCMarker.zIndex){
-			// 	this.zIndex = ++JCMarker.zIndexs
-			// }
+			const id = this.getId()
+			const overlayElement = this.getOverlayElement()
+			//循环遍历出最大层级 maxZIndex
+			for (const key in _JCMarkerBus.zIndexs) {
+				if (Object.hasOwnProperty.call(_JCMarkerBus.zIndexs, key)) {
+					const markerZIndex = _JCMarkerBus.zIndexs[key];
+					if(markerZIndex > _JCMarkerBus.maxZIndex){
+						_JCMarkerBus.maxZIndex = markerZIndex
+					}else if(markerZIndex === _JCMarkerBus.maxZIndex && key!==id){
+						_JCMarkerBus.maxZIndex = markerZIndex + 1
+					}
+				}
+			}
+			overlayElement.style.zIndex = _JCMarkerBus.maxZIndex
+			_JCMarkerBus.zIndexs[id] = _JCMarkerBus.maxZIndex
 		}
+
 		/**
-		 * 获取html dom结构
+		 * 获取 OverlayElement dom
+		 * @returns
+		 */
+
+		this.getOverlayElement = function () {
+			return this.options.overlayMarker.element
+		}
+
+		/**
+		 * 获取 element dom
 		 * @returns
 		 */
 		this.getElement = function () {
@@ -502,6 +543,7 @@ function JCMarker({ map, ...options }) {
 		}
 	}
 
+ 
 	// 初始化添加map
 	if (this.map && this.map.JCTYPE === 'MAP') {
 
@@ -510,6 +552,7 @@ function JCMarker({ map, ...options }) {
 		this.map.overlayMarkerStyle = defaultOptions.overlayMarker.zIndex
 
 	}
+
 }
 
 export default JCMarker

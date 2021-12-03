@@ -131,13 +131,13 @@ function inintMarkerClusterer(map) {
 	// 	markers.push(marker)
 	// }
 	const markerClusterer = new JC.MarkerCluster(map, markers)
-
+  console.log(markerClusterer);
 	return markerClusterer
 }
 
 
 let marker3 = new JC.Marker({
-  position: [112.76034654153298, 33.59101293004363],
+  position: [112.76034654153298*1.02, 33.59101293004363*1.03],
   offset: [-30, -20],
   content: `<div style='font-size: 12px;
         line-height:1;
@@ -148,19 +148,34 @@ let marker3 = new JC.Marker({
 })
 
 
-map.addMarker(marker2,marker3)
+let marker4 = new JC.Marker({
+  position: [112.76034654153298*1.05, 33.59101293004363*1.05],
+  offset: [-30, -20],
+  content: `<div style='font-size: 12px;
+        line-height:1;
+        background-color: #FFF;
+        border: 1px solid blue;
+        padding: 2px 3px;
+    }'>overlayMarker22222222 </div>` //设置文本标注内容
+})
+
+map.addMarker(marker1,marker2,marker3,marker4)
 
 marker3.on('click',()=>{
   marker3.setTop()
-  console.log(marker2,marker3);
+  // console.log(marker3.getOverlayElement());
+  console.log('marker3-------click')
 })
 
 marker2.on('click', function (ev) {
   marker2.setTop()
-  console.log('marker2-------click', marker2,marker3)
+  console.log('marker2-------click')
 })
 
-
+marker4.on('click', function (ev) {
+  marker4.setTop()
+  console.log('marker4-------click')
+})
 
 // map.addMarker(marker2)
 // setTimeout(()=>{
@@ -192,9 +207,20 @@ Single.on('click', e => {
 
 map.on('click', function (ev) {
 	console.log('map---click', ev)
-	marker.setTop()
+	// marker.setTop()
+
+  map.addMarker(new JC.Marker({
+		position: ev.coordinate,
+		// offset: [-30, -20],
+    content: `<div style='font-size: 12px;
+    line-height:1;
+    background-color: #FFF;
+    border: 1px solid blue;
+    padding: 2px 3px;
+    }'>overlayMarker111111 </div>` //设置文本标注内容
+	}))
 })
 
 setTimeout(() => {
-	map.off('click')
+	// map.off('click')
 }, 3000)
