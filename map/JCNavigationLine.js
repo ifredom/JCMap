@@ -1,13 +1,14 @@
 import Point from 'ol/geom/Point'
 import LineString from 'ol/geom/LineString'
 import Feature from 'ol/Feature'
-import { Icon, Stroke, Style } from 'ol/style'
+import { Circle as CircleStyle,Icon, Fill ,Stroke, Style } from 'ol/style'
 import VectorSource from 'ol/source/Vector'
 import { fromLonLat ,transform} from 'ol/proj'
 import { getUid } from 'ol/util'
 import { Vector as VectorLayer } from 'ol/layer'
 import * as turf from '@turf/turf'
 import GPS from './gps'
+ 
 /**
    * 绘制带方向箭头导航线
    * @param {*} opt.style  线的样式
@@ -35,20 +36,38 @@ class JCNavigationLine {
 	init() {
 		this.olSource_line = new VectorSource()
 		this.olLayer_line = new VectorLayer({
+			className: 'jc-navigationLine-layer',
 			source: this.olSource_line,
+			zIndex: 1,
 			style: feature => {
-				let coords = feature.getGeometry().getCoordinates()
-				return [
-					new Style({
-						stroke: new Stroke({
-							color: this.style.line_stroke,
-							width: this.style.line_width
+
+					if (feature.getGeometry().getType() === 'LineString') {
+						let coords = feature.getGeometry().getCoordinates()
+						return [
+							new Style({
+								stroke: new Stroke({
+									color: this.style.line_stroke,
+									width: this.style.line_width
+								})
+							}),
+							...this.getPointsStyle(coords)
+						]
+					}else{
+						return new Style({
+							image: new CircleStyle({
+								radius: 7,
+								fill: new Fill({ color: 'black' }),
+								stroke: new Stroke({
+									color: 'white',
+									width: 2
+								})
+							})
 						})
-					}),
-					...this.getPointsStyle(coords)
-				]
+					}
+
 			}
 		})
+
 		this.olMap.addLayer(this.olLayer_line)
 	}
 	addData() {
@@ -75,8 +94,7 @@ class JCNavigationLine {
 			return [lonLat.lat,lonLat.lon]
 		})
 
-
-		console.log(coords);
+		// console.log(coords);
 		this.geo_line = new LineString(coords)
 		let fea_line = new Feature({
 			geometry: this.geo_line
@@ -84,6 +102,9 @@ class JCNavigationLine {
 		feas.push(fea_line)
 	// console.log(this.datas);
 		this.olSource_line.addFeatures(feas)
+	}
+	getfeaLine(){
+		return this.olSource_line.getFeatures()
 	}
 	getPointsStyle(coords) {
 		let this_ = this

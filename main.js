@@ -131,7 +131,7 @@ function inintMarkerClusterer(map) {
 	// 	markers.push(marker)
 	// }
 	const markerClusterer = new JC.MarkerCluster(map, markers)
-  console.log(markerClusterer);
+ 
 	return markerClusterer
 }
 

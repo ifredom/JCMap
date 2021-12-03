@@ -69,7 +69,8 @@ function createVectorLayer(features) {
 	//矢量标注图层
 	const vectorLayer = new VectorLayer({
 		source: vectorSource,
-		className: 'markerVectorLayer'
+		className: 'jc-marker-layer',
+		zIndex:1
 	})
 	return vectorLayer
 }
@@ -182,6 +183,8 @@ function initJCMap(target, options) {
 	// 默认的矢量图层
 	const vectorLayer = createVectorLayer()
 
+	// console.log('vectorLayer---' ,vectorLayer.getZIndex());
+	
 	// 地图初始化
 	return new OlMap({
 		target,
@@ -267,6 +270,10 @@ function JCMap(target = 'map', options = {}) {
 
 	this.getKeys = map.getKeys.bind(map)
 
+	this.render = map.render.bind(map)
+
+	
+
 	// 获取当前层级
 	this.getZoom = function () {
 		return this.view.getZoom()
@@ -299,7 +306,7 @@ function JCMap(target = 'map', options = {}) {
 	this.getMarkerVectorLayer = () => {
 		return this.getLayers()
 			.getArray()
-			.find(layer => layer.getClassName().indexOf('markerVectorLayer') !== -1)
+			.find(layer => layer.getClassName().indexOf('jc-marker-layer') !== -1)
 	}
 
 	// 卫星地图图层
@@ -553,10 +560,10 @@ function JCMap(target = 'map', options = {}) {
 				this.addMarker(...target)
 			} else if (target.JCTYPE === 'MARKER') {
 				const markerVectorLayer = this.getMarkerVectorLayer()
-				target.mapOff = this.off.bind(this)
 				markerVectorLayer.getSource().addFeature(target.olTarget)
 			} else if (target.JCTYPE === 'OVERLAYMARKER') {
 				const markerVectorLayer = this.getMarkerVectorLayer()
+				// target.olTarget.setGeometry(null) // 清空其自生默认矢量图其
 				markerVectorLayer.getSource().addFeature(target.olTarget)
 				this.addOverlay(target.getOverlayMarker())
 			}else if (target.JCTYPE === 'OverlayMarker') {
@@ -609,7 +616,7 @@ function JCMap(target = 'map', options = {}) {
 	 * @param {*} layer
 	 * @returns
 	 */
-	this.hasLayer = layerName => {
+	this.getLayer = layerName => {
 		return map
 			.getLayers()
 			.getArray()
@@ -621,8 +628,8 @@ function JCMap(target = 'map', options = {}) {
 	 * @param {*} overlay
 	 */
 	this.setFitView = () => {
-		const vectorGraph = this.hasLayer('VectorLayer') // 判断是否有矢量图层
-		const clusterLayer = this.hasLayer('jc-clusterer-layer') // 判断是否有聚合图层
+		const vectorGraph = this.getLayer('VectorLayer') // 判断是否有矢量图层
+		const clusterLayer = this.getLayer('jc-clusterer-layer') // 判断是否有聚合图层
 		const rectangleBox = {
 			minLng: Infinity,
 			minLat: Infinity,
@@ -714,6 +721,8 @@ function JCMap(target = 'map', options = {}) {
 	this.addGraph = function (draw) {
 		map.addInteraction(draw)
 	}
+
+ 
 }
 
 export default JCMap

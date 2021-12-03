@@ -233,7 +233,7 @@ function createClusterSource(map, vectorSource, options) {
           geometry: point,
           features,
           showZoomFeature,
-          // JCEvents: clusterSource.get('JCEvents'), // 为每个聚合要素添加 JCEvents，去除麻烦，统一设置在聚合图层
+          // JCEvents: clusterSource.get('JCEvents'), // 为每个聚合要素添加 JCEvents，去除麻烦，已经统一设置在聚合图层
         })
         cluster.setId(cluster.ol_uid)
       }
@@ -285,7 +285,6 @@ function createMarkerCluster(map, markers, options) {
 
   const features = markers.map((marker) => {
     // 聚合对象单个矢量对象需要重新注册
-    marker.mapOff = map.off.bind(map)
     return marker.olTarget
   })
   // console.log(features)
@@ -303,8 +302,9 @@ function createMarkerCluster(map, markers, options) {
 
   // 创建一个图层
   const clusterLayer = new VectorLayer({
-    className: 'ol-layer jc-clusterer-layer',
+    className: 'jc-clusterer-layer',
     source: clusterSource,
+    zIndex:1,
     style: (feature, resolution) => createClusterStyle(styleCache, assignOptions, feature, resolution),
   })
 
@@ -321,13 +321,13 @@ function JCMarkerCluster(map, features = [], options) {
 
   const { clusterLayer, assignOptions } = createMarkerCluster(map, features, options) // 聚合图层
 
-  this.JCTYPE = 'MARKERCLUSTER'
-
   this.olTarget = clusterLayer // 聚合图层
 
   this.options = assignOptions
 
   this.map = map
+
+  this.JCTYPE = 'MARKERCLUSTER'
 
   this.JCEvents = new Map() // 存储事件
 

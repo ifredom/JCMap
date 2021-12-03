@@ -216,9 +216,6 @@ function createMarker(options, type) {
 		const overlayMarker = createOverlayMarker(options)
 		options.overlayMarker = overlayMarker
 		marker.set('overlayMarker', overlayMarker)
-		// 去除原本 geometry
-		// marker.setGeometry(new Point([options.position]))
-		// console.log(marker);
 	}
 
 	return marker
