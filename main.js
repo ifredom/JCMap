@@ -66,7 +66,10 @@ function inintMarkers(map) {
 	})
 
 
-
+  marker2.on('click', function (ev) {
+    marker2.setTop()
+    console.log('marker2-------click')
+  })
 	marker1.on('click', function (ev) {
 		console.log('marker1-------click', ev)
 	})
@@ -167,10 +170,72 @@ marker3.on('click',()=>{
   console.log('marker3-------click')
 })
 
-marker2.on('click', function (ev) {
-  marker2.setTop()
-  console.log('marker2-------click')
-})
+  map.addMarker(marker2, marker3)
+  // markerClusterer.addMarker(marker2, marker3)
+
+  let Single = new JC.InfoOverlay({
+    center: [91.132212, 30.860361],
+    content: document.querySelector('#single-box').outerHTML,
+    offset: [-100, -146],
+  })
+
+  map.addOverlays(Single)
+
+  Single.on('click', (e) => {
+    console.log(e, e.getDisplay())
+    if (e.getDisplay() === 'block') {
+      e.hide()
+    } else {
+      e.show()
+    }
+  })
+
+  markerClusterer.on('click', function (ev) {
+    console.log('markerClusterer-------')
+  })
+  // marker3.on('click', (e) => {
+  //   console.log('marker3--------', e)
+  // })
+  // console.log(markerClusterer.getMarkers())
+
+  map.on('click', function (ev) {
+    console.log('map---2222222222222', ev.coordinate, map.getZoom())
+
+    // const marker = new JC.Marker({
+    // 	map,
+    // 	position: ev.coordinate
+    // })
+    // marker.setPosition(ev.coordinate)
+    // marker.setStyle({
+    // 	label: '1123label-'
+    // })
+    // console.log(marker.getStyle())
+    // console.log(marker.getStyle())
+    // marker.setTop()
+  })
+  let graph = new JC.VectorGraph(map)
+  graph.activate('Polygon')
+  graph.on('done', e => {
+    console.log(e);
+  })
+  // graph.on('click', e => {
+  //   console.log(e);
+  // })
+  setTimeout(() => {
+    // markerClusterer.removeMarker(marker2, marker3)
+    // markerClusterer.clearMarkers()
+    // console.log(markerClusterer.getMarkers())
+    // markerClusterer.on('click')
+    // markerClusterer.on('contextmenu', (e) => {
+    //   console.log('contextmenu--------', e)
+    // })
+    // markers.forEach((marker) => {
+    //   marker.off('click')
+    // })
+    // marker2.off('click')
+    // map.off('click')
+    console.log(map);
+  }, 3000)
 
 marker4.on('click', function (ev) {
   marker4.setTop()
