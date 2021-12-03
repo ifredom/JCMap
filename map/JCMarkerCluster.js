@@ -183,12 +183,13 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
           if (inViewGeometry && showViewExtent) {
             //只添加在可视区域
             clusterSource.overlayIds.push(id)
-            map.addOverlay(overlayMarker)
+            
+            map.addMarker(overlayMarker)
           }
           if (!showViewExtent) {
             // 可视区域外的也添加
             clusterSource.overlayIds.push(id)
-            map.addOverlay(overlayMarker)
+            map.addMarker(overlayMarker)
           }
         }
       }
@@ -380,8 +381,8 @@ function JCMarkerCluster(map, features = [], options) {
     if (args.length === 1) {
       if (Array.isArray(args[0])) {
         this.addMarker(...args[0])
-      } else {
-        (args[0].JCTYPE === 'OVERLAYMARKER' || args[0].JCTYPE === 'MARKER') && this.getVectorSource().addFeature(args[0].olTarget)
+      } else if((args[0].JCTYPE === 'OVERLAYMARKER' || args[0].JCTYPE === 'MARKER')) {
+        this.getVectorSource().addFeature(args[0].olTarget)
       }
     } else {
       const markers = args.map((marker) => {

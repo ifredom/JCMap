@@ -12,6 +12,9 @@ const defaultOptions = {
 	zIndex: 2, // 层级
 	extData: {}, //自定义信息
 	projection: 'EPSG:4326',
+	overlayMarker:{
+		zIndex:9
+	},
 	// 默认 marker icon 样式
 	src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAZCAYAAADe1WXtAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHrSURBVEjHrdW9a1NxFMbxT9qmNWmaRqlFhE6CLuIL1DcUHDqJm/0HBEUk3RQXpW7dXdysWlAEHQSlo4IoIoggFCko4lJEEaq296aNtvk5JIG2NGmSOjzbuV9+9zzPOUcIwUbCvg7uYGtD9RsVdDCSJh7iT5ofONEyFLkeJvcw/5EQCE8JvRTSjKG9KSiOdvMtz0KxAqzqK+E4cZZ3GNgQikQXV7PET9bAVmqZMMbfNPM4UxOK/iwvB5mfqQNcqTeEHcQ93EVqFRRDaWZHKS41CKzqN2GYQoYv2BtCoJNrvRRe1PnwPeFGpZ+1am5TSrGQ5CJc2E1UqlH8nJCuKFN5WS3wIIUko5DIMjVOab3CEUIbASFLeFwD+Kgct09or/b0cI54rsWXRoQ+Yhxb5X4PDy9TbKWnlyj28mC9SO1MEX9u0v0P5b+YQ9+64e/i+iniZqBHiJLk603Ulm6+P2sQeI9Slmm01Z19DO8iWmog9LmyOYcaWihZ3t5kuR40z2KWiWa21P4eCj/rTFjFnG1N7dMME3kW1wJLhANE7ZxvZUlvTxFNr4GOl82ZQqKlc9LJlZNEVeBseVRjHGz5RiGZYWayAj3HQoZbmz58OD1A9JqQ4hdym4ZWIvaqn8UEZ//Lia5GrJP79cxZqX+cR1gC9S9TwAAAAABJRU5ErkJggg=='
 }
@@ -62,7 +65,6 @@ function createSingleIconStyle(style) {
 // marker Text样式处理
 function createSingleTextStyle(style) {
 	// console.log(style)
-
 	return {
 		placement: style.placement, // 默认为point
 		text: style.label,
@@ -165,7 +167,7 @@ function createMarkerStyle(style) {
 function createOverlayMarkerElement(content, id) {
 	const container = document.createElement('div')
 	container.innerHTML = content
-	container.style.zIndex = 9
+	container.style.zIndex = defaultOptions.overlayMarker.zIndex
 	container.setAttribute('id', `jcmap-marker-${id}`)
 	return container
 }
@@ -460,11 +462,12 @@ function JCMarker({ map, ...options }) {
 
 		// 置顶-待完善
 		this.setTop = function () {
-			// return this.getGeometry().getCoordinates()
-			const element = this.getElement()
-			let zIndex = element.style.zIndex
-			// element
-			element.style.zIndex = ++zIndex
+			// const element = this.getElement()
+			// let zIndex = element.style.zIndex
+			// element.style.zIndex = ++zIndex
+			// if(this.zIndex < JCMarker.zIndex){
+			// 	this.zIndex = ++JCMarker.zIndexs
+			// }
 		}
 		/**
 		 * 获取html dom结构
@@ -473,6 +476,7 @@ function JCMarker({ map, ...options }) {
 		this.getElement = function () {
 			return this.options.overlayMarker.getElement()
 		}
+
 		/**
 		 * 设置 content / html
 		 */
@@ -500,7 +504,11 @@ function JCMarker({ map, ...options }) {
 
 	// 初始化添加map
 	if (this.map && this.map.JCTYPE === 'MAP') {
+
 		this.map.addMarker(this)
+
+		this.map.overlayMarkerStyle = defaultOptions.overlayMarker.zIndex
+
 	}
 }
 

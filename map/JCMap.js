@@ -97,7 +97,7 @@ function initJCMap(target, options) {
 	//创建天地图矢量底图
 	const layerTianDi = new TileLayer({
 		zIndex: 0, // 底图图层层级
-		visible: true, //底图显示隐藏
+		visible: false, //底图显示隐藏
 		className: 'ol-layer standard',
 		source: new XYZ({
 			url: getLayerUrlByData('street', wkid, token),
@@ -109,7 +109,7 @@ function initJCMap(target, options) {
 
 	const layerTianDiLabel = new TileLayer({
 		zIndex: 0, // 底图图层层级
-		visible: true, //底图显示隐藏
+		visible: false, //底图显示隐藏
 		className: 'ol-layer standard',
 		source: new XYZ({
 			url: getLayerUrlByData('street_label', wkid, token),
@@ -164,6 +164,18 @@ function initJCMap(target, options) {
 		})
 	})
 
+	//请求高德图层
+	const AMapLayer = new TileLayer({
+		zIndex: 0, // 底图图层层级
+		visible: true,
+		className: 'ol-layer standard',
+		source: new XYZ({
+			url: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}'
+		})
+	});
+
+
+
 	//默认控件
 	const controlsExtend = [fullScreen ? new FullScreen() : null, zoomSlider ? new ZoomSlider() : null]
 
@@ -173,7 +185,7 @@ function initJCMap(target, options) {
 	// 地图初始化
 	return new OlMap({
 		target,
-		layers: [satelliteTileLayer, standardTileLayer, layerTianDi, layerTianDiLabel, layerTianDiImg, layerTianDiImgLabel, vectorLayer], // 图层
+		layers: [satelliteTileLayer, standardTileLayer, layerTianDi, layerTianDiLabel, layerTianDiImg, layerTianDiImgLabel, AMapLayer,vectorLayer], // 图层
 		overlays: [], // 覆盖物
 		view: new OlView({
 			projection: 'EPSG:' + wkid,
@@ -536,14 +548,20 @@ function JCMap(target = 'map', options = {}) {
 	// map 添加 Marker
 	this.addMarker = (...args) => {
 		if (args.length === 1) {
-			if (Array.isArray(args[0])) {
-				this.addMarker(...args[0])
-			} else if (args[0].JCTYPE === 'MARKER') {
+			const target = args[0]
+			if (Array.isArray(target)) {
+				this.addMarker(...target)
+			} else if (target.JCTYPE === 'MARKER') {
 				const markerVectorLayer = this.getMarkerVectorLayer()
-				args[0].mapOff = this.off.bind(this)
-				markerVectorLayer.getSource().addFeature(args[0].olTarget)
-			} else if (args[0].JCTYPE === 'OVERLAYMARKER') {
-				this.addOverlay(args[0].getOverlayMarker())
+				target.mapOff = this.off.bind(this)
+				markerVectorLayer.getSource().addFeature(target.olTarget)
+			} else if (target.JCTYPE === 'OVERLAYMARKER') {
+				const markerVectorLayer = this.getMarkerVectorLayer()
+				markerVectorLayer.getSource().addFeature(target.olTarget)
+				this.addOverlay(target.getOverlayMarker())
+			}else if (target.JCTYPE === 'OverlayMarker') {
+				// JCMarkerCluster change 添加 Overlay, 聚合图层会自动添加删除 feature
+				this.addOverlay(target)
 			}
 		} else {
 			args.forEach(marker => this.addMarker(marker))
@@ -558,10 +576,16 @@ function JCMap(target = 'map', options = {}) {
 			if (Array.isArray(target)) {
 				target.forEach(marker => this.removeMarker(marker))
 			} else if (target.JCTYPE === 'MARKER') {
-				const markerVectorLayer = this.getMarkerVectorLayer()
-				markerVectorLayer.getSource().removeFeature(target.olTarget)
+				const markerVectorLayerSource = this.getMarkerVectorLayer().getSource()
+				if(markerVectorLayerSource.hasFeature(target.olTarget)){
+					markerVectorLayerSource.removeFeature(target.olTarget)
+				}
 			} else if (target.JCTYPE === 'OVERLAYMARKER') {
-				map.removeOverlay(target.getOverlayMarker())
+				const markerVectorLayerSource = this.getMarkerVectorLayer().getSource()
+				if(markerVectorLayerSource.hasFeature(target.olTarget)){
+					markerVectorLayerSource.removeFeature(target.olTarget)
+					map.removeOverlay(target.getOverlayMarker())
+				}
 			} else if (target.JCTYPE === 'OverlayMarker') {
 				// 处理聚合物，change 添加到map 上的 OverlayMarker,
 				map.removeOverlay(target)
