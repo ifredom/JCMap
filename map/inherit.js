@@ -1,70 +1,86 @@
-import { Feature, Map as _Map, View } from 'ol'
-import { Point } from 'ol/geom'
-import Overlay from 'ol/Overlay'
-import Cluster from 'ol/source/Cluster'
+import { Feature, Map as _Map, View } from "ol";
+import { Point, LineString } from "ol/geom";
+import Overlay from "ol/Overlay";
+import Cluster from "ol/source/Cluster";
 
 function inheritPrototype(SubClass, SuperClass) {
-  const p = Object.create(SuperClass.prototype)
-  p.constructor = SubClass
+  const p = Object.create(SuperClass.prototype);
+  p.constructor = SubClass;
   // 设置子类原型
-  SubClass.prototype = p
+  SubClass.prototype = p;
 }
 
 // 继承Map
 function OlMap(options) {
-  _Map.call(this, options)
-  this.JCTYPE = 'OlMap'
+  _Map.call(this, options);
+  this.JCTYPE = "OlMap";
 }
 
 // 继承View
 function OlView(options) {
-  View.call(this, options)
-  this.JCTYPE = 'OlView'
+  View.call(this, options);
+  this.JCTYPE = "OlView";
 }
 
 // 继承Feature
 function OlFeature(options) {
-  Feature.call(this, options)
-  this.JCTYPE = 'OlFeature'
+  Feature.call(this, options);
+  this.JCTYPE = "OlFeature";
 }
 
 // 继承Point
 function OlPoint(options) {
-  Point.call(this, options)
-  this.JCTYPE = 'OlPoint'
+  Point.call(this, options);
+  this.JCTYPE = "OlPoint";
 }
 
 // Marker继承Point
 function Marker(options) {
-  OlFeature.call(this, options)
-  this.JCTYPE = 'OlMarker'
+  OlFeature.call(this, options);
+  this.JCTYPE = "OlMarker";
 }
 
 // Marker继承Point
 function OverlayMarker(options) {
-  Overlay.call(this, options)
-  this.JCTYPE = 'OverlayMarker'
+  Overlay.call(this, options);
+  this.JCTYPE = "OverlayMarker";
 }
 
 // OlCluster 继承 Cluster
 function OlCluster(options) {
-  Cluster.call(this, options)
-  this.name = 'OlCluster'
-  this.overlayIds = [] // 聚合物，单个 overlayMarker 容器
+  Cluster.call(this, options);
+  this.name = "OlCluster";
+  this.overlayIds = []; // 聚合物，单个 overlayMarker 容器
 }
 
 function OlOverlay(options) {
-  Overlay.call(this, options)
-  this.JCTYPE = 'OlOverlay'
+  Overlay.call(this, options);
+  this.JCTYPE = "OlOverlay";
 }
 
-inheritPrototype(OlCluster, Cluster)
-inheritPrototype(OlPoint, Point)
-inheritPrototype(OverlayMarker, Overlay)
-inheritPrototype(Marker, Feature)
-inheritPrototype(OlFeature, Feature)
-inheritPrototype(OlView, View)
-inheritPrototype(OlMap, _Map)
-inheritPrototype(OlOverlay, Overlay)
+function OlLineString(options) {
+  LineString.call(this, options);
+  this.JCTYPE = "OlLineString";
+}
 
-export { OlMap, OlView, OlFeature, OlPoint, Marker, OverlayMarker, OlCluster, OlOverlay }
+inheritPrototype(OlCluster, Cluster);
+inheritPrototype(OlPoint, Point);
+inheritPrototype(OverlayMarker, Overlay);
+inheritPrototype(Marker, Feature);
+inheritPrototype(OlFeature, Feature);
+inheritPrototype(OlView, View);
+inheritPrototype(OlMap, _Map);
+inheritPrototype(OlOverlay, Overlay);
+inheritPrototype(OlLineString, LineString);
+
+export {
+  OlMap,
+  OlView,
+  OlFeature,
+  OlPoint,
+  Marker,
+  OverlayMarker,
+  OlCluster,
+  OlOverlay,
+  OlLineString,
+};
