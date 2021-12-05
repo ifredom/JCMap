@@ -286,15 +286,11 @@ function JCMarker({ map, ...options }) {
   // 暂停行驶动画
   this.pauseMove = () => {
     const vectorLayer = this.map.getVectorLayer()
-    const id = this.getId()
     const eventName = 'pauseMove'
     vectorLayer.dispatchEvent({
       type: eventName, // 订阅事件对象的名称
-      options: {
-        eventName: 'JCMarker(moving)' + id,
-        marker: this,
-        map: this.map,
-      },
+      marker: this,
+      map: this.map,
     })
   }
 
@@ -318,56 +314,13 @@ function JCMarker({ map, ...options }) {
     // this.map.on("moving", null, { path, speed });
 
     const vectorLayer = this.map.getVectorLayer()
-    return vectorLayer.dispatchEvent({
+    vectorLayer.dispatchEvent({
       type: 'moveAlong',
       path,
       speed,
       marker: this,
       map: this.map,
     })
-    this.movingObject.lastTime = Date.now()
-    // const { path, speed } = option;
-    this.movingObject.line = new OlLineString(path)
-    this.movingObject.endPos = path[0]
-    this.movingObject.position = this.olTarget.getGeometry().clone()
-    this.movingObject.speed = speed
-    this.movingObject.moveFeature = (event) => {
-      const time = event.frameState.time
-      const elapsedTime = time - this.movingObject.lastTime
-      this.movingObject.speed = Number(this.movingObject.speed)
-      this.movingObject.distance = (this.movingObject.distance + (this.movingObject.speed * elapsedTime) / 1e6) % 2
-
-      this.movingObject.lastTime = time
-
-      const currentCoordinate = this.movingObject.line.getCoordinateAt(
-        this.movingObject.distance > 1 ? 2 - this.movingObject.distance : this.movingObject.distance
-      )
-
-      this.movingObject.startPos = this.movingObject.endPos
-
-      this.movingObject.endPos = currentCoordinate
-
-      console.log(this.movingObject.distance, this.movingObject.endPos)
-
-      let point1 = turf.point(this.movingObject.startPos)
-      let point2 = turf.point(this.movingObject.endPos)
-      let bearing = turf.bearing(point1, point2)
-
-      this.setAngle(bearing - 90)
-      this.setPosition(this.movingObject.endPos)
-      // https://www.cnblogs.com/badaoliumangqizhi/p/14993860.html
-
-      this.movingObject.position.setCoordinates(this.movingObject.endPos)
-      const vectorContext = getVectorContext(event)
-
-      vectorContext.setStyle(this.olTarget.getStyle())
-      vectorContext.drawGeometry(this.movingObject.position)
-      // 请求地图在下一帧渲染
-      this.map.render()
-    }
-
-    vectorLayer.on('postrender', this.movingObject.moveFeature)
-    this.olTarget.setGeometry(null)
   }
 
   if (this.JCTYPE === 'MARKER') {

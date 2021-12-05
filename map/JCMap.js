@@ -83,12 +83,15 @@ function createVectorLayer(features) {
     line: null,
     speed: 0,
     position: null,
+    path: [],
+    isArrived: false,
     moveFeature: null,
   }
 
   vectorLayer.on('moveAlong', (e) => {
     const { path, speed, marker, map } = e
     vectorLayer.movingObject.lastTime = Date.now()
+    vectorLayer.movingObject.path = path
     vectorLayer.movingObject.line = new OlLineString(path)
     vectorLayer.movingObject.endPos = path[0]
     vectorLayer.movingObject.position = marker.olTarget.getGeometry().clone()
@@ -106,6 +109,23 @@ function createVectorLayer(features) {
         vectorLayer.movingObject.distance > 1 ? 2 - vectorLayer.movingObject.distance : vectorLayer.movingObject.distance
       )
 
+      if (vectorLayer.movingObject.distance >= 1) {
+        // moveFeatureObject.timer && clearTimeout(moveFeatureObject.timer)
+        // moveFeatureObject.passedPath.push(path[path.length - 1])
+        vectorLayer.movingObject.position.setCoordinates(vectorLayer.movingObject.path[vectorLayer.movingObject.path.length - 1])
+        marker.olTarget.setGeometry(vectorLayer.movingObject.position)
+        // moveFeatureObject.marker.olTarget.dispatchEvent({
+        //   type: moveFeatureObject.eventName,
+        //   passedPath: moveFeatureObject.passedPath,
+        //   callBack: currentEventObject.callBack,
+        //   eventName: moveFeatureObject.type, // 实际派发的事件
+        //   eventTarget: moveFeatureObject.marker.olTarget, // 实际应该接收事件ol 对象
+        // })
+        vectorLayer.un('postrender', vectorLayer.movingObject.moveFeature)
+        vectorLayer.movingObject.isArrived = true
+        return
+      }
+
       vectorLayer.movingObject.startPos = vectorLayer.movingObject.endPos
 
       vectorLayer.movingObject.endPos = currentCoordinate
@@ -116,26 +136,29 @@ function createVectorLayer(features) {
 
       marker.setAngle(bearing - 90)
       marker.setPosition(vectorLayer.movingObject.endPos)
-      // https://www.cnblogs.com/badaoliumangqizhi/p/14993860.html
 
       vectorLayer.movingObject.position.setCoordinates(vectorLayer.movingObject.endPos)
+
       const vectorContext = getVectorContext(event)
-
       vectorContext.setStyle(marker.olTarget.getStyle())
-      console.log(marker.olTarget.getStyle())
-
       vectorContext.drawGeometry(vectorLayer.movingObject.position)
+
+      // console.log(marker.olTarget.getStyle())
       // 请求地图在下一帧渲染
+
       map.render()
     }
-
+    if (vectorLayer.movingObject.isArrived) return
     vectorLayer.on('postrender', vectorLayer.movingObject.moveFeature)
     marker.olTarget.setGeometry(null)
   })
-  vectorLayer.on('stopMove', (e) => {
+
+  vectorLayer.on('pauseMove', (e) => {
     const { marker } = e
 
     marker.olTarget.setGeometry(vectorLayer.movingObject.position)
+    // console.log('pauseMove----', marker.olTarget.getStyle())
+
     vectorLayer.un('postrender', vectorLayer.movingObject.moveFeature)
   })
 

@@ -60,7 +60,6 @@ function createPolyline(options, map) {
     return styles
   })
 
-  // (feature) => {
   return featurePolyline
 }
 
