@@ -10,7 +10,9 @@ import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import VectorSource from "ol/source/Vector";
 import XYZ from "ol/source/XYZ";
 import { Fill, Icon, Style, Text } from "ol/style";
-import { OlMap, OlView } from "./inherit";
+import { OlMap, OlView, OlLineString } from "./inherit";
+import * as turf from "@turf/turf";
+import { getVectorContext } from "ol/render";
 
 const defaultMapOptions = {
   center: [0, 0], //地图中心
@@ -80,6 +82,78 @@ function createVectorLayer(features) {
     className: "jc-vector-layer",
     zIndex: 1,
   });
+
+  vectorLayer.movingObject = {
+    startPos: null,
+    endPos: null,
+    distance: 0,
+    lastTime: null,
+    line: null,
+    speed: 0,
+    position: null,
+    moveFeature: null,
+  };
+
+  vectorLayer.on("moveAlong", (e) => {
+    const { path, speed, marker, map } = e;
+    vectorLayer.movingObject.lastTime = Date.now();
+    vectorLayer.movingObject.line = new OlLineString(path);
+    vectorLayer.movingObject.endPos = path[0];
+    vectorLayer.movingObject.position = marker.olTarget.getGeometry().clone();
+
+    vectorLayer.movingObject.speed = speed;
+    vectorLayer.movingObject.moveFeature = (event) => {
+      const time = event.frameState.time;
+      const elapsedTime = time - vectorLayer.movingObject.lastTime;
+      vectorLayer.movingObject.speed = Number(vectorLayer.movingObject.speed);
+      vectorLayer.movingObject.distance =
+        (vectorLayer.movingObject.distance +
+          (vectorLayer.movingObject.speed * elapsedTime) / 1e6) %
+        2;
+
+      vectorLayer.movingObject.lastTime = time;
+
+      const currentCoordinate = vectorLayer.movingObject.line.getCoordinateAt(
+        vectorLayer.movingObject.distance > 1
+          ? 2 - vectorLayer.movingObject.distance
+          : vectorLayer.movingObject.distance
+      );
+
+      vectorLayer.movingObject.startPos = vectorLayer.movingObject.endPos;
+
+      vectorLayer.movingObject.endPos = currentCoordinate;
+
+      let point1 = turf.point(vectorLayer.movingObject.startPos);
+      let point2 = turf.point(vectorLayer.movingObject.endPos);
+      let bearing = turf.bearing(point1, point2);
+
+      marker.setAngle(bearing - 90);
+      marker.setPosition(vectorLayer.movingObject.endPos);
+      // https://www.cnblogs.com/badaoliumangqizhi/p/14993860.html
+
+      vectorLayer.movingObject.position.setCoordinates(
+        vectorLayer.movingObject.endPos
+      );
+      const vectorContext = getVectorContext(event);
+
+      vectorContext.setStyle(marker.olTarget.getStyle());
+      console.log(marker.olTarget.getStyle());
+
+      vectorContext.drawGeometry(vectorLayer.movingObject.position);
+      // 请求地图在下一帧渲染
+      map.render();
+    };
+
+    vectorLayer.on("postrender", vectorLayer.movingObject.moveFeature);
+    marker.olTarget.setGeometry(null);
+  });
+  vectorLayer.on("stopMove", (e) => {
+    const { marker } = e;
+
+    marker.olTarget.setGeometry(vectorLayer.movingObject.position);
+    vectorLayer.un("postrender", vectorLayer.movingObject.moveFeature);
+  });
+
   return vectorLayer;
 }
 
@@ -376,7 +450,6 @@ function JCMap(target = "map", options = {}) {
       map.once(eventName, (e) => callBack && callBack(e));
     } else if (eventName === "moveend") {
       map.on(eventName, (e) => callBack && callBack(e));
-    } else if (eventName === "moving") {
     } else {
       //处理 JCMarker 矢量图形自定义事件
       if (eventName.substring(0, 8) === "JCMarker") {

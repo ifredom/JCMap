@@ -2,7 +2,7 @@ import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { OlFeature, OlPoint, OlLineString } from "./inherit";
 import { toColorRgba } from "./utils";
 import { getUid } from "ol/util";
-import arrowRightImg from "../assets/arrowright.jpg";
+import arrowRightImg from "../assets/arrowright.svg";
 
 const defaultOptions = {
   path: [], // 点坐标数组

@@ -1,7 +1,15 @@
 // import { fromLonLat } from 'ol/proj'
 
-import { Fill, Icon, Stroke, Style, Text } from "ol/style";
 import { Marker, OlPoint, OverlayMarker, OlLineString } from "./inherit";
+import { getVectorContext } from "ol/render";
+import {
+  Circle as CircleStyle,
+  Icon,
+  Fill,
+  Stroke,
+  Style,
+  Text,
+} from "ol/style";
 import * as turf from "@turf/turf";
 const defaultOptions = {
   // 坐标系
@@ -292,68 +300,79 @@ function JCMarker({ map, ...options }) {
 
   // 停止行驶动画
   this.stopMove = () => {
-    vectorLayer.on("postrender", moveFeature);
+    const vectorLayer = this.map.getVectorLayer();
+    vectorLayer.dispatchEvent({
+      type: "stopMove",
+      marker: this,
+      map: this.map,
+    });
+
+    // this.olTarget.setGeometry(this.movingObject.position);
+    // vectorLayer.un("postrender", this.movingObject.moveFeature);
 
     // hide geoMarker and trigger map render through change event
-    geoMarker.setGeometry(null);
   };
 
   // 行驶动画
   this.moveAlong = (path, speed = 60) => {
     // this.map.on("moving", null, { path, speed });
+
     const vectorLayer = this.map.getVectorLayer();
-    const vectorLayerSource = vectorLayer.getSource();
-    let distance = 0;
-    let lastTime = Date.now();
-    // const { path, speed } = option;
-    const line = new OlLineString(path);
-
-    const position = this.olTarget.getGeometry().clone();
-    console.log(position.getCoordinates());
-    const geoMarker = new Marker({
-      type: "geoMarker",
-      geometry: position,
+    return vectorLayer.dispatchEvent({
+      type: "moveAlong",
+      path,
+      speed,
+      marker: this,
+      map: this.map,
     });
-
-    let startPos = null;
-
-    let endPos = path[0];
-
-    const moveFeature = (event, marker, line, speed) => {
+    this.movingObject.lastTime = Date.now();
+    // const { path, speed } = option;
+    this.movingObject.line = new OlLineString(path);
+    this.movingObject.endPos = path[0];
+    this.movingObject.position = this.olTarget.getGeometry().clone();
+    this.movingObject.speed = speed;
+    this.movingObject.moveFeature = (event) => {
       const time = event.frameState.time;
-      const elapsedTime = time - lastTime;
-      speed = Number(speed);
-      distance = (distance + (speed * elapsedTime) / 1e6) % 2;
+      const elapsedTime = time - this.movingObject.lastTime;
+      this.movingObject.speed = Number(this.movingObject.speed);
+      this.movingObject.distance =
+        (this.movingObject.distance +
+          (this.movingObject.speed * elapsedTime) / 1e6) %
+        2;
 
-      lastTime = time;
+      this.movingObject.lastTime = time;
 
-      const currentCoordinate = line.getCoordinateAt(
-        distance > 1 ? 2 - distance : distance
+      const currentCoordinate = this.movingObject.line.getCoordinateAt(
+        this.movingObject.distance > 1
+          ? 2 - this.movingObject.distance
+          : this.movingObject.distance
       );
 
-      startPos = endPos;
+      this.movingObject.startPos = this.movingObject.endPos;
 
-      endPos = currentCoordinate;
+      this.movingObject.endPos = currentCoordinate;
 
-      console.log(startPos, endPos);
+      console.log(this.movingObject.distance, this.movingObject.endPos);
 
-      let point1 = turf.point(startPos);
-      let point2 = turf.point(endPos);
+      let point1 = turf.point(this.movingObject.startPos);
+      let point2 = turf.point(this.movingObject.endPos);
       let bearing = turf.bearing(point1, point2);
 
-      marker.setAngle(bearing - 90);
-      marker.setPosition(endPos);
+      this.setAngle(bearing - 90);
+      this.setPosition(this.movingObject.endPos);
       // https://www.cnblogs.com/badaoliumangqizhi/p/14993860.html
 
-      position.setCoordinates(endPos);
+      this.movingObject.position.setCoordinates(this.movingObject.endPos);
+      const vectorContext = getVectorContext(event);
 
+      vectorContext.setStyle(this.olTarget.getStyle());
+      vectorContext.drawGeometry(this.movingObject.position);
       // 请求地图在下一帧渲染
       this.map.render();
     };
-    vectorLayerSource.addFeature(geoMarker);
-    vectorLayer.on("postrender", (event) =>
-      moveFeature(event, this, line, speed)
-    );
+
+    vectorLayer.on("postrender", this.movingObject.moveFeature);
+    this.olTarget.setGeometry(null);
   };
 
   if (this.JCTYPE === "MARKER") {
@@ -362,6 +381,18 @@ function JCMarker({ map, ...options }) {
     this.JCEvents = new Map(); // 存储事件
     //事件监听
     this.on = (eventName, callBack = () => {}) => {
+      if (eventName === "moving") {
+        this.movingObject = {
+          startPos: null,
+          endPos: null,
+          distance: 0,
+          lastTime: null,
+          line: null,
+          speed: 0,
+          position: null,
+          moveFeature: null,
+        };
+      }
       if (!eventName || typeof eventName !== "string")
         throw new Error("请传入正确的 eventName！");
       if (!events.includes(eventName))
@@ -446,7 +477,8 @@ function JCMarker({ map, ...options }) {
       if (!position) return;
       this.options.position = position;
       this.olTarget.set("position", position);
-      this.olTarget.getGeometry().setCoordinates(position);
+      this.olTarget.getGeometry() &&
+        this.olTarget.getGeometry().setCoordinates(position);
     };
 
     // 设置自定义信息
