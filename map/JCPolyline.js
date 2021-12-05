@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 import { Icon, Stroke, Style } from 'ol/style'
 import { getUid } from 'ol/util'
 import arrowRightImg from '../assets/arrowright.svg'
 import { OlFeature, OlLineString, OlPoint } from './inherit'
 import { toColorRgba } from './utils'
+=======
+import { Fill, Icon, Stroke, Style, Text } from "ol/style";
+import { OlFeature, OlPoint, OlLineString } from "./inherit";
+import { toColorRgba } from "./utils";
+import { getUid } from "ol/util";
+import arrowRightImg from "../assets/arrowright.svg";
+>>>>>>> ad42bffbfbef1d3fa2f60b997bdf177d36261bfe
 
 const defaultOptions = {
   path: [], // 点坐标数组

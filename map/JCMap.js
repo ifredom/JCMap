@@ -75,131 +75,69 @@ function createVectorLayer(features) {
     zIndex: 1,
   })
 
-  const moveAnimations = new Map()
-  const vectorLayerMoving = (e) => {
-    vectorLayer.un('moving', vectorLayerMoving)
-    const { path, speed, marker, id, map, eventName } = e.options
-    const currentEventObject = marker.JCEvents.get(eventName)
+  vectorLayer.movingObject = {
+    startPos: null,
+    endPos: null,
+    distance: 0,
+    lastTime: null,
+    line: null,
+    speed: 0,
+    position: null,
+    moveFeature: null,
+  }
 
-    const moveFeatureObject = {
-      vectorLayerEventName: 'postrender',
-      eventName: currentEventObject.eventName,
-      type: e.type,
-      callBack: currentEventObject.callBack,
-      passedPath: [],
-      path,
-      speed,
-      id,
-      map,
-      marker,
-      position: marker.olTarget.getGeometry(),
-      line: new OlLineString(path),
-      lastTime: null,
-      distance: 0,
-      startPos: null,
-      endPos: path[0],
-      timer: null,
-      handler: null,
-    }
-    moveFeatureObject.lastTime = Date.now()
+  vectorLayer.on('moveAlong', (e) => {
+    const { path, speed, marker, map } = e
+    vectorLayer.movingObject.lastTime = Date.now()
+    vectorLayer.movingObject.line = new OlLineString(path)
+    vectorLayer.movingObject.endPos = path[0]
+    vectorLayer.movingObject.position = marker.olTarget.getGeometry().clone()
 
-    moveFeatureObject.handler = function (event) {
+    vectorLayer.movingObject.speed = speed
+    vectorLayer.movingObject.moveFeature = (event) => {
       const time = event.frameState.time
-      const elapsedTime = time - moveFeatureObject.lastTime
+      const elapsedTime = time - vectorLayer.movingObject.lastTime
+      vectorLayer.movingObject.speed = Number(vectorLayer.movingObject.speed)
+      vectorLayer.movingObject.distance = (vectorLayer.movingObject.distance + (vectorLayer.movingObject.speed * elapsedTime) / 1e6) % 2
 
-      moveFeatureObject.speed = Number(moveFeatureObject.speed)
-      moveFeatureObject.distance = (moveFeatureObject.distance + (moveFeatureObject.speed * elapsedTime) / 1e6) % 2
-      moveFeatureObject.lastTime = time
+      vectorLayer.movingObject.lastTime = time
 
-      if (moveFeatureObject.distance >= 1) {
-        moveFeatureObject.timer && clearTimeout(moveFeatureObject.timer)
-        moveFeatureObject.passedPath.push(path[path.length - 1])
-        moveFeatureObject.position.setCoordinates(path[path.length - 1])
-        // marker.marker.olTarget.setGeometry(moveFeatureObject.position)
-
-        console.log('111111111')
-
-        moveFeatureObject.marker.olTarget.dispatchEvent({
-          type: moveFeatureObject.eventName,
-          passedPath: moveFeatureObject.passedPath,
-          callBack: currentEventObject.callBack,
-          eventName: moveFeatureObject.type, // 实际派发的事件
-          eventTarget: moveFeatureObject.marker.olTarget, // 实际应该接收事件ol 对象
-        })
-
-        vectorLayer.un(moveFeatureObject.vectorLayerEventName, moveFeatureObject.handler)
-        // moveFeatureObject.vectorContext = null
-
-        return false
-      }
-
-      const currentCoordinate = moveFeatureObject.line.getCoordinateAt(
-        moveFeatureObject.distance > 1 ? 2 - moveFeatureObject.distance : moveFeatureObject.distance
+      const currentCoordinate = vectorLayer.movingObject.line.getCoordinateAt(
+        vectorLayer.movingObject.distance > 1 ? 2 - vectorLayer.movingObject.distance : vectorLayer.movingObject.distance
       )
 
-      moveFeatureObject.timer = setTimeout(() => moveFeatureObject.passedPath.push(currentCoordinate), 500)
-      moveFeatureObject.startPos = moveFeatureObject.endPos
+      vectorLayer.movingObject.startPos = vectorLayer.movingObject.endPos
 
-      moveFeatureObject.endPos = currentCoordinate
+      vectorLayer.movingObject.endPos = currentCoordinate
 
-      // console.log(startPos, endPos)
-
-      let point1 = turf.point(moveFeatureObject.startPos)
-      let point2 = turf.point(moveFeatureObject.endPos)
+      let point1 = turf.point(vectorLayer.movingObject.startPos)
+      let point2 = turf.point(vectorLayer.movingObject.endPos)
       let bearing = turf.bearing(point1, point2)
 
-      moveFeatureObject.marker.setAngle(bearing - 90)
-      // marker.setPosition(currentCoordinate)
+      marker.setAngle(bearing - 90)
+      marker.setPosition(vectorLayer.movingObject.endPos)
       // https://www.cnblogs.com/badaoliumangqizhi/p/14993860.html
-      moveFeatureObject.marker.setPosition(moveFeatureObject.endPos)
-      moveFeatureObject.position.setCoordinates(moveFeatureObject.endPos)
+
+      vectorLayer.movingObject.position.setCoordinates(vectorLayer.movingObject.endPos)
       const vectorContext = getVectorContext(event)
 
-      vectorContext.setStyle(moveFeatureObject.marker.olTarget.getStyle())
+      vectorContext.setStyle(marker.olTarget.getStyle())
+      console.log(marker.olTarget.getStyle())
 
-      vectorContext.drawGeometry(moveFeatureObject.position)
+      vectorContext.drawGeometry(vectorLayer.movingObject.position)
       // 请求地图在下一帧渲染
-
-      moveFeatureObject.marker.olTarget.dispatchEvent({
-        type: currentEventObject.eventName,
-        passedPath: moveFeatureObject.passedPath,
-        callBack: currentEventObject.callBack,
-        eventName: e.type, // 实际派发的事件
-        eventTarget: moveFeatureObject.marker.olTarget, // 实际应该接收事件ol 对象
-      })
-      moveFeatureObject.map.render()
+      map.render()
     }
 
-    if (!moveAnimations.has(moveFeatureObject.eventName)) {
-      moveAnimations.set(moveFeatureObject.eventName, moveFeatureObject)
-      vectorLayer.on(moveFeatureObject.vectorLayerEventName, moveFeatureObject.handler)
-      moveFeatureObject.marker.olTarget.setGeometry(null)
-      console.log('moveFeatureObject---1', moveFeatureObject.distance)
-    } else {
-      const currentMoveFeatureObject = moveAnimations.get(moveFeatureObject.eventName)
-      console.log('currentMoveFeatureObject---3', currentMoveFeatureObject.distance)
+    vectorLayer.on('postrender', vectorLayer.movingObject.moveFeature)
+    marker.olTarget.setGeometry(null)
+  })
+  vectorLayer.on('stopMove', (e) => {
+    const { marker } = e
 
-      vectorLayer.on(currentMoveFeatureObject.vectorLayerEventName, currentMoveFeatureObject.handler)
-      currentMoveFeatureObject.marker.olTarget.setGeometry(null)
-    }
-  }
-  const vectorLayerPauseMove = (e) => {
-    const { eventName } = e.options
-    const currentMoveFeatureObject = moveAnimations.get(eventName)
-
-    currentMoveFeatureObject.timer && clearTimeout(currentMoveFeatureObject.timer)
-    currentMoveFeatureObject.passedPath.push(currentMoveFeatureObject.endPos)
-    currentMoveFeatureObject.marker.olTarget.setGeometry(currentMoveFeatureObject.position)
-    currentMoveFeatureObject.marker.setPosition(currentMoveFeatureObject.endPos)
-
-    vectorLayer.un(currentMoveFeatureObject.vectorLayerEventName, currentMoveFeatureObject.handler)
-
-    console.log('currentMoveFeatureObject---2', vectorLayer)
-  }
-
-  vectorLayer.on('moving', vectorLayerMoving)
-
-  vectorLayer.on('pauseMove', vectorLayerPauseMove)
+    marker.olTarget.setGeometry(vectorLayer.movingObject.position)
+    vectorLayer.un('postrender', vectorLayer.movingObject.moveFeature)
+  })
 
   return vectorLayer
 }
@@ -469,12 +407,6 @@ function JCMap(target = 'map', options = {}) {
       map.once(eventName, (e) => callBack && callBack(e))
     } else if (eventName === 'moveend') {
       map.on(eventName, (e) => callBack && callBack(e))
-    } else if (eventName === 'moving') {
-      // const vectorLayer = this.getVectorLayer()
-      // vectorLayer.dispatchEvent({
-      //   type: eventName, // 订阅事件对象的名称
-      //   callBack, // 订阅事件对象的回调
-      // })
     } else {
       //处理 JCMarker 矢量图形自定义事件
       if (eventName.substring(0, 8) === 'JCMarker') {
