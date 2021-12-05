@@ -308,7 +308,7 @@ function JCMap(target = 'map', options = {}) {
 
   // 事件监听
   this.on = (eventName, callBack = () => {}, option = {}) => {
-    console.log('moving', eventName)
+
     if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
     if (!events.includes(eventName) && eventName.substring(0, 8) !== 'JCMarker' && eventName.substring(0, 9) !== 'JCCluster')
       return console.warn('无效的事件：' + eventName)

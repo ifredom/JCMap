@@ -18,93 +18,6 @@ function createVectorLayer(className, features) {
     zIndex: 1,
   })
 
-  // vectorLayer.movingObject = {
-  //   startPos: null,
-  //   endPos: null,
-  //   distance: 0,
-  //   lastTime: null,
-  //   line: null,
-  //   speed: 0,
-  //   position: null,
-  //   path: [],
-  //   isArrived: false,
-  //   moveFeature: null,
-  // }
-
-  // vectorLayer.on('moveAlong', (e) => {
-  //   const { path, speed, marker, map } = e
-  //   vectorLayer.movingObject.lastTime = Date.now()
-  //   vectorLayer.movingObject.path = path
-  //   vectorLayer.movingObject.line = new OlLineString(path)
-  //   vectorLayer.movingObject.endPos = path[0]
-  //   vectorLayer.movingObject.position = marker.olTarget.getGeometry().clone()
-
-  //   vectorLayer.movingObject.speed = speed
-  //   vectorLayer.movingObject.moveFeature = (event) => {
-  //     const time = event.frameState.time
-  //     const elapsedTime = time - vectorLayer.movingObject.lastTime
-  //     vectorLayer.movingObject.speed = Number(vectorLayer.movingObject.speed)
-  //     vectorLayer.movingObject.distance = (vectorLayer.movingObject.distance + (vectorLayer.movingObject.speed * elapsedTime) / 1e6) % 2
-
-  //     vectorLayer.movingObject.lastTime = time
-
-  //     const currentCoordinate = vectorLayer.movingObject.line.getCoordinateAt(
-  //       vectorLayer.movingObject.distance > 1 ? 2 - vectorLayer.movingObject.distance : vectorLayer.movingObject.distance
-  //     )
-
-  //     if (vectorLayer.movingObject.distance >= 1) {
-  //       // moveFeatureObject.timer && clearTimeout(moveFeatureObject.timer)
-  //       // moveFeatureObject.passedPath.push(path[path.length - 1])
-  //       vectorLayer.movingObject.position.setCoordinates(vectorLayer.movingObject.path[vectorLayer.movingObject.path.length - 1])
-  //       marker.olTarget.setGeometry(vectorLayer.movingObject.position)
-  //       // moveFeatureObject.marker.olTarget.dispatchEvent({
-  //       //   type: moveFeatureObject.eventName,
-  //       //   passedPath: moveFeatureObject.passedPath,
-  //       //   callBack: currentEventObject.callBack,
-  //       //   eventName: moveFeatureObject.type, // 实际派发的事件
-  //       //   eventTarget: moveFeatureObject.marker.olTarget, // 实际应该接收事件ol 对象
-  //       // })
-  //       vectorLayer.un('postrender', vectorLayer.movingObject.moveFeature)
-  //       vectorLayer.movingObject.isArrived = true
-  //       return
-  //     }
-
-  //     vectorLayer.movingObject.startPos = vectorLayer.movingObject.endPos
-
-  //     vectorLayer.movingObject.endPos = currentCoordinate
-
-  //     let point1 = turf.point(vectorLayer.movingObject.startPos)
-  //     let point2 = turf.point(vectorLayer.movingObject.endPos)
-  //     let bearing = turf.bearing(point1, point2)
-
-  //     marker.setAngle(bearing - 90)
-  //     marker.setPosition(vectorLayer.movingObject.endPos)
-
-  //     vectorLayer.movingObject.position.setCoordinates(vectorLayer.movingObject.endPos)
-
-  //     const vectorContext = getVectorContext(event)
-  //     vectorContext.setStyle(marker.olTarget.getStyle())
-  //     vectorContext.drawGeometry(vectorLayer.movingObject.position)
-
-  //     // console.log(marker.olTarget.getStyle())
-  //     // 请求地图在下一帧渲染
-
-  //     map.render()
-  //   }
-  //   if (vectorLayer.movingObject.isArrived) return
-  //   vectorLayer.on('postrender', vectorLayer.movingObject.moveFeature)
-  //   marker.olTarget.setGeometry(null)
-  // })
-
-  // vectorLayer.on('pauseMove', (e) => {
-  //   const { marker } = e
-
-  //   marker.olTarget.setGeometry(vectorLayer.movingObject.position)
-  //   // console.log('pauseMove----', marker.olTarget.getStyle())
-
-  //   vectorLayer.un('postrender', vectorLayer.movingObject.moveFeature)
-  // })
-
   return vectorLayer
 }
 
@@ -118,7 +31,7 @@ class JCVectorLayer {
     this.olTarget = createVectorLayer(className, features)
     // 存储事件
     this.JCEvents = new Map()
-
+    // 初始化
     this.init()
   }
 
@@ -145,136 +58,186 @@ class JCVectorLayer {
     this.getFeaturesAtCoordinate = (coordinate) => this.getSource().getFeaturesAtCoordinate(coordinate)
     this.forEachFeature = (callBack) => this.getSource().forEachFeature((feature) => callBack(feature))
 
-    this.addeventlistener('moveAlong')
-    this.addeventlistener('pauseMove')
-    this.addeventlistener('resumeMove')
-    this.addeventlistener('updateMoveSpeed')
+    //添加 moving 事件监听
+    this.addeventlistener('moving')
+
     this.map.addLayer(vectorLayer)
   }
 
   //添加事件监听
   addeventlistener(type) {
-    if (type === 'moveAlong') {
-      const eventObject = {
-        startPos: null,
-        endPos: null,
-        distance: 0,
-        lastTime: null,
-        line: null,
-        speed: 0,
-        position: null,
-        path: [],
-        isArrived: false,
-        moveFeature: null,
-      }
+    if (type === 'moving') {
+      let movingCallBack = () => {}
+      this.on(type, (e) => {
+        const { eventName, callBack, path, speed, lineFeature, marker, status, updateSpeed, circlable } = e
+        movingCallBack = callBack ? callBack : movingCallBack
 
-      const moveFeatureCallBack = (e) => {
-        const { type, eventName, path, speed, marker, lineFeature } = e
+        if (status === 'startMove') {
+          console.log('startMove---1')
 
-        eventObject.lastTime = Date.now()
-        eventObject.path = path
-        eventObject.line = lineFeature.getGeometry()
-        eventObject.endPos = path[0]
-        eventObject.position = marker.getGeometry().clone()
-        eventObject.speed = speed
-        console.log(lineFeature)
-
-        eventObject.moveFeature = (event) => {
-          const time = event.frameState.time
-          const elapsedTime = time - eventObject.lastTime
-          eventObject.speed = Number(eventObject.speed)
-          eventObject.distance = (eventObject.distance + (eventObject.speed * elapsedTime) / 1e6) % 2
-
-          eventObject.lastTime = time
-
-          const currentCoordinate = eventObject.line.getCoordinateAt(eventObject.distance > 1 ? 2 - eventObject.distance : eventObject.distance)
-
-          if (eventObject.distance >= 1) {
-            // moveFeatureObject.timer && clearTimeout(moveFeatureObject.timer)
-            // moveFeatureObject.passedPath.push(path[path.length - 1])
-            eventObject.position.setCoordinates(eventObject.path[eventObject.path.length - 1])
-            marker.setGeometry(eventObject.position)
-            // moveFeatureObject.marker.olTarget.dispatchEvent({
-            //   type: moveFeatureObject.eventName,
-            //   passedPath: moveFeatureObject.passedPath,
-            //   callBack: currentEventObject.callBack,
-            //   eventName: moveFeatureObject.type, // 实际派发的事件
-            //   eventTarget: moveFeatureObject.marker.olTarget, // 实际应该接收事件ol 对象
-            // })
-            this.un('postrender', eventObject.moveFeature)
-            eventObject.isArrived = true
-            return
+          //初始化 - 行驶
+          const initEventObject = (callBack, eventName, marker, speed, path, lineFeature) => {
+            return {
+              status: 'init',
+              callBack,
+              eventName,
+              marker,
+              speed,
+              path,
+              startPos: null,
+              endPos: null,
+              distance: 0,
+              lastTime: null,
+              line: lineFeature.getGeometry(), // 线条矢量图形对象
+              position: null, // 运动矢量图形对象
+              isArrived: false,
+              moveFeature: null,
+            }
           }
 
-          eventObject.startPos = eventObject.endPos
+          const initMove = function (vectorLayer, eventObject) {
+            eventObject.lastTime = Date.now()
 
-          eventObject.endPos = currentCoordinate
+            eventObject.endPos = path[0]
 
-          let point1 = turf.point(eventObject.startPos)
-          let point2 = turf.point(eventObject.endPos)
-          let bearing = turf.bearing(point1, point2)
+            eventObject.moveFeature = (event) => {
+              const time = event.frameState.time
+              const elapsedTime = time - eventObject.lastTime
+              const speed = Number(eventObject.speed)
+              eventObject.distance = (eventObject.distance + (speed * elapsedTime) / 1e6) % 2
 
-          marker.setAngle(bearing - 90)
-          marker.setPosition(eventObject.endPos)
+              eventObject.lastTime = time
 
-          eventObject.position.setCoordinates(eventObject.endPos)
+              const currentCoordinate = eventObject.line.getCoordinateAt(eventObject.distance > 1 ? 2 - eventObject.distance : eventObject.distance)
 
-          const vectorContext = getVectorContext(event)
-          vectorContext.setStyle(marker.getOlStyle())
-          vectorContext.drawGeometry(eventObject.position)
+              if (!circlable) {
+                if (eventObject.distance >= 1) {
+                  // eventObject.timer && clearTimeout(eventObject.timer)
+                  // eventObject.passedPath.push(path[path.length - 1])
+                  eventObject.position.setCoordinates(eventObject.path[eventObject.path.length - 1])
+                  eventObject.marker.setGeometry(eventObject.position)
+                  // eventObject.marker.olTarget.dispatchEvent({
+                  //   type: eventObject.eventName,
+                  //   passedPath: eventObject.passedPath,
+                  //   callBack: currentEventObject.callBack,
+                  //   eventName: eventObject.type, // 实际派发的事件
+                  //   eventTarget: eventObject.marker.olTarget, // 实际应该接收事件ol 对象
+                  // })
+                  vectorLayer.un('postrender', eventObject.moveFeature)
+                  eventObject.isArrived = true
+                  console.log(eventObject.distance)
+                }
+                return
+              }
 
-          // console.log(marker.olTarget.getStyle())
-          // 请求地图在下一帧渲染
+              eventObject.marker.olTarget.dispatchEvent({
+                type: eventObject.eventName,
+                // passedPath: eventObject.passedPath,
+                callBack: eventObject.callBack,
+                eventName: type, // 实际派发的事件
+              })
+              eventObject.startPos = eventObject.endPos
 
-          this.map.render()
-        }
+              eventObject.endPos = currentCoordinate
 
-        if (eventObject.isArrived) return
-        if (!this.JCEvents.has(eventName)) {
-          this.on('postrender', eventObject.moveFeature)
-          this.JCEvents.set(eventName, {
-            eventObject,
-            moveFeatureCallBack,
-          })
-        } else {
-          const { eventObject } = this.JCEvents.get(eventName)
-          this.on('postrender', eventObject.moveFeature)
-        }
-        marker.setGeometry(null)
-      }
+              let point1 = turf.point(eventObject.startPos)
+              let point2 = turf.point(eventObject.endPos)
+              let bearing = turf.bearing(point1, point2)
 
-      // 监听事件
-      this.on(type, moveFeatureCallBack)
-    } else if (type === 'pauseMove') {
-      this.on(type, (e) => {
-        const { eventName, marker } = e
-        console.log('pauseMove----', eventName, this.JCEvents)
-        if (this.JCEvents.has(eventName)) {
-          const { eventObject } = this.JCEvents.get(eventName)
+              eventObject.marker.setAngle(bearing - 90)
+              eventObject.marker.setPosition(eventObject.endPos)
 
-          marker.setGeometry(eventObject.position)
+              eventObject.position.setCoordinates(eventObject.endPos)
 
-          this.un('postrender', eventObject.moveFeature)
-        }
-      })
-    } else if (type === 'resumeMove') {
-      this.on(type, (e) => {
-        const { eventName, marker } = e
-        console.log('resumeMove----', eventName, this.JCEvents)
-        if (this.JCEvents.has(eventName)) {
-          const { eventObject } = this.JCEvents.get(eventName)
+              const vectorContext = getVectorContext(event)
+              vectorContext.setStyle(eventObject.marker.getOlStyle())
+              vectorContext.drawGeometry(eventObject.position)
 
-          this.on('postrender', eventObject.moveFeature)
+              // console.log(marker.olTarget.getStyle())
+              // 请求地图在下一帧渲染
 
-          marker.setGeometry(null)
-        }
-      })
-    } else if (type === 'updateMoveSpeed') {
-      this.on(type, (e) => {
-        const { eventName, speed } = e
-        if (this.JCEvents.has(eventName)) {
-          const { eventObject } = this.JCEvents.get(eventName)
-          eventObject.speed = speed
+              vectorLayer.map.render()
+            }
+
+            vectorLayer.un('postrender', eventObject.moveFeature)
+          }
+
+          const startMove = (vectorLayer, eventObject) => {
+            eventObject.status = 'moving'
+            // eventObject.lastTime = Date.now()
+            eventObject.position = eventObject.marker.getGeometry().clone()
+            vectorLayer.on('postrender', eventObject.moveFeature)
+            eventObject.marker.setGeometry(null)
+          }
+
+          const stopMove = (vectorLayer, eventObject) => {
+            eventObject.status = 'stopMove'
+            eventObject.marker.setGeometry(eventObject.position)
+            vectorLayer.un('postrender', eventObject.moveFeature)
+          }
+
+          const pauseMove = (vectorLayer, eventObject) => {
+            eventObject.status = 'stopMove'
+            eventObject.marker.setGeometry(eventObject.position)
+            vectorLayer.un('postrender', eventObject.moveFeature)
+          }
+
+          const resumeMove = (vectorLayer, eventObject) => {
+            eventObject.status = 'moving'
+            eventObject.lastTime = Date.now()
+            eventObject.position = eventObject.marker.getGeometry().clone()
+            vectorLayer.on('postrender', eventObject.moveFeature)
+            eventObject.marker.setGeometry(null)
+          }
+
+          //初始化动画状态
+          const animationObject = {
+            eventObject: initEventObject(movingCallBack, eventName, marker, speed, path, lineFeature),
+            initMove,
+            startMove,
+            pauseMove,
+            stopMove,
+            resumeMove,
+          }
+          if (this.JCEvents.has(eventName)) {
+            const animationObject = this.JCEvents.get(eventName)
+            if (animationObject.eventObject.status !== 'stopMove' && !animationObject.eventObject.isArrived) {
+              // 停止时刻 - 不需要再触发停止-否则不会从新开始
+              animationObject.pauseMove(this, animationObject.eventObject)
+            }
+            this.JCEvents.delete(eventName)
+          }
+          this.JCEvents.set(eventName, animationObject)
+          animationObject.initMove(this, animationObject.eventObject)
+          animationObject.startMove(this, animationObject.eventObject)
+        } else if (status === 'pauseMove') {
+          console.log('pauseMove---2')
+          if (this.JCEvents.has(eventName)) {
+            const animationObject = this.JCEvents.get(eventName)
+            if (animationObject.eventObject.status === 'stopMove') return
+            animationObject.pauseMove(this, animationObject.eventObject)
+          }
+        } else if (status === 'resumeMove') {
+          if (this.JCEvents.has(eventName)) {
+            const animationObject = this.JCEvents.get(eventName)
+            if (animationObject.eventObject.status === 'moving') return
+            animationObject.resumeMove(this, animationObject.eventObject)
+          }
+        } else if (status === 'stopMove') {
+          console.log('stopMove---4')
+          if (this.JCEvents.has(eventName)) {
+            const animationObject = this.JCEvents.get(eventName)
+            animationObject.pauseMove(this, animationObject.eventObject)
+            this.JCEvents.delete(eventName)
+          }
+        } else if (status === 'updateSpeed') {
+          console.log('updateSpeed------')
+          if (this.JCEvents.has(eventName)) {
+            const animationObject = this.JCEvents.get(eventName)
+            animationObject.eventObject.speed = updateSpeed
+          }
+        } else if (status === 'listener') {
+          console.log('movingCallBack')
         }
       })
     }

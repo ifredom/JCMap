@@ -298,45 +298,48 @@ function JCMarker({ map, ...options }) {
   // 停止行驶动画
   this.stopMove = () => {
     const vectorLayer = this.map.getVectorLayer()
-    const eventName = 'stopMove'
+    const eventName = 'moving'
+    const id = this.getId()
     vectorLayer.dispatchEvent({
       type: eventName, // 订阅事件对象的名称
+      eventName: 'JCMarker(moving)' + id,
       marker: this,
       map: this.map,
+      status: 'stopMove',
     })
   }
 
   //继续动画
   this.resumeMove = () => {
     const vectorLayer = this.map.vectorLayer
-    const eventName = 'resumeMove'
+    const eventName = 'moving'
     const id = this.getId()
-
     vectorLayer.dispatchEvent({
       type: eventName,
-      eventName: 'JCMarker(moveAlong)' + id,
+      eventName: 'JCMarker(moving)' + id,
       marker: this,
-      map: this.map,
+      status: 'resumeMove',
     })
   }
   // 暂停行驶动画
   this.pauseMove = () => {
     const vectorLayer = this.map.vectorLayer
-    const eventName = 'pauseMove'
+    const eventName = 'moving'
     const id = this.getId()
 
     vectorLayer.dispatchEvent({
       type: eventName,
-      eventName: 'JCMarker(moveAlong)' + id,
+      eventName: 'JCMarker(moving)' + id,
       marker: this,
       map: this.map,
+      status: 'pauseMove',
     })
   }
 
   // 行驶动画
-  this.moveAlong = (path, speed = 60) => {
+  this.moveAlong = (path = [], speed = 60, f = () => {}, circlable = true) => {
     const vectorLayer = this.map.vectorLayer
-    const eventName = 'moveAlong'
+    const eventName = 'moving'
     const id = this.getId()
     const lineFeature = vectorLayer.forEachFeature((feature) => {
       return feature.get('linePath') === path && feature
@@ -347,24 +350,26 @@ function JCMarker({ map, ...options }) {
     if (canMoveAlong) {
       vectorLayer.dispatchEvent({
         type: eventName,
-        eventName: 'JCMarker(moveAlong)' + id,
+        eventName: 'JCMarker(moving)' + id,
         path,
         speed,
+        circlable, //是否循环播放
         lineFeature,
         marker: this,
+        status: 'startMove',
       })
     }
   }
 
-  this.updateMoveSpeed = (speed) => {
+  this.updateMoveSpeed = (updateSpeed) => {
     const vectorLayer = this.map.vectorLayer
-    const eventName = 'updateMoveSpeed'
+    const eventName = 'moving'
     const id = this.getId()
-
     vectorLayer.dispatchEvent({
       type: eventName,
-      eventName: 'JCMarker(moveAlong)' + id,
-      speed,
+      eventName: 'JCMarker(moving)' + id,
+      updateSpeed,
+      status: 'updateSpeed',
     })
   }
 
@@ -376,12 +381,21 @@ function JCMarker({ map, ...options }) {
     this.on = (eventName, callBack = () => {}) => {
       if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
       if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
-
+      if (eventName === 'moving') {
+        const vectorLayer = this.map.vectorLayer
+        const eventName = 'moving'
+        const id = this.getId()
+        vectorLayer.dispatchEvent({
+          type: eventName,
+          eventName: 'JCMarker(moving)' + id,
+          callBack,
+          status: 'listener',
+        })
+      }
       const eventObject = {
         eventName: 'JCMarker(' + eventName + ')' + this.getId(),
         callBack,
         handler: (e) => {
-          e.passedPath
           const returnValue = {
             type: e.eventName,
             target: this,

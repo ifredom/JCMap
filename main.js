@@ -250,40 +250,59 @@ const marker = new JC.Marker({
 })
 
 const speedInput = document.getElementById('speed')
-const startButton = document.getElementById('start-animation')
 
-let animating = false
+const startButton = document.getElementById('start')
+const pauseButton = document.getElementById('pause')
+const resumeButton = document.getElementById('resume')
+const stopButton = document.getElementById('stop')
 
-// marker.on('moving', function (e) {
-// polyline.setPath(e.passedPath);
-// console.log('moving', e.passedPath)
-// })
+let animating = ''
+
+marker.on('moving', function (e) {
+  // polyline.setPath(e.passedPath);
+  // console.log('moving', e)
+})
 
 function startAnimation() {
-  animating = true
-  startButton.textContent = 'Stop Animation'
-  marker.moveAlong(lineArr, 100)
+  animating = 'start'
+  marker.moveAlong(lineArr, Number(speedInput.value))
 }
 
-console.log(speedInput)
-
 speedInput.onchange = (e) => {
-  console.log(e.target.value)
   marker.updateMoveSpeed(e.target.value)
+}
+
+function pauseAnimation() {
+  if (animating === 'pause') return
+  animating = 'pause'
+  marker.pauseMove()
+}
+
+function resumeAnimation() {
+  if (animating === 'resume') return
+  animating = 'resume'
+  marker.resumeMove(lineArr, 100)
 }
 
 function stopAnimation() {
   animating = false
   startButton.textContent = 'Start Animation'
-  marker.pauseMove()
+  marker.stopMove()
 }
 
 startButton.addEventListener('click', function () {
-  if (animating) {
-    stopAnimation()
-  } else {
-    startAnimation()
-  }
+  startAnimation()
+})
+pauseButton.addEventListener('click', function () {
+  pauseAnimation()
+})
+
+resumeButton.addEventListener('click', function () {
+  resumeAnimation()
+})
+
+stopButton.addEventListener('click', function () {
+  stopAnimation()
 })
 map.on('click', (e) => {
   console.log(e.coordinate)

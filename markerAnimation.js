@@ -5,12 +5,12 @@ import Point from 'ol/geom/Point'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
 import Map from 'ol/Map'
 import 'ol/ol.css'
+import { getVectorContext } from 'ol/render'
 import OSM from 'ol/source/OSM'
 import VectorSource from 'ol/source/Vector'
 import { Circle as CircleStyle, Fill, Icon, Stroke, Style } from 'ol/style'
 import View from 'ol/View'
 import RBush from 'rbush'
-
 const key = 'Get your own API key at https://www.maptiler.com/cloud/'
 const attributions =
   '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
@@ -97,7 +97,9 @@ setTimeout(() => {
     type: 'icon',
     geometry: new Point(route.getLastCoordinate()),
   })
+
   const position = startMarker.getGeometry().clone()
+
   const geoMarker = new Feature({
     type: 'geoMarker',
     geometry: position,
@@ -107,9 +109,6 @@ setTimeout(() => {
     source: new VectorSource({
       features: [routeFeature, geoMarker, startMarker, endMarker],
     }),
-    // style: function (feature) {
-    //   return styles[feature.get('type')];
-    // },
     style: styleFunction2,
   })
 
@@ -130,37 +129,31 @@ setTimeout(() => {
 
     const currentCoordinate = route.getCoordinateAt(distance > 1 ? 2 - distance : distance)
     position.setCoordinates(currentCoordinate)
-    const vectorContext = event
+    const vectorContext = getVectorContext(event)
     vectorContext.setStyle(styles.geoMarker)
     vectorContext.drawGeometry(position)
     // tell OpenLayers to continue the postrender animation
     map.render()
   }
-  function getLocalTime(nS) {
-    return new Date(parseInt(nS) * 1000).toLocaleString().replace(/:\d{1,2}$/, ' ')
-  }
 
   function startAnimation() {
     animating = true
-    lastTime = Date.now()
-    const marker = vectorLayer.getSource().getFeatures()[1]
-    const position = marker.getGeometry().clone()
+
     startButton.textContent = 'Stop Animation'
-    console.log(vectorLayer.getSource().getFeatures())
-
-    console.log(marker)
-
+    lastTime = Date.now()
     vectorLayer.on('postrender', moveFeature)
     // hide geoMarker and trigger map render through change event
-    marker.setGeometry(null)
+    geoMarker.setGeometry(null)
   }
 
   function stopAnimation() {
     animating = false
     startButton.textContent = 'Start Animation'
-    const marker = vectorLayer.getSource().getFeatures()[1]
+    // const marker = vectorLayer.getSource().getFeatures()[1]
     // Keep marker at current animation position
-    marker.setGeometry(position)
+    // console.log(marker)
+    geoMarker.setGeometry(position)
+
     vectorLayer.un('postrender', moveFeature)
   }
 
