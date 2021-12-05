@@ -1,254 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+    <title>轨迹回放</title>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <style>
+      html,
+      body,
+      #container {
+        height: 100%;
+        width: 100%;
+      }
 
-<?xml version= "1.0" encoding ="UTF-8" ?>
+      .input-card .btn {
+        margin-right: 1.2rem;
+        width: 9rem;
+      }
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
-<html xmlns= "http://www.w3.org/1999/xhtml" >
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<TITLE>JavascriptMapAPI示例</TITLE>
+      .input-card .btn:last-child {
+        margin-right: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="input-card">
+      <h4>轨迹回放控制</h4>
+      <div class="input-item">
+        <input type="button" class="btn" value="开始动画" id="start" onclick="startAnimation()" />
+        <input type="button" class="btn" value="暂停动画" id="pause" onclick="pauseAnimation()" />
+      </div>
+      <div class="input-item">
+        <input type="button" class="btn" value="继续动画" id="resume" onclick="resumeAnimation()" />
+        <input type="button" class="btn" value="停止动画" id="stop" onclick="stopAnimation()" />
+      </div>
+    </div>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=您申请的key值"></script>
+    <script>
+      var marker,
+        lineArr = [
+          [116.478935, 39.997761],
+          [116.478939, 39.997825],
+          [116.478912, 39.998549],
+          [116.478912, 39.998549],
+          [116.478998, 39.998555],
+          [116.478998, 39.998555],
+          [116.479282, 39.99856],
+          [116.479658, 39.998528],
+          [116.480151, 39.998453],
+          [116.480784, 39.998302],
+          [116.480784, 39.998302],
+          [116.481149, 39.998184],
+          [116.481573, 39.997997],
+          [116.481863, 39.997846],
+          [116.482072, 39.997718],
+          [116.482362, 39.997718],
+          [116.483633, 39.998935],
+          [116.48367, 39.998968],
+          [116.484648, 39.999861],
+        ]
 
+      var map = new AMap.Map('container', {
+        resizeEnable: true,
+        center: [116.397428, 39.90923],
+        zoom: 17,
+      })
 
-<link rel="icon" href="../ui/favicon.ico" type="image/x-icon" />
-<link rel="shortcut icon" href="../ui/favicon.ico" type="image/x-icon" />
-<link rel="bookmark" href="../ui/favicon.ico" type="image/x-icon" />
+      marker = new AMap.Marker({
+        map: map,
+        position: [116.478935, 39.997761],
+        icon: 'https://webapi.amap.com/images/car.png',
+        offset: new AMap.Pixel(-26, -13),
+        autoRotation: true,
+        angle: -90,
+      })
 
-<link rel="stylesheet" href="../css/themes/smoothness/jquery-ui.min.css">
+      // 绘制轨迹
+      var polyline = new AMap.Polyline({
+        map: map,
+        path: lineArr,
+        showDir: true,
+        strokeColor: '#28F', //线颜色
+        // strokeOpacity: 1,     //线透明度
+        strokeWeight: 6, //线宽
+        // strokeStyle: "solid"  //线样式
+      })
 
-<style type="text/css">
-html {
-	overflow: hidden;
-}
+      var passedPolyline = new AMap.Polyline({
+        map: map,
+        // path: lineArr,
+        strokeColor: '#AF5', //线颜色
+        // strokeOpacity: 1,     //线透明度
+        strokeWeight: 6, //线宽
+        // strokeStyle: "solid"  //线样式
+      })
 
-body {
-	margin: 0;
-	padding: 0;
-	font-size: 12px;
-	background: #dcddfb;
-	width: 100%;
-	width: auto !important;
-	height: 100%;
-	overflow: hidden;
-}
+      marker.on('moving', function (e) {
+        console.log(e.passedPath)
+        passedPolyline.setPath(e.passedPath)
+      })
 
-.map {
-	border: 1px solid #909ab5;
-	height: 100%;
-	width: 100%;
-	background-color: #F4F3F0;
-}
+      map.setFitView()
 
-.inputtext {
-	width: 100%;
-	height: 100px;
-	word-wrap: normal;
-	word-break: break-all;
-}
+      function startAnimation() {
+        marker.moveAlong(lineArr, 200)
+      }
 
-.resulttext {
-	width: 100%;
-	height: 300px;
-	word-wrap: break-word;
-	word-break: break-all;
-}
-</style>
-<link href="pretpage/css/head.css" type="text/css" rel="stylesheet" />
-<link rel="stylesheet" href="../css/codemirror.css">
-<script src="../js/codemirror.js"></script>
-<script src="../js/cm/javascript.js"></script>
+      function pauseAnimation() {
+        marker.pauseMove()
+      }
 
-<SCRIPT type="text/javascript" src="../js/jquery-1.11.1.min.js"></SCRIPT>
-<SCRIPT type="text/javascript" src="../js/jquery-ui-1.11.0.min.js"></SCRIPT>
-<SCRIPT type="text/javascript" src="../js/jquery.layout-latest.js"></SCRIPT>
+      function resumeAnimation() {
+        marker.resumeMove()
+      }
 
- 
-
-
-
- 
-<script type="text/javascript" language="javascript" src="http://a.qqearth.com:81/SE_JSAPI?v=ol&uid=cttic7501E5D4DA87AC39D782741CD794002D
-"></script>
- 
-
-<SCRIPT type="text/javascript">
-
-var uid="cttic7501E5D4DA87AC39D782741CD794002D";
-
-	var map;
-	$(document).ready(
-		function() {
- 
-		var editor = CodeMirror.fromTextArea(document.getElementById("script"), {
-	        lineNumbers: true,
-	        mode:{name: "javascript", json: true}
-	      });
-			
-		//界面排布
-		layout();
-
-		//新建地图
-		var SE = EV;
-		
-
-		map = new SE.Map("map");
-		map.centerAndZoom(new SE.LngLat(116.39885, 39.96571), 5);
-	 
-
-		$("#run").button().click(function(event) {
-			//var js = $("#script").val();
-			
-			map.clearOverLays();
-			var js = editor.getValue();
-			eval(js);
-		});
-		
-	
-		
-		$(".demobtn").button().click(function(event) {
-			$.ajax({
-				dataType:"text",
-				url : "demo/" + this.id + ".js",
-				success : function(data, textStatus) {
-
-					editor.setValue(data);
-				}
-			});
-			
-		});
-		
-		
-		
-		
-		
-	});
-	
-	function updateMap(){
-		if(map)
-			map.updateSize();		
-	}
-	
-	function layout(){
-		var layoutSettings_Outer = {
-				name : "outerLayout" ,
-				defaults : {
-					size : "auto",
-					minSize : 50,
-					paneClass : "pane" 	,
-					resizerClass : "resizer" ,
-					togglerClass : "toggler" 	,
-					buttonClass : "button" 	,
-					contentSelector : ".content" ,
-					contentIgnoreSelector : "span" ,
-					togglerLength_open : 35,
-					togglerLength_closed : 35 ,
-					hideTogglerOnSlide : true ,
-					togglerTip_open : "Close This Pane",
-					togglerTip_closed : "Open This Pane",
-					resizerTip : "Resize This Pane",
-					onresize:updateMap,
-					fxName : "slide" ,
-					fxSpeed_open : 750,
-					fxSpeed_close : 1500,
-					fxSettings_open : {
-						easing : "easeInQuint"
-					},
-					fxSettings_close : {
-						easing : "easeOutQuint"
-					}
-				},
-				north : {
-					spacing_open : 1 // cosmetic spacing
-					,
-					togglerLength_open : 0 // HIDE the toggler button
-					,
-					togglerLength_closed : -1 // "100%" OR -1 = full
-					// width of pane
-					,
-					resizable : false,
-					slidable : false
-					// override default effect
-					,
-					fxName : "none"
-				},
-				west : {
-					size : 300,
-					spacing_closed : 21 // wider space when closed
-					,
-					togglerLength_closed : 21 // make toggler 'square'
-					// - 21x21
-					,
-					togglerAlign_closed : "top" // align to top of
-					// resizer
-					,
-					togglerLength_open : 0 // NONE - using custom
-					// togglers INSIDE west-pane
-					,
-					togglerTip_open : "Close West Pane",
-					togglerTip_closed : "Open West Pane",
-					resizerTip_open : "Resize West Pane",
-					slideTrigger_open : "click" // default
-					,
-					initClosed : false
-					// add 'bounce' option to default 'slide' effect
-					,
-					fxSettings_open : {
-						easing : "easeOutBounce"
-					}
-				}
-
-			};
-
-			$('body').layout(layoutSettings_Outer);
-			
-		 
-	}
-	
-</SCRIPT>
-
-</HEAD>
-<BODY>
-   <DIV class="ui-layout-north">
-		
-	<div class="head">
-		<h1>JS客户端接口示例1</h1>
-	    <div class="link_right">
-			<a href="api.jsp">JS服务接口示例</a>
-	        <a href="mapapi.jsp">JS客户端接口示例1</a>
-	        <a href="demo.jsp">JS客户端接口示例2</a>
-	    </div>
-	</div>
-	</DIV>
-	
-	<DIV class="ui-layout-center">
-	
-		<div id="map" class="map"> </div>
-		
-	</DIV>
-	
-	
-	<DIV class="ui-layout-west">
-		 		
-		<button id="demo1" class="demobtn">$1:最佳比例尺和位置显示</button>
-		<button id="demo2" class="demobtn">$2:键盘操作</button>
-	 
- 		<button id="demo3" class="demobtn">$3:地图动画</button>
- 		<button id="demo4" class="demobtn">$4:地图类型</button>
- 		 
- 		<button id="demo5" class="demobtn">$5:计算距离</button>
- 		<button id="demo6" class="demobtn">$6:多边形和点击事件</button>
- 		
- 		<button id="demo7" class="demobtn">$7:点和范围关系</button>
- 		<button id="demo8" class="demobtn">$8:点和多边形关系</button>
- 		
- 		<button id="demo9" class="demobtn">$9:服务api测试</button>
- 		<button id="demo10" class="demobtn">$10:聚合测试</button>
- 		 
- 	 
-		<textarea class="inputtext" id="script"></textarea>
-		
-		<button id="run">运行</button>
-	</DIV>
-	
-	
-	 
-</BODY>
-</HTML>
+      function stopAnimation() {
+        marker.stopMove()
+      }
+    </script>
+  </body>
+</html>
