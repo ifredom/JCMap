@@ -220,6 +220,11 @@ const lineArr = [
   [116.484648, 39.999861],
   [116.4889679286499, 40.003822062536884],
 ]
+
+const newlineArr = lineArr.concat([116.4889679286499, 40.003822062536884])
+
+console.log(newlineArr)
+
 let polyline = new JC.Polyline({
   map,
   path: lineArr,
@@ -249,15 +254,22 @@ const startButton = document.getElementById('start-animation')
 
 let animating = false
 
-marker.on('moving', function (e) {
-  // polyline.setPath(e.passedPath);
-  // console.log('moving', e.passedPath)
-})
+// marker.on('moving', function (e) {
+// polyline.setPath(e.passedPath);
+// console.log('moving', e.passedPath)
+// })
 
 function startAnimation() {
   animating = true
   startButton.textContent = 'Stop Animation'
   marker.moveAlong(lineArr, 100)
+}
+
+console.log(speedInput)
+
+speedInput.onchange = (e) => {
+  console.log(e.target.value)
+  marker.updateMoveSpeed(e.target.value)
 }
 
 function stopAnimation() {

@@ -50,6 +50,7 @@ function createPolyline(options, map) {
   const geoPolyline = new OlLineString(options.path)
   const featurePolyline = new OlFeature({
     geometry: geoPolyline,
+    linePath: options.path,
     extData: options.extData,
   })
 

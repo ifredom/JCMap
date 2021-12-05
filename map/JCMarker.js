@@ -257,6 +257,18 @@ function JCMarker({ map, ...options }) {
     return this.options.id
   }
 
+  this.getGeometry = function () {
+    return this.olTarget.getGeometry()
+  }
+
+  this.setGeometry = function (geometry) {
+    return this.olTarget.setGeometry(geometry)
+  }
+
+  this.getOlStyle = function () {
+    return this.olTarget.getStyle()
+  }
+
   // 获取自定义信息
   this.getExtentData = function () {
     return this.options.extData
@@ -283,10 +295,10 @@ function JCMarker({ map, ...options }) {
     this.olTarget.set('overlayMarker', null)
   }
 
-  // 暂停行驶动画
-  this.pauseMove = () => {
+  // 停止行驶动画
+  this.stopMove = () => {
     const vectorLayer = this.map.getVectorLayer()
-    const eventName = 'pauseMove'
+    const eventName = 'stopMove'
     vectorLayer.dispatchEvent({
       type: eventName, // 订阅事件对象的名称
       marker: this,
@@ -294,32 +306,65 @@ function JCMarker({ map, ...options }) {
     })
   }
 
-  // 停止行驶动画
-  this.stopMove = () => {
-    const vectorLayer = this.map.getVectorLayer()
+  //继续动画
+  this.resumeMove = () => {
+    const vectorLayer = this.map.vectorLayer
+    const eventName = 'resumeMove'
+    const id = this.getId()
+
     vectorLayer.dispatchEvent({
-      type: 'stopMove',
+      type: eventName,
+      eventName: 'JCMarker(moveAlong)' + id,
       marker: this,
       map: this.map,
     })
+  }
+  // 暂停行驶动画
+  this.pauseMove = () => {
+    const vectorLayer = this.map.vectorLayer
+    const eventName = 'pauseMove'
+    const id = this.getId()
 
-    // this.olTarget.setGeometry(this.movingObject.position);
-    // vectorLayer.un("postrender", this.movingObject.moveFeature);
-
-    // hide geoMarker and trigger map render through change event
+    vectorLayer.dispatchEvent({
+      type: eventName,
+      eventName: 'JCMarker(moveAlong)' + id,
+      marker: this,
+      map: this.map,
+    })
   }
 
   // 行驶动画
   this.moveAlong = (path, speed = 60) => {
-    // this.map.on("moving", null, { path, speed });
+    const vectorLayer = this.map.vectorLayer
+    const eventName = 'moveAlong'
+    const id = this.getId()
+    const lineFeature = vectorLayer.forEachFeature((feature) => {
+      return feature.get('linePath') === path && feature
+    })
+    //是否在此线上行驶动画
+    const canMoveAlong = lineFeature && lineFeature.getGeometry().intersectsCoordinate(this.getPosition())
 
-    const vectorLayer = this.map.getVectorLayer()
+    if (canMoveAlong) {
+      vectorLayer.dispatchEvent({
+        type: eventName,
+        eventName: 'JCMarker(moveAlong)' + id,
+        path,
+        speed,
+        lineFeature,
+        marker: this,
+      })
+    }
+  }
+
+  this.updateMoveSpeed = (speed) => {
+    const vectorLayer = this.map.vectorLayer
+    const eventName = 'updateMoveSpeed'
+    const id = this.getId()
+
     vectorLayer.dispatchEvent({
-      type: 'moveAlong',
-      path,
+      type: eventName,
+      eventName: 'JCMarker(moveAlong)' + id,
       speed,
-      marker: this,
-      map: this.map,
     })
   }
 

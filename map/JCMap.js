@@ -1,14 +1,13 @@
-import * as turf from '@turf/turf'
 import { defaults as defaultControls, FullScreen, ZoomSlider } from 'ol/control'
 import { boundingExtent } from 'ol/extent'
 import Polygon from 'ol/geom/Polygon' //
 import { defaults as DefaultInteraction } from 'ol/interaction'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
-import { getVectorContext } from 'ol/render'
 import VectorSource from 'ol/source/Vector'
 import XYZ from 'ol/source/XYZ'
 import { Fill, Icon, Style, Text } from 'ol/style'
-import { OlLineString, OlMap, OlView } from './inherit'
+import { OlMap, OlView } from './inherit'
+import JCVectorLayer from './JCVectorLayer'
 
 const defaultMapOptions = {
   center: [0, 0], //地图中心
@@ -60,109 +59,6 @@ function getLayerUrlByData(type, wkid, token) {
     tileMatrixSetId = wkid === 4326 ? 'c' : 'w'
   }
   return url + 'T=' + layerId + tileMatrixSetId + '&x={x}&y={y}&l={z}&tk=' + token
-}
-
-//创建矢量标注图层
-function createVectorLayer(features) {
-  //矢量标注的数据源
-  const vectorSource = new VectorSource({
-    features,
-  })
-  //矢量标注图层
-  const vectorLayer = new VectorLayer({
-    source: vectorSource,
-    className: 'jc-vector-layer',
-    zIndex: 1,
-  })
-
-  vectorLayer.movingObject = {
-    startPos: null,
-    endPos: null,
-    distance: 0,
-    lastTime: null,
-    line: null,
-    speed: 0,
-    position: null,
-    path: [],
-    isArrived: false,
-    moveFeature: null,
-  }
-
-  vectorLayer.on('moveAlong', (e) => {
-    const { path, speed, marker, map } = e
-    vectorLayer.movingObject.lastTime = Date.now()
-    vectorLayer.movingObject.path = path
-    vectorLayer.movingObject.line = new OlLineString(path)
-    vectorLayer.movingObject.endPos = path[0]
-    vectorLayer.movingObject.position = marker.olTarget.getGeometry().clone()
-
-    vectorLayer.movingObject.speed = speed
-    vectorLayer.movingObject.moveFeature = (event) => {
-      const time = event.frameState.time
-      const elapsedTime = time - vectorLayer.movingObject.lastTime
-      vectorLayer.movingObject.speed = Number(vectorLayer.movingObject.speed)
-      vectorLayer.movingObject.distance = (vectorLayer.movingObject.distance + (vectorLayer.movingObject.speed * elapsedTime) / 1e6) % 2
-
-      vectorLayer.movingObject.lastTime = time
-
-      const currentCoordinate = vectorLayer.movingObject.line.getCoordinateAt(
-        vectorLayer.movingObject.distance > 1 ? 2 - vectorLayer.movingObject.distance : vectorLayer.movingObject.distance
-      )
-
-      if (vectorLayer.movingObject.distance >= 1) {
-        // moveFeatureObject.timer && clearTimeout(moveFeatureObject.timer)
-        // moveFeatureObject.passedPath.push(path[path.length - 1])
-        vectorLayer.movingObject.position.setCoordinates(vectorLayer.movingObject.path[vectorLayer.movingObject.path.length - 1])
-        marker.olTarget.setGeometry(vectorLayer.movingObject.position)
-        // moveFeatureObject.marker.olTarget.dispatchEvent({
-        //   type: moveFeatureObject.eventName,
-        //   passedPath: moveFeatureObject.passedPath,
-        //   callBack: currentEventObject.callBack,
-        //   eventName: moveFeatureObject.type, // 实际派发的事件
-        //   eventTarget: moveFeatureObject.marker.olTarget, // 实际应该接收事件ol 对象
-        // })
-        vectorLayer.un('postrender', vectorLayer.movingObject.moveFeature)
-        vectorLayer.movingObject.isArrived = true
-        return
-      }
-
-      vectorLayer.movingObject.startPos = vectorLayer.movingObject.endPos
-
-      vectorLayer.movingObject.endPos = currentCoordinate
-
-      let point1 = turf.point(vectorLayer.movingObject.startPos)
-      let point2 = turf.point(vectorLayer.movingObject.endPos)
-      let bearing = turf.bearing(point1, point2)
-
-      marker.setAngle(bearing - 90)
-      marker.setPosition(vectorLayer.movingObject.endPos)
-
-      vectorLayer.movingObject.position.setCoordinates(vectorLayer.movingObject.endPos)
-
-      const vectorContext = getVectorContext(event)
-      vectorContext.setStyle(marker.olTarget.getStyle())
-      vectorContext.drawGeometry(vectorLayer.movingObject.position)
-
-      // console.log(marker.olTarget.getStyle())
-      // 请求地图在下一帧渲染
-
-      map.render()
-    }
-    if (vectorLayer.movingObject.isArrived) return
-    vectorLayer.on('postrender', vectorLayer.movingObject.moveFeature)
-    marker.olTarget.setGeometry(null)
-  })
-
-  vectorLayer.on('pauseMove', (e) => {
-    const { marker } = e
-
-    marker.olTarget.setGeometry(vectorLayer.movingObject.position)
-    // console.log('pauseMove----', marker.olTarget.getStyle())
-
-    vectorLayer.un('postrender', vectorLayer.movingObject.moveFeature)
-  })
-
-  return vectorLayer
 }
 
 // 层级关系
@@ -268,15 +164,12 @@ function initJCMap(target, options) {
   //默认控件
   const controlsExtend = [fullScreen ? new FullScreen() : null, zoomSlider ? new ZoomSlider() : null]
 
-  // 默认的矢量图层
-  const vectorLayer = createVectorLayer()
-
   // console.log('vectorLayer---' ,vectorLayer.getZIndex());
 
   // 地图初始化
   return new OlMap({
     target,
-    layers: [satelliteTileLayer, standardTileLayer, layerTianDi, layerTianDiLabel, layerTianDiImg, layerTianDiImgLabel, AMapLayer, vectorLayer], // 图层
+    layers: [satelliteTileLayer, standardTileLayer, layerTianDi, layerTianDiLabel, layerTianDiImg, layerTianDiImgLabel, AMapLayer], // 图层
     overlays: [], // 覆盖物
     view: new OlView({
       projection: 'EPSG:' + wkid,
@@ -311,6 +204,9 @@ function JCMap(target = 'map', options = {}) {
 
   //是否移除 map 点击事件
   let isOffClick = false
+
+  // 默认的矢量图层
+  this.vectorLayer = new JCVectorLayer({ map, className: 'jc-vector-layer' })
 
   this.JCTYPE = 'MAP'
 
@@ -664,31 +560,36 @@ function JCMap(target = 'map', options = {}) {
     }
   }
 
-  // map 删除 Marker
-  this.removeMarker = (...args) => {
+  // map 删除 覆盖物
+  this.remove = (...args) => {
     if (args.length === 1) {
       // 单参数或者数组
       const target = args[0]
       if (Array.isArray(target)) {
-        target.forEach((marker) => this.removeMarker(marker))
+        target.forEach((marker) => this.remove(marker))
       } else if (target.JCTYPE === 'MARKER') {
-        const markerVectorLayerSource = this.getVectorLayer().getSource()
-        if (markerVectorLayerSource.hasFeature(target.olTarget)) {
-          markerVectorLayerSource.removeFeature(target.olTarget)
+        const vectorLayerSource = this.getVectorLayer().getSource()
+        if (vectorLayerSource.hasFeature(target.olTarget)) {
+          vectorLayerSource.removeFeature(target.olTarget)
         }
       } else if (target.JCTYPE === 'OVERLAYMARKER') {
-        const markerVectorLayerSource = this.getVectorLayer().getSource()
-        if (markerVectorLayerSource.hasFeature(target.olTarget)) {
-          markerVectorLayerSource.removeFeature(target.olTarget)
+        const vectorLayerSource = this.getVectorLayer().getSource()
+        if (vectorLayerSource.hasFeature(target.olTarget)) {
+          vectorLayerSource.removeFeature(target.olTarget)
           map.removeOverlay(target.getOverlayMarker())
         }
       } else if (target.JCTYPE === 'OverlayMarker') {
         // 处理聚合物，change 添加到map 上的 OverlayMarker,
         map.removeOverlay(target)
+      } else if (target.JCTYPE === 'POLYLINE') {
+        const vectorLayerSource = this.getVectorLayer().getSource()
+        if (vectorLayerSource.hasFeature(target.olTarget)) {
+          vectorLayerSource.removeFeature(target.olTarget)
+        }
       }
     } else {
       // 多个参数
-      args.forEach((marker) => this.removeMarker(marker))
+      args.forEach((marker) => this.remove(marker))
     }
   }
 

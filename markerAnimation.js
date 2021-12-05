@@ -5,7 +5,6 @@ import Point from 'ol/geom/Point'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
 import Map from 'ol/Map'
 import 'ol/ol.css'
-import { getVectorContext } from 'ol/render'
 import OSM from 'ol/source/OSM'
 import VectorSource from 'ol/source/Vector'
 import { Circle as CircleStyle, Fill, Icon, Stroke, Style } from 'ol/style'
@@ -131,7 +130,7 @@ setTimeout(() => {
 
     const currentCoordinate = route.getCoordinateAt(distance > 1 ? 2 - distance : distance)
     position.setCoordinates(currentCoordinate)
-    const vectorContext = getVectorContext(event)
+    const vectorContext = event
     vectorContext.setStyle(styles.geoMarker)
     vectorContext.drawGeometry(position)
     // tell OpenLayers to continue the postrender animation

@@ -76,7 +76,14 @@
         autoRotation: true,
         angle: -90,
       })
-
+      var marker2 = new AMap.Marker({
+        map: map,
+        position: [116.484648, 39.999861],
+        icon: 'https://webapi.amap.com/images/car.png',
+        offset: new AMap.Pixel(-26, -13),
+        autoRotation: true,
+        angle: -90,
+      })
       // 绘制轨迹
       var polyline = new AMap.Polyline({
         map: map,
@@ -106,18 +113,22 @@
 
       function startAnimation() {
         marker.moveAlong(lineArr, 200)
+        marker2.moveAlong(lineArr.reverse(), 200)
       }
 
       function pauseAnimation() {
         marker.pauseMove()
+        marker2.pauseMove()
       }
 
       function resumeAnimation() {
         marker.resumeMove()
+        marker2.resumeMove()
       }
 
       function stopAnimation() {
         marker.stopMove()
+        marker2.stopMove()
       }
     </script>
   </body>

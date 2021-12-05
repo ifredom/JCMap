@@ -259,7 +259,7 @@ function createClusterSource(map, vectorSource, options) {
 
     clusterSource.overlayIds.forEach((id) => {
       const overlayMarker = map.getOverlayById(id)
-      map.removeMarker(overlayMarker)
+      map.remove(overlayMarker)
     })
 
     clusterSource.overlayIds = []
@@ -395,19 +395,19 @@ function JCMarkerCluster(map, features = [], options) {
   }
 
   // 删除Marker
-  this.removeMarker = (...args) => {
+  this.remove = (...args) => {
     console.log(args)
     if (args.length === 1) {
       // 单参数或者数组
       if (Array.isArray(args[0])) {
-        this.removeMarker(...args[0])
+        this.remove(...args[0])
       } else if (args[0].JCTYPE === 'MARKER' || args[0].JCTYPE === 'OVERLAYMARKER') {
         // removeFeature 时候 触发 change 事件，并且会 remove overlayMarker
         this.getVectorSource().removeFeature(args[0].olTarget)
       }
     } else {
       // 多个参数
-      args.forEach((marker) => this.removeMarker(marker))
+      args.forEach((marker) => this.remove(marker))
     }
   }
 
@@ -416,7 +416,7 @@ function JCMarkerCluster(map, features = [], options) {
     // 遍历清空已经渲染 OverlayMarkers
     this.getClusterSource().overlayIds.forEach((id) => {
       const overlayMarker = this.map.getOverlayById(id)
-      this.map.removeMarker(overlayMarker)
+      this.map.remove(overlayMarker)
     })
     this.getClusterSource().overlayIds = [] // 清空overlayMarkers 数据
     this.getVectorSource().clear() // 清空 Marker集合数据对象

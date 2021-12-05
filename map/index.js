@@ -1,11 +1,11 @@
-import "ol/ol.css";
-import JCGraph from "./JCGraph";
-import JCMap from "./JCMap";
-import JCMarker from "./JCMarker";
-import JCMarkerCluster from "./JCMarkerCluster";
-import JCOverlay from "./JCOverlay";
-import JCNavigationLine from "./JCNavigationLine";
-import JCPolyline from "./JCPolyline";
+import 'ol/ol.css'
+import JCGraph from './JCGraph'
+import JCMap from './JCMap'
+import JCMarker from './JCMarker'
+import JCMarkerCluster from './JCMarkerCluster'
+import JCNavigationLine from './JCNavigationLine'
+import JCOverlay from './JCOverlay'
+import JCPolyline from './JCPolyline'
 
 export default {
   Map: JCMap,
@@ -19,4 +19,4 @@ export default {
   InfoOverlay: JCOverlay, // 信息框覆盖物类
   NavigationLine: JCNavigationLine, // 带箭头轨迹线类
   Polyline: JCPolyline, // 带箭头轨迹线类
-};
+}
