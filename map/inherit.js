@@ -2,6 +2,7 @@ import { Feature, Map as _Map, View } from "ol";
 import { Point, LineString } from "ol/geom";
 import Overlay from "ol/Overlay";
 import Cluster from "ol/source/Cluster";
+import Draw from 'ol/interaction/Draw'
 
 function inheritPrototype(SubClass, SuperClass) {
   const p = Object.create(SuperClass.prototype);
@@ -63,6 +64,10 @@ function OlLineString(options) {
   this.JCTYPE = "OlLineString";
 }
 
+function OlDraw(options) {
+  Draw.call(this, options)
+  this.JCTYPE = "OlFeature";
+}
 inheritPrototype(OlCluster, Cluster);
 inheritPrototype(OlPoint, Point);
 inheritPrototype(OverlayMarker, Overlay);
@@ -72,6 +77,7 @@ inheritPrototype(OlView, View);
 inheritPrototype(OlMap, _Map);
 inheritPrototype(OlOverlay, Overlay);
 inheritPrototype(OlLineString, LineString);
+inheritPrototype(OlDraw, Draw)
 
 export {
   OlMap,
@@ -83,4 +89,5 @@ export {
   OlCluster,
   OlOverlay,
   OlLineString,
+  OlDraw
 };

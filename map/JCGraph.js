@@ -2,10 +2,11 @@ import 'ol/ol.css'
 
 import {  Vector as VectorLayer } from 'ol/layer'
 import { Circle as CircleStyle, Fill, Stroke, Style, RegularShape } from 'ol/style'
-import Draw, { createBox, createRegularPolygon } from 'ol/interaction/Draw'
-import Polygon, { fromExtent } from 'ol/geom/Polygon' //
+import { createBox, createRegularPolygon } from 'ol/interaction/Draw'
+import Polygon, { fromExtent } from 'ol/geom/Polygon' // 多边形
 import Circle from 'ol/geom/Circle' // 圆形
-import Point from 'ol/geom/Point'
+import Point from 'ol/geom/Point' // 点
+import LineString from 'ol/geom/LineString'; // 线
 import { MultiPoint } from 'ol/geom'
 import VectorSource from 'ol/source/Vector'
 import {  getCenter, getHeight, getWidth } from 'ol/extent'
@@ -14,7 +15,7 @@ import { transform, fromLonLat } from 'ol/proj'
 import { getDistance } from 'ol/sphere'
 import Modify from 'ol/interaction/Modify'
 import { never, platformModifierKeyOnly, primaryAction } from 'ol/events/condition'
-import {  OlFeature } from './inherit'
+import {  OlFeature, OlDraw } from './inherit'
 
 /**
 	 * 矢量图形类
@@ -33,14 +34,14 @@ import {  OlFeature } from './inherit'
    constructor (map, options = {}) {
     this.map = map
     this.JCTYPE = 'GRAPH'
-    this.olTarget = null // 绘制对象
+    this.olTarget = null // 被动绘制对象
+    this.drawTarget = null // 主动绘制对象
     this.source = null // 数据源
     this.vector = null // 准备放在图层上的数据元素
     this.drawFeature = null
     this.events = ['done', 'click', 'dblclick', 'contextmenu'] // 支持的事件
     this.clickTimeId = null //单击事件定时器
     this.JCEvents = new Map() // 存储事件
-    this.initGraph(options)
     this.commonStyle = option => {
       if (!option) {
         option = {}
@@ -124,6 +125,14 @@ import {  OlFeature } from './inherit'
     }
     this.graphTool = {
       // 绘制工具列表
+      Point: {
+        status: false,
+        style: null
+      },
+      Line: {
+        status: false,
+        style: null
+      },
       Circle: {
         status: false,
         style: null
@@ -181,55 +190,64 @@ import {  OlFeature } from './inherit'
       switch (type) {
         // 点和线 目前暂未开发
         case 'Point':
+          penValue = 'Point'
           break
         case 'Line':
+          penValue = 'LineString'
           break
         // 默认不写参数 即为圆形
         case 'Circle':
-          if (this.graphTool.Circle.style) {
-            this.vector.setStyle(this.graphTool.Circle.style)
-          }
           break
         case 'Polygon':
-          if (this.graphTool.Polygon.style) {
-            this.vector.setStyle(this.graphTool.Polygon.style)
-          }
           penValue = 'Polygon'
           break
         case 'Rectangle':
-          if (this.graphTool.Rectangle.style) {
-            this.vector.setStyle(this.graphTool.Rectangle.style)
-          }
           geometryFunction = this.paintRectangle()
           break
         case 'Square':
           geometryFunction = this.paintSquare()
           break
       }
-      this.olTarget = new Draw({
+      if (this.graphTool[type].style) {
+        this.vector.setStyle(this.graphTool[type].style)
+      }
+      let freehandFlag = false
+      switch (type) {
+        case 'Polygon':
+        case 'Line':
+          freehandFlag = false
+          break
+        default: 
+          freehandFlag = true
+          break
+      }
+      this.drawTarget = new OlDraw({
         // 数据源
         source: this.source,
         // 绘制类型
         type: penValue,
         geometryFunction: geometryFunction,
-        freehand: type !== 'Polygon', // 手绘模式
-        stopClick: true
+        // geometryName: '林鹏',
+        freehand: freehandFlag, // 手绘模式
+        stopClick: true,
         // 最大点数
         // maxPoints: maxPoints
       })
-  
       // 将draw对象添加到map中，然后就可以进行图形绘制了
-      this.map.addGraph(this.olTarget)
-      this.olTarget.setActive(true)
-      this.olTarget.addEventListener('drawend', e => {
-        this.olTarget.setActive(false)
-		    this.stopPaint()
+      this.map.addGraph(this.drawTarget)
+      this.drawTarget.setActive(true)
+      this.drawTarget.addEventListener('drawend', e => {
+        // 将当前绘制的矢量图形 通过done事件触发抛出去
         let targets = this.JCEvents.get('JCGraph(done)')
         this.drawFeature = this.buildFeature(e.feature)
-        //getCoordinates()
+        e.feature.set('JCTYPE', 'OlDraw')
         window.dispatchEvent(targets.costomEvent)
+        // 按道理应该可以连续绘制的，所以将此处代码提到deactivate方法上去
+        // this.olTarget.setActive(false)
+		    // this.stopPaint()
       })
     }
+    this.initGraph(options) // 初始化矢量图层样式
    }
   /**
   * 对数据进行修改筛选，不将原生数据返回给用户
@@ -238,7 +256,17 @@ import {  OlFeature } from './inherit'
     const geo = e.getGeometry()
     let data = {}
     const type = this.judgeShape(geo)
-    if (type === 'Circle') {
+    if (type === 'Point') {
+      const points = geo.getCoordinates()
+      data = {
+        center: points
+      }
+    } else if (type === 'LineString') {
+      const points = geo.getCoordinates()
+      data = {
+        points: points
+      }
+    } else if (type === 'Circle') {
       const center = geo.getCenter()
       const radius = geo.getRadius()
       data = {
@@ -283,7 +311,56 @@ import {  OlFeature } from './inherit'
    * 失活矢量图绘制
    */
   deactivate () {
-    this.olTarget.setActive(false)
+    if (this.drawTarget) {
+      this.drawTarget.setActive(false)
+      this.drawTarget = null
+    }
+    this.stopPaint()
+  }
+  /**
+   * 点
+   */
+  Point (center, option = {}, extData = {}) {
+    let centerPath = fromLonLat([center[0], center[1]], 'EPSG:4326')
+    const tmp = new Point(centerPath)
+    this.olTarget = new OlFeature(tmp)
+    this.olTarget.set('extData', extData)
+    if (extData.id) {
+      this.olTarget.setId(extData.id)
+    } else {
+      this.olTarget.setId(this.olTarget.ol_uid)
+    }
+    this.olTarget.setStyle(this.commonStyle(option))
+    this.graphTool.Point.style = this.commonStyle(option)
+    this.source.addFeature(this.olTarget)
+    // if (this.olTarget) {
+    //   this.olTarget.on = this.on.bind(this.olTarget)
+    //   this.olTarget.off = this.off.bind(this.olTarget)
+    // }
+    return this.olTarget
+  }
+  /**
+   * 线
+   */
+  Line (path, option = {}, extData = {}) {
+    const finalPath = []
+    // 进行坐标系转换 转4326坐标系
+    for (let i = 0; i < path.length; i++) {
+      const tmpPoint = fromLonLat([path[i][0], path[i][1]], 'EPSG:4326')
+      finalPath.push(tmpPoint)
+    }
+    const tmp = new LineString(finalPath)
+    this.olTarget = new OlFeature(tmp)
+    this.olTarget.set('extData', extData)
+    if (extData.id) {
+      this.olTarget.setId(extData.id)
+    } else {
+      this.olTarget.setId(this.olTarget.ol_uid)
+    }
+    this.olTarget.setStyle(this.commonStyle(option))
+    this.graphTool.Line.style = this.commonStyle(option)
+    this.source.addFeature(this.olTarget)
+    return this.olTarget
   }
   /**
    * 圆形
@@ -293,8 +370,8 @@ import {  OlFeature } from './inherit'
     const finalPath = fromLonLat([center[0], center[1]], 'EPSG:4326')
     const finalRadius = this.formatMetersToRadius(radius)
     const tmp = new Circle(finalPath, finalRadius)
-    tmp.set('extData', extData)
     this.olTarget = new OlFeature(tmp)
+    this.olTarget.set('extData', extData)
     if (extData.id) {
       this.olTarget.setId(extData.id)
     } else {
@@ -316,8 +393,8 @@ import {  OlFeature } from './inherit'
       finalPath.push(tmpPoint)
     }
     const tmp = new Polygon([finalPath])
-    tmp.set('extData', extData)
     this.olTarget = new OlFeature(tmp)
+    this.olTarget.set('extData', extData)
     if (extData.id) {
       this.olTarget.setId(extData.id)
     } else {
@@ -347,10 +424,10 @@ import {  OlFeature } from './inherit'
       finalPath.push(tmpPoint)
     }
     const tmp = fromExtent(finalPath.flat())
-    tmp.set('extData', extData)
     this.olTarget = new OlFeature({
       geometry: tmp
     })
+    this.olTarget.set('extData', extData)
     if (extData.id) {
       this.olTarget.setId(extData.id)
     } else {
@@ -360,6 +437,16 @@ import {  OlFeature } from './inherit'
     this.graphTool.Rectangle.style = this.commonStyle(option)
     this.source.addFeature(this.olTarget)
     return this.olTarget
+  }
+  /**
+   * 获取 自定义数据
+   */
+  getExtData () {
+    if (!this.olTarget) {
+      console.warn('矢量图形未初始化喔~')
+    } else {
+      return this.olTarget.get('extData')
+    }
   }
   /**
    * 判断矢量图形形状
@@ -466,18 +553,26 @@ import {  OlFeature } from './inherit'
    * 初始化矢量图形
    */
   initGraph (options) {
-    this.source = new VectorSource({ wrapX: false })
-    this.vector = new VectorLayer({
-      className: 'VectorLayer',
-      // 数据源
-      source: this.source,
-      // 样式
-      style: (feature) => {
-        const styles = this.commonStyle(options)
-        return styles
-      }
-    })
-    this.map.addLayer(this.vector) // 添加到图层上
+    // 取到map类已实例化的矢量图层
+    if (this.map.getVectorLayer()) {
+      this.vector = this.map.getVectorLayer()
+      this.source = this.vector.getSource()
+      const style = this.commonStyle(options)
+      this.vector.setStyle(style)
+    } else {
+      this.source = new VectorSource({ wrapX: false })
+      this.vector = new VectorLayer({
+        className: 'VectorLayer',
+        // 数据源
+        source: this.source,
+        // 样式
+        style: (feature) => {
+          const styles = this.commonStyle(options)
+          return styles
+        }
+      })
+      this.map.addLayer(this.vector) // 添加到图层上
+    }
   }
 
   /**
@@ -495,15 +590,15 @@ import {  OlFeature } from './inherit'
    * 停止绘制
    */
   stopPaint (e) {
-    if (this.olTarget) {
-      this.map.removeGraph(this.olTarget)
+    if (this.drawTarget) {
+      this.map.removeGraph(this.drawTarget)
     }
   }
   
   /**
    * 绘制矩形
    */
-  paintRectangle () {
+  paintRectangle (coordinates, geometry) {
     return createBox()
   }
   /**
@@ -517,13 +612,13 @@ import {  OlFeature } from './inherit'
    * 获取Id
    */
   getId () {
-    return this.olTarget && this.olTarget.getId()
+    return this.olTarget ? (this.olTarget.getId() || this.olTarget.ol_uid) : ''
   }
+  
   // 事件注册
   on (eventName, callBack = () => {}) {
     if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
       if (!this.events.includes(eventName)) return console.warn('无效的事件：' + eventName)
-
       const eventObject = {
 				eventName: eventName !== 'done' ? 'JCGraph(' + eventName + ')' + this.getId() : 'JCGraph(' + eventName + ')',
 				callBack,
@@ -535,7 +630,6 @@ import {  OlFeature } from './inherit'
 					})
 				}
 			}
-
 			// 未绑定过事件
 			if (!this.JCEvents.has(eventObject.eventName)) {
         if (eventObject.eventName === 'JCGraph(' + eventName + ')') {
@@ -544,6 +638,7 @@ import {  OlFeature } from './inherit'
           eve.callBack = callBack
           eventObject.costomEvent = eve
           window.addEventListener(eventName, e => e.callBack && e.callBack(this.drawFeature))
+          // this.drawTarget.set('JCEvents', this.JCEvents)
         } else {
           //监听事件 - JCMap 处理成 cliclk
 				  this.olTarget.on(eventObject.eventName, eventObject.handler)
@@ -562,7 +657,7 @@ import {  OlFeature } from './inherit'
 				//储存新事件
 				this.JCEvents.set(currentEventObject.eventName, eventObject)
 			}
-			this.olTarget.set('JCEvents', this.JCEvents)    
+      this.olTarget && this.olTarget.set('JCEvents', this.JCEvents)
   }
   //事件移除
   off (eventName, callBack = () => {}) {
@@ -578,7 +673,7 @@ import {  OlFeature } from './inherit'
         // 删除事件存储
         this.JCEvents.delete(eventName)
         
-        this.olTarget.set('JCEvents', this.JCEvents)
+        this.olTarget && this.olTarget.set('JCEvents', this.JCEvents)
         callBack()
       }
   }

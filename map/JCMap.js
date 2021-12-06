@@ -200,7 +200,7 @@ function JCMap(target = 'map', options = {}) {
   let clickTimeId = null //单击事件定时器
 
   // 支持的事件
-  const events = ['complete', 'moveend', 'zoomOnClick', 'click', 'dblclick', 'contextmenu', 'moving']
+  const events = ['complete', 'moveend', 'zoomOnClick', 'click', 'dblclick', 'contextmenu', 'moving', 'pointermove']
 
   //是否移除 map 点击事件
   let isOffClick = false
@@ -346,10 +346,8 @@ function JCMap(target = 'map', options = {}) {
         clickTimeId = setTimeout(() => {
           if (olMap.hasFeatureAtPixel(e.pixel)) {
             // 获取点击的图层，以及要素
-            const [olFeature, olLayer] = olMap.forEachFeatureAtPixel(e.pixel, (feature, layer) => [feature, layer])
-
+            const [olFeature, olLayer] = olMap.forEachFeatureAtPixel(e.pixel, (feature, layer) =>  [feature, layer])
             const JCEvents = olFeature.get('JCEvents') || new Map()
-
             const dispatchAction = (target, eventTarget, JCEvents, event) => {
               JCEvents.forEach(function (currentEventObject, eventName) {
                 if (eventName.toLowerCase().indexOf(event.type) !== -1) {
@@ -370,8 +368,6 @@ function JCMap(target = 'map', options = {}) {
                 }
               })
             }
-
-            // console.log(olFeature,olLayer);
             if (olFeature.JCTYPE === 'ClusterMarker') {
               //聚合要素 features
               const features = olFeature.get('features')
@@ -397,6 +393,9 @@ function JCMap(target = 'map', options = {}) {
                   dispatchAction(olLayer, olFeature, JCEvents, e)
                 }
               }
+            } else if (!olFeature.JCTYPE && olFeature.get('JCTYPE') === 'OlDraw'){
+              // dispatchAction(olFeature, olFeature, JCEvents, e)
+              // 这里暂时不做处理 特殊实例：主动绘制完图形点击事件，目前可不加
             } else {
               // 非聚合要素features
               if (!JCEvents.size) {
@@ -706,11 +705,34 @@ function JCMap(target = 'map', options = {}) {
   this.removeGraph = function (draw) {
     map.removeInteraction(draw)
   }
-
+  this.getInteractions = () => {
+    return map.getInteractions()
+  }
   // 添加 矢量交互图
   this.addGraph = function (draw) {
     map.addInteraction(draw)
   }
+
+  /**
+   * 默认事件
+   */
+  this.defaultEvents = () => {
+    if (this.olTarget) {
+      this.olTarget.on('pointermove', (e) => {
+        let pixel= this.olTarget.getEventPixel(e.originalEvent);
+        let feature= this.olTarget.forEachFeatureAtPixel(pixel,function (feature) {
+            return feature
+          })
+          if(!feature){
+            this.olTarget.getTargetElement().style.cursor = 'auto'
+          }else{
+            this.olTarget.getTargetElement().style.cursor = 'pointer'
+          }
+      })
+    }
+  }
+
+  this.defaultEvents() // 默认事件添加
 }
 
 export default JCMap
