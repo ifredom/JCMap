@@ -15,15 +15,15 @@ const defaultOptions = {
     zIndex: 9,
   },
   // 默认 marker icon 样式
-  src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAZCAYAAADe1WXtAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHrSURBVEjHrdW9a1NxFMbxT9qmNWmaRqlFhE6CLuIL1DcUHDqJm/0HBEUk3RQXpW7dXdysWlAEHQSlo4IoIoggFCko4lJEEaq296aNtvk5JIG2NGmSOjzbuV9+9zzPOUcIwUbCvg7uYGtD9RsVdDCSJh7iT5ofONEyFLkeJvcw/5EQCE8JvRTSjKG9KSiOdvMtz0KxAqzqK+E4cZZ3GNgQikQXV7PET9bAVmqZMMbfNPM4UxOK/iwvB5mfqQNcqTeEHcQ93EVqFRRDaWZHKS41CKzqN2GYQoYv2BtCoJNrvRRe1PnwPeFGpZ+1am5TSrGQ5CJc2E1UqlH8nJCuKFN5WS3wIIUko5DIMjVOab3CEUIbASFLeFwD+Kgct09or/b0cI54rsWXRoQ+Yhxb5X4PDy9TbKWnlyj28mC9SO1MEX9u0v0P5b+YQ9+64e/i+iniZqBHiJLk603Ulm6+P2sQeI9Slmm01Z19DO8iWmog9LmyOYcaWihZ3t5kuR40z2KWiWa21P4eCj/rTFjFnG1N7dMME3kW1wJLhANE7ZxvZUlvTxFNr4GOl82ZQqKlc9LJlZNEVeBseVRjHGz5RiGZYWayAj3HQoZbmz58OD1A9JqQ4hdym4ZWIvaqn8UEZ//Lia5GrJP79cxZqX+cR1gC9S9TwAAAAABJRU5ErkJggg==',
+  icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAZCAYAAADe1WXtAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHrSURBVEjHrdW9a1NxFMbxT9qmNWmaRqlFhE6CLuIL1DcUHDqJm/0HBEUk3RQXpW7dXdysWlAEHQSlo4IoIoggFCko4lJEEaq296aNtvk5JIG2NGmSOjzbuV9+9zzPOUcIwUbCvg7uYGtD9RsVdDCSJh7iT5ofONEyFLkeJvcw/5EQCE8JvRTSjKG9KSiOdvMtz0KxAqzqK+E4cZZ3GNgQikQXV7PET9bAVmqZMMbfNPM4UxOK/iwvB5mfqQNcqTeEHcQ93EVqFRRDaWZHKS41CKzqN2GYQoYv2BtCoJNrvRRe1PnwPeFGpZ+1am5TSrGQ5CJc2E1UqlH8nJCuKFN5WS3wIIUko5DIMjVOab3CEUIbASFLeFwD+Kgct09or/b0cI54rsWXRoQ+Yhxb5X4PDy9TbKWnlyj28mC9SO1MEX9u0v0P5b+YQ9+64e/i+iniZqBHiJLk603Ulm6+P2sQeI9Slmm01Z19DO8iWmog9LmyOYcaWihZ3t5kuR40z2KWiWa21P4eCj/rTFjFnG1N7dMME3kW1wJLhANE7ZxvZUlvTxFNr4GOl82ZQqKlc9LJlZNEVeBseVRjHGz5RiGZYWayAj3HQoZbmz58OD1A9JqQ4hdym4ZWIvaqn8UEZ//Lia5GrJP79cxZqX+cR1gC9S9TwAAAAABJRU5ErkJggg==',
 }
 
 // 默认 marker  样式
 const getDefaultStyle = () => ({
   //icon style
-  img: defaultOptions.src,
-  rotateWithView: true,
-  angle: 0,
+  icon: defaultOptions.icon,
+  rotateWithView: true,  // 是否跟随视图旋转
+  angle: 0, // 图片旋转角度
   //text style
   font: 'normal 12px sans-serif',
   label: '',
@@ -53,9 +53,9 @@ function createSingleIconStyle(style) {
     offset: [0, 0], // 偏移量设置，相对于原点
     scale: 1, // 图标缩放比例
     opacity: 1, // 透明度
-    src: style.img,
+    src: style.icon,
     // img: style.img, // 图标的url
-    rotateWithView: style.rotateWithView, // 是否旋转
+    rotateWithView: style.rotateWithView, // 是否跟随视图旋转
     rotation: (Math.PI / 180) * style.angle, // 旋转角度
   }
   return sIconStyle
@@ -97,6 +97,7 @@ function createSingleTextStyle(style) {
 // 处理 Marker 参数
 function getMarkerOptions(defaultOptions, options) {
   const assignOptions = Object.assign({}, defaultOptions, options)
+
   const {
     projection,
     position, //位置
@@ -128,11 +129,12 @@ function getMarkerOptions(defaultOptions, options) {
 
 // Marker  样式处理函数
 function createMarkerStyle(style) {
+  
   const defaultStyle = getDefaultStyle()
-  // console.log(defaultStyle)
 
+  // console.log('defaultStyle---',defaultStyle);
   const iconStyle = createSingleIconStyle({
-    img: style.img || defaultStyle.img,
+    icon: style.icon || defaultStyle.icon,
     rotateWithView: style.rotateWithView || defaultStyle.rotateWithView,
     angle: style.angle || defaultStyle.angle,
   })
@@ -321,6 +323,7 @@ function JCMarker({ map, ...options }) {
       status: 'resumeMove',
     })
   }
+
   // 暂停行驶动画
   this.pauseMove = () => {
     const vectorLayer = this.map.vectorLayer
@@ -338,16 +341,17 @@ function JCMarker({ map, ...options }) {
 
   // 行驶动画
   this.moveAlong = (path = [], speed = 60, f = () => {}, circlable = true) => {
+    if(!path.length || !Array.isArray(path)) return false
     const vectorLayer = this.map.vectorLayer
     const eventName = 'moving'
     const id = this.getId()
     const lineFeature = vectorLayer.forEachFeature((feature) => {
       return feature.get('linePath') === path && feature
     })
-    //是否在此线上行驶动画
-    const canMoveAlong = lineFeature && lineFeature.getGeometry().intersectsCoordinate(this.getPosition())
-
-    if (canMoveAlong) {
+    //是否在此线上行驶动画-可能不准确
+    // const canMoveAlong = lineFeature && lineFeature.getGeometry().intersectsCoordinate(this.getPosition())
+    // console.log('canMoveAlong---',canMoveAlong,this.getPosition())
+    // if (canMoveAlong) {
       vectorLayer.dispatchEvent({
         type: eventName,
         eventName: 'JCMarker(moving)' + id,
@@ -358,9 +362,10 @@ function JCMarker({ map, ...options }) {
         marker: this,
         status: 'startMove',
       })
-    }
+    // }
   }
 
+  // 更新动度
   this.updateMoveSpeed = (updateSpeed) => {
     const vectorLayer = this.map.vectorLayer
     const eventName = 'moving'
@@ -377,6 +382,7 @@ function JCMarker({ map, ...options }) {
     //矢量marker
 
     this.JCEvents = new Map() // 存储事件
+    
     //事件监听
     this.on = (eventName, callBack = () => {}) => {
       if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
@@ -388,14 +394,15 @@ function JCMarker({ map, ...options }) {
         vectorLayer.dispatchEvent({
           type: eventName,
           eventName: 'JCMarker(moving)' + id,
-          callBack,
-          status: 'listener',
+          moveCallBack:callBack,
+          status:'moveCallBack'
         })
       }
       const eventObject = {
         eventName: 'JCMarker(' + eventName + ')' + this.getId(),
         callBack,
         handler: (e) => {
+          console.log(e);
           const returnValue = {
             type: e.eventName,
             target: this,
@@ -463,6 +470,9 @@ function JCMarker({ map, ...options }) {
         .setRotation((Math.PI / 180) * angle)
     }
 
+    this.getAngle = function (angle = 0) {
+      return this.options.angle
+    }
     // 设置 Marker 坐标
     this.setPosition = function (position) {
       if (!position) return

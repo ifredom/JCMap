@@ -1,3 +1,9 @@
+
+  /**
+   * 16进制颜色转为RGB格式
+   * @param {*} sHex  16进制颜色
+   * @param {*} opacity 透明度
+   */
 export function toColorRgba(sHex, opacity = 1) {
   // 十六进制颜色值的正则表达式
   var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{4}|[0-9a-fA-f]{6}|[0-9a-fA-f]{8})$/;
