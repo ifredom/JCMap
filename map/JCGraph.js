@@ -337,7 +337,7 @@ import {  OlFeature, OlDraw } from './inherit'
     //   this.olTarget.on = this.on.bind(this.olTarget)
     //   this.olTarget.off = this.off.bind(this.olTarget)
     // }
-    return this.olTarget
+    return this
   }
   /**
    * 线
@@ -360,7 +360,7 @@ import {  OlFeature, OlDraw } from './inherit'
     this.olTarget.setStyle(this.commonStyle(option))
     this.graphTool.Line.style = this.commonStyle(option)
     this.source.addFeature(this.olTarget)
-    return this.olTarget
+    return this
   }
   /**
    * 圆形
@@ -380,7 +380,7 @@ import {  OlFeature, OlDraw } from './inherit'
     this.olTarget.setStyle(this.commonStyle(option))
     this.graphTool.Circle.style = this.commonStyle(option)
     this.source.addFeature(this.olTarget)
-    return this.olTarget
+    return this
   }
   /**
    * 多边形
@@ -403,7 +403,7 @@ import {  OlFeature, OlDraw } from './inherit'
     this.olTarget.setStyle(this.commonStyle(option))
     this.graphTool.Polygon.style = this.commonStyle(option)
     this.source.addFeature(this.olTarget)
-    return this.olTarget
+    return this
   }
   /**
    * 矩形
@@ -436,7 +436,7 @@ import {  OlFeature, OlDraw } from './inherit'
     this.olTarget.setStyle(this.commonStyle(option))
     this.graphTool.Rectangle.style = this.commonStyle(option)
     this.source.addFeature(this.olTarget)
-    return this.olTarget
+    return this
   }
   /**
    * 获取 自定义数据
@@ -625,7 +625,7 @@ import {  OlFeature, OlDraw } from './inherit'
 				handler: e => {
 					e.callBack({
 						type: e.eventName,
-						target: this,
+						target: e.target,
 						event: e.event
 					})
 				}
@@ -658,6 +658,7 @@ import {  OlFeature, OlDraw } from './inherit'
 				this.JCEvents.set(currentEventObject.eventName, eventObject)
 			}
       this.olTarget && this.olTarget.set('JCEvents', this.JCEvents)
+      console.log(this.JCEvents);
   }
   //事件移除
   off (eventName, callBack = () => {}) {
