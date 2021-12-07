@@ -27,6 +27,10 @@ function OlView(options) {
 function OlFeature(options) {
   Feature.call(this, options);
   this.JCTYPE = "OlFeature";
+  // 特殊方法, 用于获取用户加上去的自定义数据, 为啥加在这里, 因为外面抛出去的类是继承于Feature, 但是我们只是继承Feature类, 并没有重写这个类, 所以在此定义
+  this.getExtData = () => {
+    return this.get('extData')
+  }
 }
 
 // 继承Point
