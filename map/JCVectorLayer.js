@@ -41,13 +41,13 @@ class TrackAnimation {
 		this.speed = speed // 行驶速度
 		this.path = path // 执行路径
 		this.lineGeometry = lineFeature.getGeometry() // 线条矢量图形对象
- 
+
 		this.line100 = []
 		// const line100 = Array.from(new Array(100)).map((e,i)=>{
 		// 	const coordinate = this.lineGeometry.getCoordinateAt((i+1)/100)
 		// 	return coordinate
 		// })
- 
+
 		// console.log(line100,path);
 	}
 	// 动画监听
@@ -95,7 +95,6 @@ class TrackAnimation {
 		this.marker.setGeometry(this.position)
 		// 移除动画监听
 		vectorLayer.un('postrender', this.moveFeature)
-
 	}
 
 	//继续 - 继续执行动画
@@ -110,15 +109,12 @@ class TrackAnimation {
 		this.speed = speed
 	}
 
-
-
 	// 到达终点回调
 	onArrived(vectorLayer) {
-
 		// this.timer && clearTimeout(this.timer)
 		// this.passedPath.push(path[path.length - 1])
-		this.position.setCoordinates(this.path[this.path.length - 1])
-		this.marker.setGeometry(this.position)
+		// this.position.setCoordinates(this.path[this.path.length - 1])
+		// this.marker.setGeometry(this.position)
 		// this.marker.olTarget.dispatchEvent({
 		//   type: this.eventName,
 		//   passedPath: this.passedPath,
@@ -127,8 +123,7 @@ class TrackAnimation {
 		//   eventTarget: this.marker.olTarget, // 实际应该接收事件ol 对象
 		// })
 		this.isArrived = true
-		this.stopMove(vectorLayer)
-
+		// this.stopMove(vectorLayer)
 	}
 
 	//执行动画函数
@@ -142,11 +137,49 @@ class TrackAnimation {
 		this.distance = (this.distance + (speed * elapsedTime) / 1e6) % 2
 		// 刷新上一时刻
 		this.lastTime = time
+		// 不是循环播放，限制 超出距离
+		if(!this.circlable){
+			if(this.distance>=1){
+				this.distance = 1
+			}
+		}
 		// 反减可实现反向运动，获取坐标点
 		const currentCoordinate = this.lineGeometry.getCoordinateAt(this.distance > 1 ? 2 - this.distance : this.distance)
 
 		// 动画监听
 		this.onMoveAnimate()
+
+		this.startPos = this.endPos
+
+		this.endPos = currentCoordinate
+
+		// 此判断可去除停止继续后的角度闪烁
+		if (this.startPos[0] !== this.endPos[0] && this.startPos[1] !== this.endPos[1]) {
+			let point1 = turf.point(this.startPos)
+			let point2 = turf.point(this.endPos)
+			let bearing = turf.bearing(point1, point2)
+
+			this.marker.setAngle(bearing - 90)
+			this.marker.setPosition(this.endPos)
+			
+		} else {
+			console.log('----', event, this.distance)
+
+
+
+
+		}
+
+		// 是否在轨迹线上
+		// console.log('1111---', this.lineGeometry.intersectsCoordinate(currentCoordinate))
+		this.position.setCoordinates(this.endPos)
+
+		// 获取渲染图层的画布
+		const vectorContext = getVectorContext(event)
+		vectorContext.setStyle(this.marker.getOlStyle())
+		vectorContext.drawGeometry(this.position)
+
+		// console.log(marker.olTarget.getStyle())
 
 		//是否循环
 		if (!this.circlable) {
@@ -156,34 +189,6 @@ class TrackAnimation {
 				return this.onArrived(vectorLayer)
 			}
 		}
-
-		this.startPos = this.endPos
-
-		this.endPos = currentCoordinate
-
-		// 此判断可去除停止继续后的角度闪烁
-		// if(this.startPos[0] !== this.endPos[0] && this.startPos[1] !== this.endPos[1])
- 		// 是否在轨迹线上
-		// console.log('1111---', this.lineGeometry.intersectsCoordinate(currentCoordinate))
-
-		let point1 = turf.point(this.startPos)
-		let point2 = turf.point(this.endPos)
-		let bearing = turf.bearing(point1, point2)
-
-		this.marker.setAngle(bearing - 90)
-		this.marker.setPosition(this.endPos)
-
-		this.position.setCoordinates(this.endPos)
-
-
-
-		// 获取渲染图层的画布
-		const vectorContext = getVectorContext(event)
-
-		vectorContext.setStyle(this.marker.getOlStyle())
-		vectorContext.drawGeometry(this.position)
-
-		// console.log(marker.olTarget.getStyle())
 		// 请求地图在下一帧渲染
 		vectorLayer.map.render()
 	}

@@ -13,7 +13,13 @@ var length = turf.length(line, options)
 
 var along = turf.along(line, length * 0.3, options)
 
-console.log('line 30% 长度 位置的点对象 ：', along.geometry)
+ 
+let startPos = turf.point([116.48538303047181, 39.99969219049072])
+let endPos = turf.point([116.48538303047181, 39.99969219049072])
+let bearing = turf.bearing(startPos, endPos)
+
+
+console.log('line 30% 长度 位置的点对象 ：', along.geometry,bearing)
 
 // 单位还可以设置为degrees, radians, miles, or kilometers
 
