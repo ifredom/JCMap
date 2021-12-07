@@ -3,7 +3,7 @@ import JCGraph from './JCGraph'
 import JCMap from './JCMap'
 import JCMarker from './JCMarker'
 import JCMarkerCluster from './JCMarkerCluster'
-import JCOverlay from './JCOverlay'
+import JCInfoWindow from './JCInfoWindow'
 import JCPolyline from './JCPolyline'
 
 export default {
@@ -15,6 +15,6 @@ export default {
   // Event: new Event(),
   VectorGraph: JCGraph, // 矢量图形类
   // Search: _JCSearch, // 搜索类
-  InfoOverlay: JCOverlay, // 信息框覆盖物类
+  InfoWindow: JCInfoWindow, // 信息框类
   Polyline: JCPolyline, // 带箭头轨迹线类
 }

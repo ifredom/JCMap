@@ -58,9 +58,10 @@ function OlCluster(options) {
   this.overlayIds = []; // 聚合物，单个 overlayMarker 容器
 }
 
-function OlOverlay(options) {
+// 信息框类 OlInfoWindow 继承 Overlay
+function OlInfoWindow(options) {
   Overlay.call(this, options);
-  this.JCTYPE = "OlOverlay";
+  this.JCTYPE = "OlInfoWindow";
 }
 
 function OlLineString(options) {
@@ -79,7 +80,7 @@ inheritPrototype(Marker, Feature);
 inheritPrototype(OlFeature, Feature);
 inheritPrototype(OlView, View);
 inheritPrototype(OlMap, _Map);
-inheritPrototype(OlOverlay, Overlay);
+inheritPrototype(OlInfoWindow, Overlay);
 inheritPrototype(OlLineString, LineString);
 inheritPrototype(OlDraw, Draw)
 
@@ -91,7 +92,7 @@ export {
   Marker,
   OverlayMarker,
   OlCluster,
-  OlOverlay,
+  OlInfoWindow,
   OlLineString,
   OlDraw
 };

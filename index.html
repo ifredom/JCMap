@@ -4,38 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./assets/style/index.css">
     <title>JCMap</title>
-    <style>
-      .box-container {
-        position: absolute;
-        text-align: center;
-      }
-      .single-box {
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-        background-color: #fff;
-        z-index: 999;
-        border: 1px solid #eee;
-        font-size: 12px;
-        width: 200px;
-        height: 121px;
-      }
-      .title {
-        background-color: #ddd;
-        border-bottom: #eee;
-        line-height: 25px;
-        height: 25px;
-        font-size: 15px;
-        margin-bottom: 10px;
-        padding: 0 10px;
-      }
-    </style>
   </head>
 
   <body>
     <div id="app">
       <div style="display: none">
-        <div class="single-box" id="single-box">
-          <div class="title">添加标记</div>
+        <div class="single" id="single" style="white-space: nowrap;">
+          自定义信息框
         </div>
       </div>
       <div id="map" style="height: 600px"></div>

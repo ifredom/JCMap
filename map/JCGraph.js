@@ -653,7 +653,6 @@ import {  OlFeature, OlDraw } from './inherit'
           eve.initEvent(eventName, false, true)
           eve.callBack = callBack
           eventObject.costomEvent = eve
-          console.log(eventObject);
           window.addEventListener(eventName, e => e.callBack && e.callBack(this.drawFeature))
           // this.drawTarget.set('JCEvents', this.JCEvents)
         } else {

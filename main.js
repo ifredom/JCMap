@@ -206,21 +206,37 @@ rectangle1.on('click', e => {
 	console.log(e.target.getExtData())
 })
 
-let Single = new JC.InfoOverlay({
-	center: [91.132212, 30.860361],
-	content: document.querySelector('#single-box').outerHTML,
-	offset: [-100, -146]
+let Single = new JC.InfoWindow({
+  // center: [116.47699844509125, 39.9982652552948],
+  // content: document.querySelector('#single').outerHTML,
+  // offset: [-100, -146], 
+  offset: [0, 0]
 })
 
-map.addOverlays(Single)
+// map.addOverlays(Single)
+let marker5 = new JC.Marker({
+  position: [116.46699, 39.9982652552948],
+  offset: [-30, -20],
+  img: ''
+})
+map.add(marker5)
+Single.show(map, [116.46699, 39.9982652552948])
 
-Single.on('click', e => {
-	console.log(e, e.getDisplay())
-	if (e.getDisplay() === 'block') {
-		e.hide()
-	} else {
-		e.show()
-	}
+Single.on('click', (e) => {
+  console.log(e, e.getDisplay())
+  if (e.getDisplay() === 'block') {
+    e.hide()
+  } else {
+    e.show()
+  }
+})
+
+
+
+
+
+map.on('click', (e) => {
+  console.log(e.coordinate)
 })
 
 let graphSelect = document.querySelector('#selected')
