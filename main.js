@@ -174,28 +174,32 @@ markerClusterer.on('click', function (ev) {
 
 let graph = new JC.VectorGraph(map)
 // graph.activate("Rectangle");
-// graph.on("done", (e) => {
-//   graph.deactivate()
-// });
-let point1 = graph.Point([116.47966187864304,39.99695633729553], {imageFill: '#264df6'}, {'name': '点'})
+graph.on("done", (e) => {
+  // graph.deactivate()
+  console.log(e, '绘制完');
+});
+graph.on('modifyend', e => {
+  console.log(e, '编辑完');
+})
+let point1 = graph.Point([116.47966187864304,39.99695633729553], null, {'name': '点'})
 point1.on('click', e => {
-  console.log(e.target.get('extData'));
+  console.log(e.target.getExtData());
 })
 let line1 = graph.Line([[116.47764753967286,39.9971494563446],[116.48007762104035, 39.99650572618103]], null, {'name': '线'})
 line1.on('click', e => {
-  console.log(e.target.get('extData'));
+  console.log(e.target.getExtData());
 })
 let circle1 = graph.Circle([116.47614550262452, 39.99763225396728], 81.75489888771256, null, {'name': '圆'})
 circle1.on('click', e => {
-  console.log(e.target.get('extData'));
+  console.log(e.target.getExtData());
 })
 let polygon1 = graph.Polygon([[116.47699844509125, 39.9982652552948], [116.47721838623048, 39.997278202377316], [116.47869360118867, 39.99738549073791], [116.47857558399201, 39.9979058392868], [116.47837710052491, 39.99842618783569]], null, {'name': '多边形'})
 polygon1.on('click', e => {
-  console.log(e.target.get('extData'));
+  console.log(e.target.getExtData());
 })
 let rectangle1 = graph.Rectangle([116.48053896099091,39.99640916665649, 116.48225557476044, 39.99715482076263], null, {'name': '矩形'})
 rectangle1.on('click', e => {
-  console.log(e.target.get('extData'));
+  console.log(e.target.getExtData());
 })
 
 let Single = new JC.InfoOverlay({
@@ -294,7 +298,6 @@ function pauseAnimation() {
 }
 
 function resumeAnimation() {
-  graph.activate("Rectangle");
   if (animating === 'resume') return
   animating = 'resume'
   marker.resumeMove(lineArr, 100)
@@ -304,7 +307,6 @@ function stopAnimation() {
   animating = false
   startButton.textContent = 'Start Animation'
   marker.stopMove()
-  graph.deactivate()
 }
 
 startButton.addEventListener('click', function () {
@@ -324,3 +326,19 @@ stopButton.addEventListener('click', function () {
 map.on('click', (e) => {
   console.log(e.coordinate)
 })
+
+let graphSelect = document.querySelector('#selected')
+graphSelect.onchange = () => {
+  if (graphSelect.value === '') {
+    graph.deactivate()
+  } else {
+    graph.activate(graphSelect.value)
+  }
+}
+
+let graphEdit = document.querySelector('#edit')
+graphEdit.onclick = () => {
+  // if (graphSelect.value) {
+    graph.editPaint()
+  // }
+}

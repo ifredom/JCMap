@@ -39,7 +39,8 @@ import {  OlFeature, OlDraw } from './inherit'
     this.source = null // 数据源
     this.vector = null // 准备放在图层上的数据元素
     this.drawFeature = null
-    this.events = ['done', 'click', 'dblclick', 'contextmenu'] // 支持的事件
+    this.events = ['done', 'modifyend', 'click', 'dblclick', 'contextmenu'] // 支持的事件
+    this.specialEvents = ['done', 'modifyend'] // 特殊事件
     this.clickTimeId = null //单击事件定时器
     this.JCEvents = new Map() // 存储事件
     this.commonStyle = option => {
@@ -75,7 +76,7 @@ import {  OlFeature, OlDraw } from './inherit'
           radius: option.imageRadius || 7,
           fill: new Fill({
             // 填充颜色
-            color: option.imageFill || '#e81818'
+            color: option.imageFill || '#264df6'
           })
         })
       })
@@ -261,7 +262,7 @@ import {  OlFeature, OlDraw } from './inherit'
       data = {
         center: points
       }
-    } else if (type === 'LineString') {
+    } else if (type === 'Line') {
       const points = geo.getCoordinates()
       data = {
         points: points
@@ -297,7 +298,7 @@ import {  OlFeature, OlDraw } from './inherit'
     }
   }
   /**
-   * 激活矢量图绘制
+   * 激活矢量图绘制deactivate
    * @param {*} graphName
    */
   activate (graphName) {
@@ -462,6 +463,8 @@ import {  OlFeature, OlDraw } from './inherit'
           type = 'Rectangle'
         }
       }
+    } else if (type === 'LineString') {
+      type = 'Line'
     }
     return type
   }
@@ -470,7 +473,7 @@ import {  OlFeature, OlDraw } from './inherit'
    */
   editPaint () {
     const defaultStyle = new Modify({ source: this.source }).getOverlay().getStyleFunction()
-
+    let _this = this
     const modify = new Modify({
       source: this.source,
       condition: function (event) {
@@ -490,9 +493,13 @@ import {  OlFeature, OlDraw } from './inherit'
               modifyGeometry.point = modifyPoint
               modifyGeometry.geometry0 = modifyGeometry.geometry
               // get anchor and minimum radius of vertices to be used
-              const result = this.calculateCenter(modifyGeometry.geometry0)
+              const result = _this.calculateCenter(modifyGeometry.geometry0)
               modifyGeometry.center = result.center
               modifyGeometry.minRadius = result.minRadius
+              // let typeName = _this.judgeShape(modifyGeometry.geometry0)
+              // if (typeName === 'Circle') {
+              //   geometry.translate(dx, dy)
+              // }
             }
 
             const center = modifyGeometry.center
@@ -508,16 +515,21 @@ import {  OlFeature, OlDraw } from './inherit'
               const currentRadius = Math.sqrt(dx * dx + dy * dy)
               if (currentRadius > 0) {
                 const currentAngle = Math.atan2(dy, dx)
-									const geometry = modifyGeometry.geometry0.clone()
-									geometry.scale(currentRadius / initialRadius, undefined, center)
-									const typeName = modifyGeometry.geometry0.getType()
-									if (typeName === 'Polygon') {
-                    let shapeName = this.judgeShape(modifyGeometry.geometry0)
-										if (shapeName !== 'Rectangle') {
-											geometry.rotate(currentAngle - initialAngle, center)
-										}
-									}
-									modifyGeometry.geometry = geometry
+                
+                const geometry = modifyGeometry.geometry0.clone()
+                geometry.scale(currentRadius / initialRadius, undefined, center)
+                const typeName = modifyGeometry.geometry0.getType()
+                if (typeName === 'Polygon') {
+                  let shapeName = _this.judgeShape(modifyGeometry.geometry0)
+                  if (shapeName !== 'Rectangle') {
+                    geometry.rotate(currentAngle - initialAngle, center)
+                  }
+                } else if (typeName === 'Circle') {
+                  geometry.translate(dx, dy)
+                } else if (typeName === 'Point') {
+                  geometry.translate(dx, dy)
+                }
+                modifyGeometry.geometry = geometry
               }
             }
           }
@@ -545,6 +557,10 @@ import {  OlFeature, OlDraw } from './inherit'
         if (modifyGeometry) {
           feature.setGeometry(modifyGeometry.geometry)
           feature.unset('modifyGeometry', true)
+          let targets = _this.JCEvents.get('JCGraph(modifyend)')
+          _this.drawFeature = _this.buildFeature(feature)
+          feature.set('JCTYPE', 'OlDraw')
+          window.dispatchEvent(targets.costomEvent)
         }
       })
     })
@@ -598,7 +614,7 @@ import {  OlFeature, OlDraw } from './inherit'
   /**
    * 绘制矩形
    */
-  paintRectangle (coordinates, geometry) {
+  paintRectangle () {
     return createBox()
   }
   /**
@@ -620,7 +636,7 @@ import {  OlFeature, OlDraw } from './inherit'
     if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
       if (!this.events.includes(eventName)) return console.warn('无效的事件：' + eventName)
       const eventObject = {
-				eventName: eventName !== 'done' ? 'JCGraph(' + eventName + ')' + this.getId() : 'JCGraph(' + eventName + ')',
+				eventName: !this.specialEvents.includes(eventName) ? 'JCGraph(' + eventName + ')' + this.getId() : 'JCGraph(' + eventName + ')',
 				callBack,
 				handler: e => {
 					e.callBack({
@@ -637,6 +653,7 @@ import {  OlFeature, OlDraw } from './inherit'
           eve.initEvent(eventName, false, true)
           eve.callBack = callBack
           eventObject.costomEvent = eve
+          console.log(eventObject);
           window.addEventListener(eventName, e => e.callBack && e.callBack(this.drawFeature))
           // this.drawTarget.set('JCEvents', this.JCEvents)
         } else {
@@ -657,12 +674,11 @@ import {  OlFeature, OlDraw } from './inherit'
 				//储存新事件
 				this.JCEvents.set(currentEventObject.eventName, eventObject)
 			}
-      this.olTarget && this.olTarget.set('JCEvents', this.JCEvents)
-      console.log(this.JCEvents);
+      this.olTarget && this.olTarget.set('JCEvents', this.JCEvents) 
   }
   //事件移除
   off (eventName, callBack = () => {}) {
-    eventName =  eventName !== 'done' ? 'JCGraph(' + eventName + ')' + this.getId() : 'JCGraph(' + eventName + ')'
+    eventName =  !this.specialEvents.includes(eventName) ? 'JCGraph(' + eventName + ')' + this.getId() : 'JCGraph(' + eventName + ')'
 
       if (this.JCEvents.has(eventName)) {
         // 获取事件对象
