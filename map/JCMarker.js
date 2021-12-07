@@ -316,7 +316,7 @@ function JCMarker({ map, ...options }) {
     const vectorLayer = this.map.getVectorLayer()
     const eventName = 'moving'
     const id = this.getId()
-    vectorLayer.dispatchEvent({
+    vectorLayer && vectorLayer.dispatchEvent({
       type: eventName, // 订阅事件对象的名称
       eventName: 'JCMarker(moving)' + id,
       marker: this,
@@ -330,7 +330,7 @@ function JCMarker({ map, ...options }) {
     const vectorLayer = this.map.vectorLayer
     const eventName = 'moving'
     const id = this.getId()
-    vectorLayer.dispatchEvent({
+    vectorLayer && vectorLayer.dispatchEvent({
       type: eventName,
       eventName: 'JCMarker(moving)' + id,
       marker: this,
@@ -344,7 +344,7 @@ function JCMarker({ map, ...options }) {
     const eventName = 'moving'
     const id = this.getId()
 
-    vectorLayer.dispatchEvent({
+    vectorLayer && vectorLayer.dispatchEvent({
       type: eventName,
       eventName: 'JCMarker(moving)' + id,
       marker: this,
@@ -418,7 +418,7 @@ function JCMarker({ map, ...options }) {
         const vectorLayer = this.map.vectorLayer
         const eventName = 'moving'
         const id = this.getId()
-        vectorLayer.dispatchEvent({
+        vectorLayer && vectorLayer.dispatchEvent({
           type: eventName,
           eventName: 'JCMarker(moving)' + id,
           moveCallBack:callBack,

@@ -60,6 +60,9 @@
           [116.483633, 39.998935],
           [116.48367, 39.998968],
           [116.484648, 39.999861],
+          [116.4889679286499, 40.003822062536884],
+  [116.49177741676331, 40.00160192330932],
+  [116.48720693260194, 39.9987695105896]
         ]
 
       var map = new AMap.Map('container', {
@@ -71,8 +74,8 @@
       marker = new AMap.Marker({
         map: map,
         position: [116.478935, 39.997761],
-        icon: 'https://webapi.amap.com/images/car.png',
-        offset: new AMap.Pixel(-26, -13),
+        // icon: 'https://webapi.amap.com/images/car.png',
+        // offset: new AMap.Pixel(-26, -13),
         autoRotation: true,
         angle: -90,
       })
@@ -95,6 +98,7 @@
         // strokeStyle: "solid"  //线样式
       })
 
+
       var passedPolyline = new AMap.Polyline({
         map: map,
         // path: lineArr,
@@ -103,10 +107,11 @@
         strokeWeight: 6, //线宽
         // strokeStyle: "solid"  //线样式
       })
+      // passedPolyline.setPath(lineArr) 
 
       marker.on('moving', function (e) {
-        console.log(e.passedPath)
-        passedPolyline.setPath(e.passedPath)
+        console.log(e)
+        // passedPolyline.setPath(e.passedPath)
       })
 
       map.setFitView()
@@ -114,6 +119,7 @@
       function startAnimation() {
         marker.moveAlong(lineArr, 200)
         marker2.moveAlong(lineArr.reverse(), 200)
+ 
       }
 
       function pauseAnimation() {

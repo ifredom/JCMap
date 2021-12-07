@@ -43,42 +43,25 @@ class TrackAnimation {
 		this.lineGeometry = lineFeature.getGeometry() // 线条矢量图形对象
 		this.updateDistance = 0
 		this.progress = 0 //当前进度
+
+		this.iconAngle = -90
+		this.startAngle = 0 //  动画本次的起点
+		this.endAngle = 0 // 动画上次的停止点
+		this.alreadyAngle = 0
 		this.passedPath = [] // 驶过路径
 
 	}
-	// 动画监听
-	onMoveAnimate() {
-		const progress = parseInt(this.distance.toFixed(2)*100)
- 
-		//去除相同的进度
-		if(this.progress !== progress){
 
-			const inLineGeometry = 	this.lineGeometry.intersectsCoordinate(this.endPos)
-
-			inLineGeometry && this.passedPath.push(this.endPos)
-
-			console.log(this.passedPath);
-			
- 
-
-			this.progress = progress
-			if (this.moveCallBack) {
-				this.marker.olTarget.dispatchEvent({
-					progress, // 行驶进度 - 无法精确到每处
-					type: this.eventName,
-					passedPath: this.passedPath,
-					callBack: this.moveCallBack
-					// eventName: type // 实际派发的事件
-				})
-			}
-		}
-	}
 	//初始化 - 动画对象- 动画准备就绪
 	initMove(vectorLayer) {
 		// 设置当前动画上次执行时间
 		this.lastTime = Date.now()
 		// 设置上次动画的停止点
 		this.endPos = this.path[0]
+ 
+		this.entAngle = this.iconAngle //  动画本次的起点
+	
+		this.passedPath.push(this.endPos)
 		// 设置动画效果的执行函数
 		this.moveFeature = event => this.moveAnimate(event, vectorLayer)
 		// 移除动画执行函数
@@ -132,7 +115,41 @@ class TrackAnimation {
 		console.log('onArrived---')
 		this.stopMove(vectorLayer)
 	}
+	// 动画监听
+	onMoveAnimate(angle) {
+		const progress = parseInt(this.distance.toFixed(2)*100)
+		const inLineGeometry = 	this.lineGeometry.intersectsCoordinate(this.endPos)
+		if(this.alreadyAngle>0 && inLineGeometry ){
+			this.alreadyAngle = 0
+			this.passedPath.push(this.endPos)
+			console.log(this.passedPath);
+		}
+		
+		//去除相同的进度
+		if(this.progress !== progress){
 
+	
+		
+			this.startAngle = this.endAngle //  动画本次的起点角度
+		
+			this.endAngle = angle // 动画上次的停止点角度
+
+
+			this.alreadyAngle += parseInt(Math.abs(Math.abs(this.endAngle) - Math.abs(this.startAngle)).toFixed(2))
+
+			this.progress = progress
+			
+			if (this.moveCallBack) {
+				this.marker.olTarget.dispatchEvent({
+					progress, // 行驶进度 - 无法精确到每处
+					type: this.eventName,
+					passedPath: this.passedPath,
+					callBack: this.moveCallBack
+					// eventName: type // 实际派发的事件
+				})
+			}
+		}
+	}
 	//执行动画函数
 	moveAnimate(event, vectorLayer) {
 		// 获取当前渲染帧状态时刻
@@ -165,7 +182,7 @@ class TrackAnimation {
 		// 去除停止继续后,startPos，endPos 坐标相同,导致角度为0，闪烁的问题
 		if (this.startPos[0] !== this.endPos[0] || this.startPos[1] !== this.endPos[1] ) {
 			// 此时为 动画执行过程中 坐标不同,  
-			this.marker.setAngle(bearing - 90)
+			this.marker.setAngle(bearing + this.iconAngle)
 			this.marker.setPosition(this.endPos)
 		} 
  
@@ -178,7 +195,7 @@ class TrackAnimation {
 		// console.log(marker.olTarget.getStyle())
 
 		// 动画监听
-		this.onMoveAnimate()
+		this.onMoveAnimate(bearing - 90)
 
 		//是否循环
 		if (!this.circlable) {
