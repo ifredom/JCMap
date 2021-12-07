@@ -45,13 +45,18 @@
       <label for="speed">
         speed:&nbsp;
         <input id="speed" type="range" min="10" max="999" step="10" value="100" />
-
+      </label>
+      <label for="distance">
+        distance:&nbsp;
+        <input id="distance" type="range" min="0" max="100" step="10" value="0" />
+      </label>
+      <div>
+  
         <input type="button" class="btn" value="开始动画" id="start" />
         <input type="button" class="btn" value="暂停动画" id="pause" />
-
         <input type="button" class="btn" value="继续动画" id="resume" />
         <input type="button" class="btn" value="停止动画" id="stop" />
-      </label>
+      </div>
     </div>
 
     <script type="module" src="/main.js"></script>

@@ -114,6 +114,18 @@ function getMarkerOptions(defaultOptions, options) {
   assignOptions.extData && delete assignOptions.extData
   const style = JSON.parse(JSON.stringify(assignOptions))
 
+
+  // assignOptions.id && console.log({
+  //   geometry: new OlPoint(position),
+  //   content,
+  //   position,
+  //   offset,
+  //   angle,
+  //   extData,
+  //   id: extData.id ? extData.id : null,
+  //   overlayMarker: null,
+  //   style: style, // 获取到样式
+  // });
   return {
     geometry: new OlPoint(position),
     content,
@@ -219,6 +231,8 @@ function createMarker(options, type) {
   } else {
     const overlayMarker = createOverlayMarker(options)
     options.overlayMarker = overlayMarker
+    // 去除默认图形样式
+    marker.setStyle(new Style())
     marker.set('overlayMarker', overlayMarker)
   }
 
@@ -377,6 +391,19 @@ function JCMarker({ map, ...options }) {
       status: 'updateSpeed',
     })
   }
+  // 更新进度
+  this.updateMoveDistance = (updateDistance) => {
+    const vectorLayer = this.map.vectorLayer
+    const eventName = 'moving'
+    const id = this.getId()
+    vectorLayer.dispatchEvent({
+      type: eventName,
+      eventName: 'JCMarker(moving)' + id,
+      updateDistance,
+      status: 'updateDistance',
+    })
+  }
+
 
   if (this.JCTYPE === 'MARKER') {
     //矢量marker

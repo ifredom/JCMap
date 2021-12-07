@@ -41,25 +41,36 @@ class TrackAnimation {
 		this.speed = speed // 行驶速度
 		this.path = path // 执行路径
 		this.lineGeometry = lineFeature.getGeometry() // 线条矢量图形对象
+		this.updateDistance = 0
+		this.progress = 0 //当前进度
+		this.passedPath = [] // 驶过路径
 
-		this.line100 = []
-		// const line100 = Array.from(new Array(100)).map((e,i)=>{
-		// 	const coordinate = this.lineGeometry.getCoordinateAt((i+1)/100)
-		// 	return coordinate
-		// })
-
-		// console.log(line100,path);
 	}
 	// 动画监听
 	onMoveAnimate() {
-		// console.log(this.distance);
-		if (this.moveCallBack) {
-			this.marker.olTarget.dispatchEvent({
-				type: this.eventName,
-				// passedPath: this.passedPath,
-				callBack: this.moveCallBack
-				// eventName: type // 实际派发的事件
-			})
+		const progress = parseInt(this.distance.toFixed(2)*100)
+ 
+		//去除相同的进度
+		if(this.progress !== progress){
+
+			const inLineGeometry = 	this.lineGeometry.intersectsCoordinate(this.endPos)
+
+			inLineGeometry && this.passedPath.push(this.endPos)
+
+			console.log(this.passedPath);
+			
+ 
+
+			this.progress = progress
+			if (this.moveCallBack) {
+				this.marker.olTarget.dispatchEvent({
+					progress, // 行驶进度 - 无法精确到每处
+					type: this.eventName,
+					passedPath: this.passedPath,
+					callBack: this.moveCallBack
+					// eventName: type // 实际派发的事件
+				})
+			}
 		}
 	}
 	//初始化 - 动画对象- 动画准备就绪
@@ -109,21 +120,17 @@ class TrackAnimation {
 		this.speed = speed
 	}
 
+	// 更新进度
+	updateDistance(distance) {
+		this.updateDistance = updateDistance
+	}
 	// 到达终点回调
 	onArrived(vectorLayer) {
 		// this.timer && clearTimeout(this.timer)
-		// this.passedPath.push(path[path.length - 1])
 		// this.position.setCoordinates(this.path[this.path.length - 1])
-		// this.marker.setGeometry(this.position)
-		// this.marker.olTarget.dispatchEvent({
-		//   type: this.eventName,
-		//   passedPath: this.passedPath,
-		//   callBack: currentEventObject.moveCallBack,
-		//   eventName: this.type, // 实际派发的事件
-		//   eventTarget: this.marker.olTarget, // 实际应该接收事件ol 对象
-		// })
 		this.isArrived = true
-		// this.stopMove(vectorLayer)
+		console.log('onArrived---')
+		this.stopMove(vectorLayer)
 	}
 
 	//执行动画函数
@@ -137,6 +144,8 @@ class TrackAnimation {
 		this.distance = (this.distance + (speed * elapsedTime) / 1e6) % 2
 		// 刷新上一时刻
 		this.lastTime = time
+
+		// console.log((speed * elapsedTime) / 1e6);
 		// 不是循环播放，限制 超出距离
 		if(!this.circlable){
 			if(this.distance>=1){
@@ -146,34 +155,21 @@ class TrackAnimation {
 		// 反减可实现反向运动，获取坐标点
 		const currentCoordinate = this.lineGeometry.getCoordinateAt(this.distance > 1 ? 2 - this.distance : this.distance)
 
-		// 动画监听
-		this.onMoveAnimate()
-
 		this.startPos = this.endPos
-
 		this.endPos = currentCoordinate
 
-		// 此判断可去除停止继续后的角度闪烁
-		if (this.startPos[0] !== this.endPos[0] && this.startPos[1] !== this.endPos[1]) {
-			let point1 = turf.point(this.startPos)
-			let point2 = turf.point(this.endPos)
-			let bearing = turf.bearing(point1, point2)
-
+		let point1 = turf.point(this.startPos)
+		let point2 = turf.point(this.endPos)
+		let bearing = turf.bearing(point1, point2)
+		
+		// 去除停止继续后,startPos，endPos 坐标相同,导致角度为0，闪烁的问题
+		if (this.startPos[0] !== this.endPos[0] || this.startPos[1] !== this.endPos[1] ) {
+			// 此时为 动画执行过程中 坐标不同,  
 			this.marker.setAngle(bearing - 90)
 			this.marker.setPosition(this.endPos)
-			
-		} else {
-			console.log('----', event, this.distance)
-
-
-
-
-		}
-
-		// 是否在轨迹线上
-		// console.log('1111---', this.lineGeometry.intersectsCoordinate(currentCoordinate))
+		} 
+ 
 		this.position.setCoordinates(this.endPos)
-
 		// 获取渲染图层的画布
 		const vectorContext = getVectorContext(event)
 		vectorContext.setStyle(this.marker.getOlStyle())
@@ -181,16 +177,20 @@ class TrackAnimation {
 
 		// console.log(marker.olTarget.getStyle())
 
+		// 动画监听
+		this.onMoveAnimate()
+
 		//是否循环
 		if (!this.circlable) {
 			// 是否到达终点
 			if (this.distance >= 1) {
-				console.log('onArrived---')
 				return this.onArrived(vectorLayer)
 			}
 		}
-		// 请求地图在下一帧渲染
+		// 用来触发Map监听postcompose事件，直到监听事件结束。
 		vectorLayer.map.render()
+
+
 	}
 }
 
@@ -245,7 +245,7 @@ class JCVectorLayer {
 	addeventlistener(type) {
 		if (type === 'moving') {
 			this.on(type, e => {
-				const { eventName, moveCallBack, path, speed, lineFeature, marker, status, updateSpeed, circlable } = e
+				const { eventName, moveCallBack, path, speed, lineFeature, marker, status, updateSpeed,updateDistance, circlable } = e
 				// 是否存在 当前marker 动画
 				const isExitMarkerMove = this.JCEvents.has(eventName)
 				if (status === 'startMove') {
@@ -296,9 +296,17 @@ class JCVectorLayer {
 					console.log('updateSpeed------')
 					if (isExitMarkerMove) {
 						const animationObject = this.JCEvents.get(eventName)
-						animationObject.updateSpeed(updateSpeed)
+						animationObject.updateSpeed(Number(updateSpeed))
 					}
-				} else if (status === 'moveCallBack') {
+				}else if (status === 'updateDistance') {
+					console.log('updateDistance------')
+					if (isExitMarkerMove) {
+						const animationObject = this.JCEvents.get(eventName)
+						animationObject.updateDistance(Number(updateDistance))
+					}
+				}
+				
+				else if (status === 'moveCallBack') {
 					const moveConfig = {
 						eventName,
 						moveCallBack

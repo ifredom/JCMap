@@ -62,6 +62,7 @@ function inintMarkers(map) {
   let marker2 = new JC.Marker({
     position: [112.76034654153298, 33.59101293004363],
     offset: [-30, -20],
+    id:'11111111',
     content: `<div style='font-size: 12px;
           line-height:1;
           background-color: #FFF;
@@ -244,22 +245,33 @@ const lineArr = [
  
 ]
 
-const newlineArr = lineArr.concat([116.4889679286499, 40.003822062536884])
+const newlineArr = lineArr.concat([[116.4889679286499, 40.003822062536884]])
 
 console.log(newlineArr)
 
 let polyline = new JC.Polyline({
   map,
-  path: lineArr,
+  path: newlineArr,
   map: map,
-
   showDir: true,
   strokeColor: '#28F', //线颜色
   strokeWeight: 6, //线宽
   extData: null, // 自定义信息
 })
 
+ 
 // console.log(polyline);
+
+var passedPolyline = new JC.Polyline({
+  map: map,
+  path: lineArr,
+  strokeColor: "#AF5",  //线颜色
+  // strokeOpacity: 1,     //线透明度
+  strokeWeight: 6,      //线宽
+  // strokeStyle: "solid"  //线样式
+});
+
+
 
 const marker = new JC.Marker({
   map: map,
@@ -269,8 +281,10 @@ const marker = new JC.Marker({
   autoRotation: true,
   angle: -90,
 })
+ 
 
 const speedInput = document.getElementById('speed')
+const distanceInput = document.getElementById('distance')
 
 const startButton = document.getElementById('start')
 const pauseButton = document.getElementById('pause')
@@ -292,6 +306,12 @@ function startAnimation() {
 speedInput.onchange = (e) => {
   marker.updateMoveSpeed(e.target.value)
 }
+
+distanceInput.onchange = (e) => {
+  marker.updateMoveDistance(e.target.value)
+}
+
+
 
 function pauseAnimation() {
   if (animating === 'pause') return
