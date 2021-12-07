@@ -68,7 +68,7 @@ function inintMarkers(map) {
           background-color: #FFF;
           border: 1px solid blue;
           padding: 2px 3px;
-      }'>overlayMarker111111 </div>`, //设置文本标注内容
+      '>overlayMarker111111 </div>`, //设置文本标注内容
   })
 
   marker2.on('click', function (ev) {
@@ -150,7 +150,7 @@ let marker3 = new JC.Marker({
         background-color: #FFF;
         border: 1px solid blue;
         padding: 2px 3px;
-    }'>overlayMarker22222222 </div>`, //设置文本标注内容
+    '>overlayMarker22222222 </div>`, //设置文本标注内容
 })
 
 let marker4 = new JC.Marker({
@@ -161,7 +161,7 @@ let marker4 = new JC.Marker({
         background-color: #FFF;
         border: 1px solid blue;
         padding: 2px 3px;
-    }'>overlayMarker22222222 </div>`, //设置文本标注内容
+    '>overlayMarker22222222 </div>`, //设置文本标注内容
 })
 
 map.add(marker1, marker2, marker3, marker4)
@@ -209,13 +209,21 @@ rectangle1.on('click', e => {
   console.log(e.target.getExtData());
 })
 
-let Single = new JC.InfoOverlay({
-  center: [91.132212, 30.860361],
-  content: document.querySelector('#single-box').outerHTML,
-  offset: [-100, -146],
+let Single = new JC.InfoWindow({
+  // center: [116.47699844509125, 39.9982652552948],
+  // content: document.querySelector('#single').outerHTML,
+  // offset: [-100, -146], 
+  offset: [0, 0]
 })
 
-map.addOverlays(Single)
+// map.addOverlays(Single)
+let marker5 = new JC.Marker({
+  position: [116.46699, 39.9982652552948],
+  offset: [-30, -20],
+  img: ''
+})
+map.add(marker5)
+Single.show(map, [116.46699, 39.9982652552948])
 
 Single.on('click', (e) => {
   console.log(e, e.getDisplay())
@@ -250,8 +258,6 @@ const lineArr = [
 ]
 
 const newlineArr = lineArr.concat([[116.4889679286499, 40.003822062536884]])
-
-console.log(newlineArr)
 
 let polyline = new JC.Polyline({
   map,

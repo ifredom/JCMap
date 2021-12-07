@@ -481,62 +481,6 @@ function JCMap(target = 'map', options = {}) {
   }
 
   /**
-   * 添加单个或多个覆盖物
-   * @param {*} markers
-   */
-  this.addOverlays = (markers) => {
-    const flag = Object.prototype.toString.call(markers)
-    const commonStyle = (option) => {
-      const singleStyle = option.getStyle()
-      return new Style({
-        image: new Icon({
-          src: singleStyle.img,
-        }),
-        text: new Text({
-          text: singleStyle.label,
-          offsetY: singleStyle.labelYOffset,
-          offsetX: singleStyle.labelXOffset,
-          padding: singleStyle.padding,
-          backgroundFill: new Fill({
-            color: singleStyle.labelBgColor,
-          }),
-          font: singleStyle.font,
-        }),
-        zIndex: 2,
-      })
-    }
-
-    this.markerLayer = new VectorLayer({
-      source: new VectorSource(),
-    })
-    // 添加图层
-    map.addLayer(this.markerLayer)
-    // 添加多个覆盖物
-    if (flag === '[object Array]') {
-      // console.log(markers);
-      markers.forEach((item) => {
-        const style = commonStyle(item)
-        item.setStyle(style)
-      })
-      this.markerLayer.getSource().addFeatures(markers)
-    } else {
-      // 添加单个覆盖物
-      // const style = commonStyle(markers)
-      // markers.setStyle(style)
-      // this.markerLayer.getSource().addFeature(markers)
-      // 添加自定义覆盖物(有content的html字符串形式)
-      if (markers.get('overlayMarker')) {
-        let overlay = markers.get('overlayMarker')
-        console.log(markers);
-        map.addOverlay(overlay)
-      } else {
-        // 添加常规覆盖物，通过传img等数据进来
-        map.addOverlay(markers)
-      }
-    }
-  }
-
-  /**
    * 添加 单个或者多个  覆盖物
    * @param {*} markers
    */
@@ -559,6 +503,10 @@ function JCMap(target = 'map', options = {}) {
         },
         POLYLINE: () => {
           vectorLayer.getSource().addFeature(target.olTarget)
+        },
+        // 信息框
+        INFOWINDOW: () => {
+          this.addOverlay(target.olTarget)
         },
         unknown: () => {},
       }
