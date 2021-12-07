@@ -349,24 +349,29 @@ function JCMap(target = 'map', options = {}) {
             const [olFeature, olLayer] = olMap.forEachFeatureAtPixel(e.pixel, (feature, layer) =>  [feature, layer])
             const JCEvents = olFeature.get('JCEvents') || new Map()
             const dispatchAction = (target, eventTarget, JCEvents, event) => {
-              JCEvents.forEach(function (currentEventObject, eventName) {
-                if (eventName.toLowerCase().indexOf(event.type) !== -1) {
-                  // console.log({
-                  // 	type: eventName, // 订阅事件对象的名称
-                  // 	callBack:currentEventObject.callBack, // 订阅事件对象的回调
-                  // 	eventName:event.type, // 实际派发的事件
-                  // 	event, // 触发的事件的鼠标事件
-                  // 	eventTarget // 实际应该接收事件ol 对象
-                  // });
+              // JCEvents.forEach(function (currentEventObject, eventName) {
+              //   if (eventName.toLowerCase().indexOf(event.type) !== -1) {
+              //     target.dispatchEvent({
+              //       type: eventName, // 订阅事件对象的名称
+              //       callBack: currentEventObject.callBack, // 订阅事件对象的回调
+              //       eventName: event.type, // 实际派发的事件
+              //       event, // 触发的事件的鼠标事件
+              //       eventTarget, // 实际应该接收事件ol 对象
+              //     })
+              //   }
+              // })
+              for(let [key, value] of JCEvents.entries()) {
+                if (key.indexOf(target.getId()) >= 0) {
                   target.dispatchEvent({
-                    type: eventName, // 订阅事件对象的名称
-                    callBack: currentEventObject.callBack, // 订阅事件对象的回调
+                    type: key, // 订阅事件对象的名称
+                    callBack: value.callBack, // 订阅事件对象的回调
                     eventName: event.type, // 实际派发的事件
                     event, // 触发的事件的鼠标事件
                     eventTarget, // 实际应该接收事件ol 对象
                   })
+                  break
                 }
-              })
+              }
             }
             if (olFeature.JCTYPE === 'ClusterMarker') {
               //聚合要素 features

@@ -179,25 +179,24 @@ let graph = new JC.VectorGraph(map)
 // });
 let point1 = graph.Point([116.47966187864304,39.99695633729553], {imageFill: '#264df6'}, {'name': '点'})
 point1.on('click', e => {
-  console.log(e.target.getExtData());
+  console.log(e.target.get('extData'));
 })
 let line1 = graph.Line([[116.47764753967286,39.9971494563446],[116.48007762104035, 39.99650572618103]], null, {'name': '线'})
 line1.on('click', e => {
-  console.log(e.target.getExtData());
+  console.log(e.target.get('extData'));
 })
 let circle1 = graph.Circle([116.47614550262452, 39.99763225396728], 81.75489888771256, null, {'name': '圆'})
 circle1.on('click', e => {
-  console.log(e.target.getExtData());
+  console.log(e.target.get('extData'));
 })
 let polygon1 = graph.Polygon([[116.47699844509125, 39.9982652552948], [116.47721838623048, 39.997278202377316], [116.47869360118867, 39.99738549073791], [116.47857558399201, 39.9979058392868], [116.47837710052491, 39.99842618783569]], null, {'name': '多边形'})
 polygon1.on('click', e => {
-  console.log(e.target.getExtData());
+  console.log(e.target.get('extData'));
 })
 let rectangle1 = graph.Rectangle([116.48053896099091,39.99640916665649, 116.48225557476044, 39.99715482076263], null, {'name': '矩形'})
 rectangle1.on('click', e => {
-  console.log(e.target.getExtData());
+  console.log(e.target.get('extData'));
 })
-
 
 let Single = new JC.InfoOverlay({
   center: [91.132212, 30.860361],
