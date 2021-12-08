@@ -3,7 +3,7 @@ import { boundingExtent } from 'ol/extent'
 import Polygon from 'ol/geom/Polygon' //
 import { defaults as DefaultInteraction } from 'ol/interaction'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer'
-import VectorSource from 'ol/source/Vector'
+import { getUid } from 'ol/util'
 import XYZ from 'ol/source/XYZ'
 import { Fill, Icon, Style, Text } from 'ol/style'
 import { OlMap, OlView } from './inherit'
@@ -200,7 +200,7 @@ function JCMap(target = 'map', options = {}) {
   let clickTimeId = null //单击事件定时器
 
   // 支持的事件
-  const events = ['complete', 'moveend', 'zoomOnClick', 'click', 'dblclick', 'contextmenu', 'moving', 'pointermove']
+  const events = ['complete', 'moveend', 'click', 'dblclick', 'contextmenu', 'moving', 'pointermove']
 
   //是否移除 map 点击事件
   let isOffClick = false
@@ -350,7 +350,7 @@ function JCMap(target = 'map', options = {}) {
             const JCEvents = olFeature.get('JCEvents') || new Map()
             const dispatchAction = (target, eventTarget, JCEvents, event) => {
               JCEvents.forEach(function (currentEventObject, eventName) {
-                if (eventName.indexOf(target.getId()) !== -1) {
+                if (eventName.indexOf(getUid(target)) !== -1 ) {
                   target.dispatchEvent({
                     type: eventName, // 订阅事件对象的名称
                     callBack: currentEventObject.callBack, // 订阅事件对象的回调

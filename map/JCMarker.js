@@ -1,6 +1,7 @@
 // import { fromLonLat } from 'ol/proj'
 import { Fill, Icon, Stroke, Style, Text } from 'ol/style'
 import { Marker, OlPoint, OverlayMarker } from './inherit'
+import { getUid } from 'ol/util'
 const defaultOptions = {
   // 坐标系
   id: null, //id
@@ -219,9 +220,10 @@ function createMarker(options, type) {
 
   //设置ID
   if (!options.id) {
-    options.id = marker.ol_uid
-    marker.setId(marker.ol_uid)
-    marker.set('id', marker.ol_uid)
+    const uid = getUid(marker)
+    options.id = uid
+    marker.setId(uid)
+    marker.set('id', uid)
   }
 
   if (type === 'MARKER') {
@@ -429,7 +431,7 @@ function JCMarker({ map, ...options }) {
         eventName: 'JCMarker(' + eventName + ')' + this.getId(),
         callBack,
         handler: (e) => {
-          console.log(e);
+          // console.log(e);
           const returnValue = {
             type: e.eventName,
             target: this,

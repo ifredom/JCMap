@@ -1,3 +1,4 @@
+import { getUid } from 'ol/util'
 import { boundingExtent } from 'ol/extent'
 import { fromExtent } from 'ol/geom/Polygon'
 import { Vector as VectorLayer } from 'ol/layer'
@@ -196,6 +197,7 @@ const addOverlaysAction = (map, clusterSource, features, showViewExtent) => {
       }
     } else if (showZoomFeature) {
       //处理zoom 不聚合情况
+      feature.setGeometry(null) // 清空聚合图形
       addOverlaysAction(map, clusterSource, markers, showViewExtent)
     }
   }, 100)
@@ -212,10 +214,8 @@ function createClusterSource(map, vectorSource, options) {
     source: vectorSource,
     createCluster(point, features) {
       let cluster = null
-      // console.log('createCluster---------')
       const zoom = map.getZoom()
       const showZoomFeature = zoom >= noClusterZoom
-      // console.log(zoom)
 
       if (features.length == 1) {
         const overlayMarker = features[0].get('overlayMarker')
@@ -233,10 +233,10 @@ function createClusterSource(map, vectorSource, options) {
         cluster = new OlFeature({
           geometry: point,
           features,
-          showZoomFeature,
+          showZoomFeature
           // JCEvents: clusterSource.get('JCEvents'), // 为每个聚合要素添加 JCEvents，去除麻烦，已经统一设置在聚合图层
         })
-        cluster.setId(cluster.ol_uid)
+        cluster.setId(getUid(cluster))
       }
 
       cluster.JCTYPE = 'ClusterMarker'
@@ -307,7 +307,6 @@ function createMarkerCluster(map, markers, options) {
     zIndex: 1,
     style: (feature, resolution) => createClusterStyle(styleCache, assignOptions, feature, resolution),
   })
-
   // 默认添加图层
   map.addLayer(clusterLayer) // 初始默认数据添加图层
 
@@ -348,7 +347,7 @@ function JCMarkerCluster(map, features = [], options) {
   this.setMinDistance = (minDistance) => this.olTarget.getSource().setMinDistance(minDistance)
 
   this.getId = function () {
-    return this.getClusterSource().ol_uid
+    return getUid(this.olTarget)
   }
 
   // 获取聚合类的所有基础Marker集合
@@ -455,7 +454,8 @@ function JCMarkerCluster(map, features = [], options) {
       eventName: JCEventName,
       callBack,
       handler: (e) => {
-        if (e.type === 'zoomOnClick') {
+
+        if (this.options.zoomOnClick) {
           this.setClusterExtentView(e.eventTarget)
         }
         e.callBack({
@@ -510,12 +510,6 @@ function JCMarkerCluster(map, features = [], options) {
 
   map.markerCluster = this // map 上添加 markerCluster
 
-  // 注册点击散开事件
-  const hasClick = map.JCEvents.some((e) => e.eventName === 'zoomOnClick')
-  if (!hasClick && this.options) {
-    // zoomOnClick 事件监听，-统一 this.on 处理
-    this.on('zoomOnClick')
-  }
 }
 
 export default JCMarkerCluster
