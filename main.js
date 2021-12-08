@@ -238,28 +238,39 @@ rectangle1.on('click', e => {
 })
 
 let Single = new JC.InfoWindow({
-  // center: [116.47699844509125, 39.9982652552948],
-  // content: document.querySelector('#single').outerHTML,
+  content: document.querySelector('#single').outerHTML,
   // offset: [-100, -146], 
-  offset: [0, 0]
+  offset: [-10, -10],
+  // title: '标记点',
+  // content: '这是一些标记点哦',
+  width: 200,
+  height: 100
 })
-
+Single.on('click', e => {
+  if (e.type === 'save') {
+    console.log(e.data);
+  }
+  Single.close()
+})
 // map.addOverlays(Single)
 let marker5 = new JC.Marker({
-  position: [116.46699, 39.9982652552948],
-  offset: [-30, -20],
+  position: [116.46699, 39.9952652552948],
+  offset: [0,0],
   img: ''
 })
-map.add(marker5)
-Single.show(map, [116.46699, 39.9982652552948])
 
-Single.on('click', (e) => {
-  console.log(e, e.getDisplay())
-  if (e.getDisplay() === 'block') {
-    e.hide()
-  } else {
-    e.show()
-  }
+let marker6 = new JC.Marker({
+  position: [116.46779, 39.9982652552948],
+  offset: [0,0],
+  img: ''
+})
+map.add(marker5, marker6)
+marker5.on('click', (e) => {
+  Single.open(map, e.target)
+})
+
+marker6.on('click', (e) => {
+  Single.open(map, e.target)
 })
 
 
@@ -268,6 +279,12 @@ Single.on('click', (e) => {
 
 map.on('click', (e) => {
   console.log(e.coordinate)
+  // let m = new JC.Marker({
+  //   position: e.coordinate,
+  //   offset: [-30, -20],
+  //   img: ''
+  // })
+  // map.add(m)
 })
 
 let graphSelect = document.querySelector('#selected')
