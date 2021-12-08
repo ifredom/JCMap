@@ -433,7 +433,6 @@ function JCMarker({ map, ...options }) {
         eventName: 'JCMarker(' + eventName + ')' + this.getId(),
         callBack,
         handler: (e) => {
-          // console.log(e);
           const returnValue = {
             type: e.eventName,
             target: this,

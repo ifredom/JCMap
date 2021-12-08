@@ -218,7 +218,6 @@ let Single = new JC.InfoWindow({
 	// offset: [-100, -146],
 	offset: [0, 0]
 })
-
 // map.addOverlays(Single)
 let marker5 = new JC.Marker({
 	position: [116.46699, 39.9982652552948],
