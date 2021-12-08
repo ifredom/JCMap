@@ -234,7 +234,7 @@ function createMarker(options, type) {
     const overlayMarker = createOverlayMarker(options)
     options.overlayMarker = overlayMarker
     // 去除默认图形样式
-    marker.setStyle(new Style())
+    marker.setStyle(new Style()) // 在源聚合图层里应该存在clone geometry
     marker.set('overlayMarker', overlayMarker)
   }
 
@@ -270,6 +270,8 @@ function JCMarker({ map, ...options }) {
   this.map = map
 
   this._listion = ''
+
+  this.animation = ''
 
   this.getId = function () {
     return this.options.id
@@ -691,8 +693,22 @@ function JCMarker({ map, ...options }) {
       this.olTarget.set('position', position)
       this.olTarget.setPosition('position', position)
     }
+  
+    // 设置 Marker 弹跳动画
+    this.setAnimation= function (animationName) {
+      if(!this.animation){
+        this.animation = animationName
+        this.getElement().classList.add(animationName)
+      }else{
+        this.getElement().classList.toggle(this.animation)
+        this.getElement().classList.add(animationName)
+      }
+      if(!animationName || animationName === 'JCMAP_ANIMATION_NONE'){
+        this.getElement().classList.toggle(animationName)
+      }
+    }
+   
   }
-
   // 初始化添加map
   if (this.map && this.map.JCTYPE === 'MAP') {
     this.map.add(this)

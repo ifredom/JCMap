@@ -1,0 +1,30 @@
+
+ 
+.JCMAP_ANIMATION_BOUNCE{
+  position:relative;
+  -webkit-animation:JCMAP_ANIMATION_BOUNCE 1s infinite ; 
+}
+
+@keyframes JCMAP_ANIMATION_BOUNCE{
+  0%{
+    top:0;
+  }
+  50%{
+    top:-40px; 
+  }
+  100%{
+    top:0;
+  }
+}
+
+@-webkit-keyframes JCMAP_ANIMATION_BOUNCE{
+  0%{
+    top:0;
+  }
+  50%{
+    top:-50px; 
+  }
+  100%{
+    top:0;
+  }
+}

@@ -21,9 +21,12 @@ class JCVectorLayer {
 		this.JCEvents = new Map()
 
 		this.moveConfigs = new Map()
-		this.getId = ()=>this.id
+		
+
+		
 		// 初始化
 		this.init()
+		
 	}
 
 	init() {
@@ -49,7 +52,10 @@ class JCVectorLayer {
 		this.getFeaturesAtCoordinate = coordinate => this.getSource().getFeaturesAtCoordinate(coordinate)
 		this.forEachFeature = callBack => this.getSource().forEachFeature(feature => callBack(feature))
 
-		// this.getId = ()=>
+		this.getId = ()=>this.id
+
+		this.moveCallBack = ()=> {}
+		
 		//添加 moving 事件监听
 		this.addeventlistener('moving')
 
@@ -63,6 +69,7 @@ class JCVectorLayer {
 				const { eventName, moveCallBack, path, speed, lineFeature, marker, status, updateSpeed,updateDistance, circlable } = e
 				// 是否存在 当前marker 动画
 				const isExitMarkerMove = this.JCEvents.has(eventName)
+ 
 				if (status === 'startMove') {
 
 					console.log('startMove---1')
@@ -120,14 +127,8 @@ class JCVectorLayer {
 						animationObject.updateDistance(Number(updateDistance))
 					}
 				}
-				
 				else if (status === 'moveCallBack') {
-					const moveConfig = {
-						eventName,
-						moveCallBack
-					}
-					this.moveConfigs.set(eventName, moveConfig)
-					// animationObject.moveCallBack = moveCallBack
+					this.moveCallBack = moveCallBack
 				}
 			})
 		}
@@ -142,9 +143,9 @@ function createVectorLayer(className, features) {
 	})
 	//矢量标注图层
 	const vectorLayer = new VectorLayer({
-		source: vectorSource,
 		className,
-		zIndex: 1
+		source: vectorSource,
+		zIndex: 1,
 	})
 
 	return vectorLayer
@@ -152,7 +153,7 @@ function createVectorLayer(className, features) {
 
 class TrackAnimation {
 	constructor(data) {
-		const { eventName, marker, speed, path, lineFeature, circlable } = data
+		const { eventName, marker, speed, path, lineFeature, circlable,moveCallBack } = data
 		//初始化 - 动画相关参数配置
 		this.status = 'init' // 动画的状态
 		this.startPos = null //  动画本次的起点
@@ -164,6 +165,7 @@ class TrackAnimation {
 		this.moveFeature = null // 动画效果函数
 
 		this.moveCallBack = null //  marker 对应的动画监听回调
+		
 		this.circlable = false // 是否循环播放
 		this.eventName = eventName //  marker对应的动画事件名
 		this.marker = marker // 执行的动画的marker
@@ -183,6 +185,7 @@ class TrackAnimation {
 
 	//初始化 - 动画对象- 动画准备就绪
 	initMove(vectorLayer) {
+
 		// 设置当前动画上次执行时间
 		this.lastTime = Date.now()
 		// 设置上次动画的停止点
@@ -199,6 +202,7 @@ class TrackAnimation {
 
 	//开始 - 重新执行动画
 	startMove(vectorLayer) {
+		this.moveCallBack = vectorLayer.moveCallBack
 		// 设置当前动画状态
 		this.status = 'moving'
 		// this.lastTime = Date.now()
@@ -251,13 +255,11 @@ class TrackAnimation {
 		if(this.alreadyAngle>0 && inLineGeometry ){
 			this.alreadyAngle = 0
 			this.passedPath.push(this.endPos)
-			console.log(this.passedPath);
+			// console.log(this.passedPath);
 		}
 		
 		//去除相同的进度
 		if(this.progress !== progress){
-
-	
 		
 			this.startAngle = this.endAngle //  动画本次的起点角度
 		

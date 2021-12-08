@@ -96,6 +96,7 @@ function createSingleIconStyle(style) {
   return sIconStyle
 }
 
+
 // 设置聚合要素样式
 function createClusterStyle(styleCache, assignOptions, feature, resolution) {
   const size = feature.get('features').length // 获取该要素所在聚合群的要素数量
@@ -148,6 +149,7 @@ function createClusterStyle(styleCache, assignOptions, feature, resolution) {
         zIndex: defaultStyle.zIndex, // 设置层级
       }),
     ]
+   
     styleCache[size] = style
   }
   return style
@@ -236,6 +238,7 @@ function createClusterSource(map, vectorSource, options) {
           showZoomFeature
           // JCEvents: clusterSource.get('JCEvents'), // 为每个聚合要素添加 JCEvents，去除麻烦，已经统一设置在聚合图层
         })
+        
         cluster.setId(getUid(cluster))
       }
 
@@ -295,9 +298,8 @@ function createMarkerCluster(map, markers, options) {
     features,
   })
 
-  // const finalPath = fromLonLat([center[0], center[1]], 'EPSG:4326')
-  // 创建要素聚合数据来源
 
+  // 创建要素聚合数据来源
   const clusterSource = createClusterSource(map, vectorSource, assignOptions)
 
   // 创建一个图层

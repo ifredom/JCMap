@@ -35,9 +35,21 @@ class JCPolyline {
 
     this.olTarget = olTarget
 
-    this.id = getUid(olTarget)
+    this.id = getUid(this.olTarget)
 
     this.map = map
+
+    this.setPath = function(path){
+      // const  geometry = this.olTarget.getGeometry().clone()
+      // this.olTarget.getGeometry().setCoordinates(path)
+      const geoPolyline = new OlLineString(path)
+
+      this.olTarget = createPolyline(this.options, map)
+
+      console.log(geoPolyline.getCoordinates());
+      
+      this.map.add(this)
+    }
 
     // 初始化添加到 map 默认图层上
     if (this.map && this.map.JCTYPE === 'MAP') {
@@ -52,9 +64,11 @@ function createPolyline(options, map) {
     geometry: geoPolyline,
     linePath: options.path,
     extData: options.extData,
+    options
   })
 
   featurePolyline.setStyle((feature) => {
+    const options = feature.get('options')
     const styles = createPolylineStyle(options)
     //箭头样式
     options.showDir && styles.push(...createArrowPolylineStyle(options.path, options.strokeWeight, map))
