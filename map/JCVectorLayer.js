@@ -1,4 +1,3 @@
-
 import { getUid } from 'ol/util'
 import { Vector as VectorLayer } from 'ol/layer'
 import VectorSource from 'ol/source/Vector'
@@ -15,17 +14,16 @@ class JCVectorLayer {
 
 		// 默认的矢量图层
 		this.olTarget = createVectorLayer(className, features)
- 
+
 		this.id = getUid(this.olTarget)
 
 		// 存储事件
 		this.JCEvents = new Map()
 
 		this.animationEvents = new Map()
-		
+
 		// 初始化
 		this.init()
-		
 	}
 
 	init() {
@@ -50,8 +48,8 @@ class JCVectorLayer {
 		this.getFeaturesAtCoordinate = coordinate => this.getSource().getFeaturesAtCoordinate(coordinate)
 		this.forEachFeature = callBack => this.getSource().forEachFeature(feature => callBack(feature))
 
-		this.getId = ()=>this.id
-		
+		this.getId = () => this.id
+
 		//添加 moving 事件监听
 		this.addeventlistener('moving')
 
@@ -61,12 +59,22 @@ class JCVectorLayer {
 	//添加事件监听
 	addeventlistener(type) {
 		if (type === 'moving') {
+			const vectorSource = new VectorSource({
+				features: []
+			})
+			//矢量标注图层
+			const vectorLayer = new VectorLayer({
+				className: '轨迹图层',
+				source: vectorSource,
+				zIndex: 5
+			})
+			this.map.addLayer(vectorLayer)
 			this.on(type, e => {
-				const { type, eventName, moveCallBack, path, speed, lineFeature, marker, status, updateSpeed,updateDistance, circlable } = e
+				const { type, eventName, moveCallBack, path, speed, lineFeature, marker, status, updateSpeed, updateDistance, circlable } = e
 				// 是否存在 当前marker 动画
 				const isExitMarkerMove = this.JCEvents.has(eventName)
 				const moveStatusHandler = {
-					startMove:()=>{
+					startMove: () => {
 						//当前marker 已经存在动画
 						if (isExitMarkerMove) {
 							// 获取动画对象
@@ -79,52 +87,62 @@ class JCVectorLayer {
 							//删除之前的动画
 							this.JCEvents.delete(eventName)
 						}
-	
+
 						//初始化完整动画对象
-						const animationObject = new TrackAnimation({ vectorLayer:this, type, eventName, marker, speed, path, lineFeature, circlable })
+						const animationObject = new TrackAnimation({
+							vectorLayer: this,
+							trackVectorLayer: vectorLayer,
+							type,
+							eventName,
+							marker,
+							speed,
+							path,
+							lineFeature,
+							circlable
+						})
 						// 保存当前动画
 						this.JCEvents.set(eventName, animationObject)
-				
+
 						//初始化动画
 						animationObject.initMove()
 						//开始动画效果
 						animationObject.startMove()
 					},
-					pauseMove:()=>{
+					pauseMove: () => {
 						if (isExitMarkerMove) {
 							const animationObject = this.JCEvents.get(eventName)
 							if (animationObject.status === 'stopMove') return
 							animationObject.stopMove()
 						}
 					},
-					resumeMove:()=>{
+					resumeMove: () => {
 						if (isExitMarkerMove) {
 							const animationObject = this.JCEvents.get(eventName)
 							if (animationObject.status === 'moving') return
 							animationObject.resumeMove()
 						}
 					},
-					stopMove:()=>{
+					stopMove: () => {
 						if (isExitMarkerMove) {
 							const animationObject = this.JCEvents.get(eventName)
 							animationObject.stopMove()
 							this.JCEvents.delete(eventName)
 						}
 					},
-					updateSpeed:()=>{
+					updateSpeed: () => {
 						if (isExitMarkerMove) {
 							const animationObject = this.JCEvents.get(eventName)
 							animationObject.updateSpeed(Number(updateSpeed))
 						}
 					},
-					updateDistance:()=>{
+					updateDistance: () => {
 						if (isExitMarkerMove) {
 							const animationObject = this.JCEvents.get(eventName)
 							animationObject.updateDistance(Number(updateDistance))
-						} 
+						}
 					},
-					moveCallBack:()=>{
-						this.animationEvents.set(eventName,{moveCallBack})
+					moveCallBack: () => {
+						this.animationEvents.set(eventName, { moveCallBack })
 						if (isExitMarkerMove) {
 							const animationObject = this.JCEvents.get(eventName)
 							animationObject.updateMoveCallBack(moveCallBack)
@@ -147,12 +165,10 @@ function createVectorLayer(className, features) {
 	const vectorLayer = new VectorLayer({
 		className,
 		source: vectorSource,
-		zIndex: 1,
+		zIndex: 9
 	})
 
 	return vectorLayer
 }
-
- 
 
 export default JCVectorLayer

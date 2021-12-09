@@ -2,7 +2,7 @@ import * as turf from '@turf/turf'
 import { getVectorContext } from 'ol/render'
 class TrackAnimation {
 	constructor(data) {
-		const { vectorLayer, type, eventName, marker, speed, path, lineFeature, circlable } = data
+		const { vectorLayer, trackVectorLayer, type, eventName, marker, speed, path, lineFeature, circlable } = data
 		//初始化 - 动画相关参数配置
 		this.status = 'init' // 动画的状态
 		this.startPos = null //  动画本次的起点
@@ -13,8 +13,10 @@ class TrackAnimation {
 		this.isArrived = false // 是否到达终点
 		this.moveFeature = null // 动画效果函数
 		// 初始传入
-		this.type = type //  marker对应的监听事件名
+		this.trackVectorLayer = trackVectorLayer
+
 		this.vectorLayer = vectorLayer // 图层
+		this.type = type //  marker对应的监听事件名
 		this.marker = marker // 执行的动画的marker
 		this.eventName = eventName //  marker对应的动画事件名
 		this.speed = speed // 行驶速度
@@ -51,14 +53,14 @@ class TrackAnimation {
 
 		this.passedPath.push(this.endPos)
 		// 设置动画效果的执行函数
-		this.moveFeature = event => this.moveAnimate(event, this.vectorLayer)
+		this.moveFeature = event => this.moveAnimate(event)
 		// 移除动画执行函数
-		this.vectorLayer.un('postrender', this.moveFeature)
+		this.trackVectorLayer.un('postrender', this.moveFeature)
 	}
 
 	//开始 - 重新执行动画
 	startMove() {
-		console.log(this.marker)
+		// console.log(this.marker)
 		this.isArrived = false
 		// 设置当前动画状态
 		this.status = 'moving'
@@ -66,9 +68,11 @@ class TrackAnimation {
 		// 克隆当前 maker的矢量图形
 		this.position = this.marker.getGeometry().clone()
 		// 执行动画监听
-		this.vectorLayer.on('postrender', this.moveFeature)
+		this.trackVectorLayer.on('postrender', this.moveFeature)
 		// 隐藏小车前一刻位置同时触发事件
-		this.marker.setGeometry(null)
+		// this.marker.setGeometry(null)
+		// console.log(this.marker.olTarget)
+		this.trackVectorLayer.getSource().addFeature(this.marker.olTarget)
 	}
 
 	//停止 - 停止执行动画
@@ -78,7 +82,7 @@ class TrackAnimation {
 		// 将小车固定在当前位置
 		this.marker.setGeometry(this.position)
 		// 移除动画监听
-		this.vectorLayer.un('postrender', this.moveFeature)
+		this.trackVectorLayer.un('postrender', this.moveFeature)
 	}
 
 	//继续 - 继续执行动画
@@ -178,18 +182,25 @@ class TrackAnimation {
 			// 此时为 动画执行过程中 坐标不同,
 			this.marker.setAngle(bearing + this.iconAngle)
 			this.marker.setPosition(this.endPos)
+			console.log(this.marker.getPosition())
 		}
 
 		this.position.setCoordinates(this.endPos)
 		// 获取渲染图层的画布
-		const vectorContext = getVectorContext(event)
-		vectorContext.setStyle(this.marker.getOlStyle())
-		vectorContext.drawGeometry(this.position)
 
-		// console.log(marker.olTarget.getStyle())
+		const vectorContext = getVectorContext(event)
+		const style = this.marker.getOlStyle()
+		const feature = this.marker.olTarget.clone()
+		feature.setGeometry(this.position)
+		style.setZIndex(2)
+		vectorContext.drawFeature(feature, style)
+		// vectorContext.setStyle(this.marker.getOlStyle())
+		// vectorContext.drawGeometry(this.position)
+
+		// console.log(vectorContext)
 
 		// 动画监听
-		this.onMoveAnimate(bearing - 90)
+		this.onMoveAnimate(bearing + this.iconAngle)
 
 		//是否循环
 		if (!this.circlable) {

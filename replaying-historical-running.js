@@ -46,8 +46,6 @@ const marker = new JC.Marker({
 	angle: -90
 })
 
-
-
 let animating = ''
 
 const lineArr = [
@@ -75,8 +73,6 @@ const lineArr = [
 	[116.48720693260194, 39.9987695105896]
 ]
 
-
-
 let polyline = new JC.Polyline({
 	map,
 	path: lineArr,
@@ -90,40 +86,40 @@ let polyline = new JC.Polyline({
 // console.log(polyline);
 
 var passedPolyline = new JC.Polyline({
-  map: map,
-  // path: lineArr,
-  strokeColor: "#000",  //线颜色
-  // strokeOpacity: 1,     //线透明度
-  strokeWeight: 6,      //线宽
-  // strokeStyle: "solid"  //线样式
-	zIndex:8
-});
+	map: map,
+	// path: lineArr,
+	strokeColor: '#000', //线颜色
+	// strokeOpacity: 1,     //线透明度
+	strokeWeight: 6, //线宽
+	// strokeStyle: "solid"  //线样式
+	zIndex: 8
+})
 
 // marker.setAnimation('AMAP_ANIMATION_BOUNCE');
- 
- 
-	// passedPolyline.setPath(lineArr);
-	marker.on('moving', function (e) {
-		// console.log('moving', e)
-		// console.log(marker.getRatio());
-		distanceInput.value = marker.getRatio()*10
-	})
- 
+
+// passedPolyline.setPath(lineArr);
+marker.on('moving', function (e) {
+	// console.log('moving', e)
+	// console.log(marker.getRatio());
+	distanceInput.value = marker.getRatio() * 10
+})
+
+marker.on('click', function () {
+	console.log('1111111111111111111')
+})
 
 function startAnimation() {
 	animating = 'start'
 	marker.moveAlong(lineArr, Number(speedInput.value))
-
 }
 
 speedInput.onchange = e => {
 	marker.updateMoveSpeed(e.target.value)
- 
 }
 
 distanceInput.onchange = e => {
 	marker.moveAlong(lineArr, Number(speedInput.value))
-	marker.updateMoveDistance(e.target.value/1000)
+	marker.updateMoveDistance(e.target.value / 1000)
 }
 
 function pauseAnimation() {
@@ -155,11 +151,9 @@ stopButton.addEventListener('click', function () {
 	stopAnimation()
 })
 
-
 map.on('click', e => {
 	console.log(e.coordinate)
 })
 
- 
-// 2. 事件绑定 ， 更改 maker 类型实现
+// 2. 事件绑定，隐藏旧的图形，并提高层级
 // 3. 设置驶过轨迹线 ， 通过获取到的分段驶过线，分段设置动画
