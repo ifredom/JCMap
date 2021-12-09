@@ -213,28 +213,44 @@ rectangle1.on('click', e => {
 })
 
 let Single = new JC.InfoWindow({
-	// center: [116.47699844509125, 39.9982652552948],
-	// content: document.querySelector('#single').outerHTML,
+	// content: document.querySelector('#single'),
+  // content: `<div>123</div>`,
+  title: '标记点',
+  content: '这是一个标记点喔',
 	// offset: [-100, -146],
-	offset: [0, 0]
+	offset: [0, 0],
+  width: 200,
+  height: 100
 })
 // map.addOverlays(Single)
 let marker5 = new JC.Marker({
-	position: [116.46699, 39.9982652552948],
-	offset: [-30, -20],
-	img: ''
+	position: [116.46873189838723, 39.99656413395958],
+	// offset: [-10, -20],
+  extData: {'name': '大林'},
+  content: buildContent()
 })
-map.add(marker5)
-Single.show(map, [116.46699, 39.9982652552948])
 
-Single.on('click', e => {
-	console.log(e, e.getDisplay())
-	if (e.getDisplay() === 'block') {
-		e.hide()
-	} else {
-		e.show()
-	}
+let marker6 = new JC.Marker({
+	position: [116.47023189838723, 39.99156413395958],
+	// offset: [-10, -20],
+  extData: {'name': '大鹏'},
+  content: buildContent()
 })
+map.add(marker5, marker6)
+
+marker5.on('click', (e) => {
+  Single.open(map, e.target)
+  // let d = document.querySelector('.control')
+  // Single.setContent(d)
+  Single.setContent(e.target.getExtentData().name)
+})
+
+marker6.on('click', (e) => {
+  Single.open(map, e.target)
+  // Single.setContent(document.querySelector('#edit'))
+  Single.setContent(e.target.getExtentData().name)
+})
+// Single.open(map, [116.357969621871, 39.87414636555371]) 
 
 const clusterermarker1 = new JC.Marker({
 	position: [116.47648317130837, 40.00343952433769],
