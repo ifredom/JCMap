@@ -2,6 +2,7 @@
 import { Fill, Icon, Stroke, Style, Text } from 'ol/style'
 import { Marker, OlPoint, OverlayMarker } from './inherit'
 import { getUid } from 'ol/util'
+import { deepClone } from './utils'
 const defaultOptions = {
 	// 坐标系
 	id: null, //id
@@ -263,6 +264,9 @@ function JCMarker({ map, ...options }) {
 
 	this.olTarget = createMarker(markerOptions, this.JCTYPE)
 
+	this.originOptions = deepClone(options)
+
+	console.log(this.originOptions)
 	this.options = markerOptions
 
 	this.map = map
@@ -375,15 +379,15 @@ function JCMarker({ map, ...options }) {
 		// if (canMoveAlong) {
 
 		vectorLayer.dispatchEvent({
-				type,
-				eventName: JCEventName,
-				path,
-				speed,
-				circlable, //是否循环播放
-				lineFeature,
-				marker: this,
-				status: 'startMove'
-			}) 
+			type,
+			eventName: JCEventName,
+			path,
+			speed,
+			circlable, //是否循环播放
+			lineFeature,
+			marker: this,
+			status: 'startMove'
+		})
 		// }
 	}
 
