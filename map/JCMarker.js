@@ -266,7 +266,7 @@ function JCMarker({ map, ...options }) {
 
 	this.originOptions = deepClone(options)
 
-	console.log(this.originOptions)
+	// console.log(this.originOptions)
 	this.options = markerOptions
 
 	this.map = map

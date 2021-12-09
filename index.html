@@ -44,11 +44,24 @@
       <input type="button" class="btn" value="继续动画" id="resume" />
       <input type="button" class="btn" value="停止动画" id="stop" />
     </div>
-    <script type="module" src="/main.js"></script>
-    <!-- <script type="module" src="/ol.js"></script> -->
-    <!-- <script type="module" src="/markerAnimation.js"></script> -->
-    <!-- 历史轨迹 -->
-    <!-- <script type="module" src="/replaying-historical-running.js"></script> -->
+  </div>
+  <div class="graph-select">
+    <label for="selected">新增图形</label>
+    <select name="selected" id="selected">
+      <option value=""></option>
+      <option value="Point">点</option>
+      <option value="Line">线</option>
+      <option value="Circle">圆形</option>
+      <option value="Polygon">多边形</option>
+      <option value="Rectangle">矩形</option>
+    </select>
+    <button id="edit">编辑图形</button>
+  </div>
+  <script type="module" src="/main.js"></script>
+  <!-- <script type="module" src="/ol.js"></script> -->
+  <!-- <script type="module" src="/markerAnimation.js"></script> -->
+  <!-- 历史轨迹 -->
+  <!-- <script type="module" src="/replaying-historical-running.js"></script> -->
 </body>
 
 </html>
