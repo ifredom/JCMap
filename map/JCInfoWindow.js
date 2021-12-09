@@ -3,29 +3,42 @@ import { OlInfoWindow } from './inherit'
    * 覆盖物信息框类
    * @param {*} ?title 常规配置中的标题
    * @param {*} content 自定义html / 常规配置中的内容数据
-   * @param {*} extData 自定义数据
    * @param {*} offset 偏移
    */
  class JCInfoWindow {
   constructor (option) {
-    const {content = '', title = '',  extData = {}, offset = [0, 0], width = 200, height = 100} = option
+    const {content, title = 'JCMap 信息框', offset = [0, 0], position = 'bottom-center', width = 200, height = 100} = option
     this.events = ['click', 'dblclick', 'contextmenu'] // 支持的事件
     this.clickTimeId = null //单击事件定时器
     this.JCEvents = new Map() // 存储事件
     this.JCTYPE = 'INFOWINDOW'
-    if (title) {
-      let defaultO = this.defaultOffset(width, height, 'common')
-      let o = defaultO.map((item, i) => item + offset[i])
-      this.olTarget = this.createCommonOverlay(title, content, extData, o, width, height)
+    this.contentType = this.judgeContentType(content)
+    if (this.contentType === 'string') {
+      this.olTarget = this.createCommonOverlay(title, content, offset, position, width, height)
     } else {
-      let defaultO = this.defaultOffset(width, height)
-      let o = defaultO.map((item, i) => item + offset[i])
-      this.olTarget = this.createHtmlOverlay(content, extData, o, width, height)
+      this.olTarget = this.createHtmlOverlay(content, offset, position, width, height)
     }
     
     this.defaultEvents()
   }
-
+  /**
+   * 用来判断传入的content是什么类型
+   */
+  judgeContentType (content) {
+    let fromPrototype = Object.prototype.toString.call(content)
+    if (fromPrototype === '[object String]' || fromPrototype === '[object Number]') {
+      // html字符串
+      if (content.indexOf('<') >= 0) {
+        return 'htmlString'
+      } else {
+      // 普通字符串
+        return 'string'
+      }
+      // DOM
+    } else if (fromPrototype === '[object HTMLDivElement]' || fromPrototype === '[object Undefined]') {
+      return 'dom'
+    }
+  }
   /**
    * 默认事件增加执行
    */
@@ -43,24 +56,17 @@ import { OlInfoWindow } from './inherit'
     }
   }
   /**
-   * 修正默认offset， 因为Overlay类中的postioning不生效，所以需要手动修正偏移
+   * 获取指定id或者class所对应的dom
    */
-  defaultOffset = (width, height, type) => {
-    if (type) {
-      let x = -((2 + width) / 2)
-      let y = -(27 + height) // 标题栏默认高度是 25， 整体border宽度为 1
-      return [x, y]
-    } else {
-      return [-(width / 2), -height]
-    }
+  getElementByName (name) {
+    return this.olTarget && this.olTarget.getElement().querySelector(name)
   }
   /**
    * 创建常规信息框
    * @returns  Overlay
    */
-  createCommonOverlay = (titleString, contentString, extData, offset, width, height) => {
+  createCommonOverlay = (titleString, contentString, offset, position, width, height) => {
     const container = document.createElement('div')
-    container.style.position = 'absolute'
     container.style.backgroundColor = '#fff'
     let singleBox = document.createElement('div')
     singleBox.setAttribute('class', 'single-box')
@@ -77,7 +83,10 @@ import { OlInfoWindow } from './inherit'
     container.appendChild(singleBox)
     const over = new OlInfoWindow({
       element: container,
-      offset: offset
+      offset: offset,
+      insertFirst: false,
+      stopEvent: true,
+      positioning: position
     })
     over.getElement().setAttribute('id', `JC-Overlay`)
     over.getElement().setAttribute('class', 'info-box')
@@ -87,9 +96,8 @@ import { OlInfoWindow } from './inherit'
    * 创建自定义信息框
    * @returns  Overlay
    */
-  createHtmlOverlay = (content, extData, offset, width, height) => {
+  createHtmlOverlay = (content, offset, position, width, height) => {
     const container = document.createElement('div')
-    container.style.position = 'absolute'
     container.style.backgroundColor = '#fff'
     container.setAttribute('class', 'content-title')
     container.style.width = width + 'px'
@@ -99,11 +107,21 @@ import { OlInfoWindow } from './inherit'
     container.appendChild(title)
     let box = document.createElement('div')
     box.style.height = (height - 16) + 'px'
-    box.innerHTML = content
+    box.setAttribute('class', 'html-content')
+    if (content) {
+      if (this.contentType === 'dom') {
+        box.appendChild(content)
+      } else if (this.contentType === 'htmlString') {
+        box.innerHTML = content
+      }
+    }
     container.appendChild(box)
     const over = new OlInfoWindow({
       element: container,
-      offset: offset
+      offset: offset,
+      insertFirst: false,
+      stopEvent: true,
+      positioning: position
     })
     over.getElement().setAttribute('id', `JC-Overlay`)
     return over
@@ -112,8 +130,15 @@ import { OlInfoWindow } from './inherit'
   /**
    * 设置信息框的值
    */
-  setContent = () => {
-
+  setContent = (content) => {
+    if (this.contentType === 'string') {
+      this.getElementByName('.content').innerText = content
+    } else if (this.contentType === 'dom') {
+      let firstChild = this.getElementByName('.html-content').firstElementChild
+      content && this.getElementByName('.html-content').replaceChild(content, firstChild)
+    } else if (this.contentType === 'htmlString') {
+      this.getElementByName('.html-content').innerHTML = content
+    }
   }
   /**
    * 显示信息框
