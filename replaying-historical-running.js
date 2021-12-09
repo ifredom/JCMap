@@ -100,39 +100,37 @@ var passedPolyline = new JC.Polyline({
 });
 
 // marker.setAnimation('AMAP_ANIMATION_BOUNCE');
-console.log(polyline)
-setTimeout(()=>{
-	passedPolyline.setPath(lineArr);
-},2000)
-
-
-marker.on('moving', function (e) {
-
-	console.log('moving', e.passedPath)
-})
+ 
+ 
+	// passedPolyline.setPath(lineArr);
+	marker.on('moving', function (e) {
+		// console.log('moving', e)
+		// console.log(marker.getRatio());
+		distanceInput.value = marker.getRatio()*10
+	})
+ 
 
 function startAnimation() {
 	animating = 'start'
 	marker.moveAlong(lineArr, Number(speedInput.value))
+
 }
 
 speedInput.onchange = e => {
 	marker.updateMoveSpeed(e.target.value)
+ 
 }
 
 distanceInput.onchange = e => {
-	marker.updateMoveDistance(e.target.value)
+	marker.moveAlong(lineArr, Number(speedInput.value))
+	marker.updateMoveDistance(e.target.value/1000)
 }
 
 function pauseAnimation() {
-	if (animating === 'pause') return
-	animating = 'pause'
 	marker.pauseMove()
 }
 
 function resumeAnimation() {
-	if (animating === 'resume') return
-	animating = 'resume'
 	marker.resumeMove(lineArr, 100)
 }
 
@@ -156,10 +154,12 @@ resumeButton.addEventListener('click', function () {
 stopButton.addEventListener('click', function () {
 	stopAnimation()
 })
+
+
 map.on('click', e => {
 	console.log(e.coordinate)
 })
 
-// 1. 进度控制 , 通过时间控制
+ 
 // 2. 事件绑定 ， 更改 maker 类型实现
 // 3. 设置驶过轨迹线 ， 通过获取到的分段驶过线，分段设置动画
