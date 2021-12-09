@@ -3,21 +3,20 @@ import { OlInfoWindow } from './inherit'
    * 覆盖物信息框类
    * @param {*} ?title 常规配置中的标题
    * @param {*} content 自定义html / 常规配置中的内容数据
-   * @param {*} extData 自定义数据
    * @param {*} offset 偏移
    */
  class JCInfoWindow {
   constructor (option) {
-    const {content, title = 'JCMap 信息框',  extData = {}, offset = [0, 0], width = 200, height = 100} = option
+    const {content, title = 'JCMap 信息框', offset = [0, 0], position = 'bottom-center', width = 200, height = 100} = option
     this.events = ['click', 'dblclick', 'contextmenu'] // 支持的事件
     this.clickTimeId = null //单击事件定时器
     this.JCEvents = new Map() // 存储事件
     this.JCTYPE = 'INFOWINDOW'
     this.contentType = this.judgeContentType(content)
     if (this.contentType === 'string') {
-      this.olTarget = this.createCommonOverlay(title, content, extData, offset, width, height)
+      this.olTarget = this.createCommonOverlay(title, content, offset, position, width, height)
     } else {
-      this.olTarget = this.createHtmlOverlay(content, extData, offset, width, height)
+      this.olTarget = this.createHtmlOverlay(content, offset, position, width, height)
     }
     
     this.defaultEvents()
@@ -66,7 +65,7 @@ import { OlInfoWindow } from './inherit'
    * 创建常规信息框
    * @returns  Overlay
    */
-  createCommonOverlay = (titleString, contentString, extData, offset, width, height) => {
+  createCommonOverlay = (titleString, contentString, offset, position, width, height) => {
     const container = document.createElement('div')
     container.style.backgroundColor = '#fff'
     let singleBox = document.createElement('div')
@@ -87,7 +86,7 @@ import { OlInfoWindow } from './inherit'
       offset: offset,
       insertFirst: false,
       stopEvent: true,
-      positioning: 'bottom-center'
+      positioning: position
     })
     over.getElement().setAttribute('id', `JC-Overlay`)
     over.getElement().setAttribute('class', 'info-box')
@@ -97,7 +96,7 @@ import { OlInfoWindow } from './inherit'
    * 创建自定义信息框
    * @returns  Overlay
    */
-  createHtmlOverlay = (content, extData, offset, width, height) => {
+  createHtmlOverlay = (content, offset, position, width, height) => {
     const container = document.createElement('div')
     container.style.backgroundColor = '#fff'
     container.setAttribute('class', 'content-title')
@@ -122,8 +121,7 @@ import { OlInfoWindow } from './inherit'
       offset: offset,
       insertFirst: false,
       stopEvent: true,
-      positioning: 'bottom-center',
-      className: 'ol-overlay-container ol-selectable'
+      positioning: position
     })
     over.getElement().setAttribute('id', `JC-Overlay`)
     return over
