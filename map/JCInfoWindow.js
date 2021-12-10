@@ -144,11 +144,13 @@ import { OlInfoWindow } from './inherit'
    * 显示信息框
    */
   open = (map, e) => {
+    console.log(this.olTarget.getElement().classList);
     let position = e.getPosition()
     this.olTarget.setPosition(position)
     let id = e.getId()
     this.olTarget.set('id', id)
     this.olTarget.getElement().setAttribute('id', `JC-Overlay-${id}`)
+    this.olTarget.getElement().setAttribute('class', `jc-infoWindow-display`)
     map.add(this)
   }
   /**

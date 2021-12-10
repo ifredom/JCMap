@@ -508,6 +508,10 @@ function JCMap(target = 'map', options = {}) {
         INFOWINDOW: () => {
           this.addOverlay(target.olTarget)
         },
+        // 右键菜单栏
+        ContextMenu: () => {
+          this.addOverlay(target.olTarget)
+        },
         unknown: () => {},
       }
       Array.isArray(target) ? this.add(...target) : targetSwitch[JCTYPE]()

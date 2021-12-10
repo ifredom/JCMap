@@ -63,7 +63,11 @@ function OlInfoWindow(options) {
   Overlay.call(this, options);
   this.JCTYPE = "OlInfoWindow";
 }
-
+// 右键菜单类 OlContextMenu 继承 Overlay
+function OlContextMenu(options) {
+  Overlay.call(this, options)
+  this.JCTYPE = 'OlContextMenu'
+}
 function OlLineString(options) {
   LineString.call(this, options);
   this.JCTYPE = "OlLineString";
@@ -83,6 +87,7 @@ inheritPrototype(OlMap, _Map);
 inheritPrototype(OlInfoWindow, Overlay);
 inheritPrototype(OlLineString, LineString);
 inheritPrototype(OlDraw, Draw)
+inheritPrototype(OlContextMenu, Overlay)
 
 export {
   OlMap,
@@ -94,5 +99,6 @@ export {
   OlCluster,
   OlInfoWindow,
   OlLineString,
-  OlDraw
+  OlDraw,
+  OlContextMenu
 };
