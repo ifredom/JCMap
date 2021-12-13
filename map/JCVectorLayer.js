@@ -59,16 +59,6 @@ class JCVectorLayer {
 	//添加事件监听
 	addeventlistener(type) {
 		if (type === 'moving') {
-			const vectorSource = new VectorSource({
-				features: []
-			})
-			//矢量标注图层
-			const vectorLayer = new VectorLayer({
-				className: '轨迹图层',
-				source: vectorSource,
-				zIndex: 5
-			})
-			this.map.addLayer(vectorLayer)
 			this.on(type, e => {
 				const { type, eventName, moveCallBack, path, speed, lineFeature, marker, status, updateSpeed, updateDistance, circlable } = e
 				// 是否存在 当前marker 动画
@@ -91,7 +81,6 @@ class JCVectorLayer {
 						//初始化完整动画对象
 						const animationObject = new TrackAnimation({
 							vectorLayer: this,
-							trackVectorLayer: vectorLayer,
 							type,
 							eventName,
 							marker,

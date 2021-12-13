@@ -105,7 +105,12 @@ marker.on('moving', function (e) {
 })
 
 marker.on('click', function () {
+	console.log('click-------')
+	marker.pauseMove()
+})
+marker.on('dblclick', function () {
 	console.log('1111111111111111111')
+	marker.resumeMove()
 })
 
 function startAnimation() {
@@ -151,9 +156,12 @@ stopButton.addEventListener('click', function () {
 	stopAnimation()
 })
 
-map.on('click', e => {
-	console.log(e.coordinate)
-})
+// map.on('click', e => {
+// 	console.log(e.coordinate)
+// })
+// map.on('dblclick', e => {
+// 	console.log('dblclick', e.coordinate)
+// })
 
 // 2. 事件绑定，隐藏旧的图形，并提高层级
 // 3. 设置驶过轨迹线 ， 通过获取到的分段驶过线，分段设置动画

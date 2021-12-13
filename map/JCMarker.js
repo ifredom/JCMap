@@ -264,9 +264,6 @@ function JCMarker({ map, ...options }) {
 
 	this.olTarget = createMarker(markerOptions, this.JCTYPE)
 
-	this.originOptions = deepClone(options)
-
-	// console.log(this.originOptions)
 	this.options = markerOptions
 
 	this.map = map
@@ -274,6 +271,9 @@ function JCMarker({ map, ...options }) {
 	this._listion = ''
 
 	this.animation = ''
+
+	this.getOriginOptions = () => deepClone(options)
+	// console.log(this.originOptions)
 
 	this.getId = function () {
 		return this.options.id
@@ -441,7 +441,7 @@ function JCMarker({ map, ...options }) {
 		//事件监听
 		this.on = (eventName, callBack = () => {}) => {
 			if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
-			if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
+			// if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
 			if (eventName === 'moving') {
 				const vectorLayer = this.map.vectorLayer
 				const eventName = 'moving'
@@ -526,7 +526,7 @@ function JCMarker({ map, ...options }) {
 				.setRotation((Math.PI / 180) * angle)
 		}
 
-		this.getAngle = function (angle = 0) {
+		this.getAngle = function () {
 			return this.options.angle
 		}
 		// 设置 Marker 坐标
@@ -558,6 +558,12 @@ function JCMarker({ map, ...options }) {
 		this.setStyle = function (style = {}) {
 			this.options.style = style
 			this.olTarget.setStyle(createMarkerStyle(style))
+		}
+		this.setOlStyle = function (style = {}) {
+			this.olTarget.setStyle(style)
+		}
+		this.setOpacity = function (opacity = 1) {
+			this.getOlStyle().getImage().setOpacity(opacity)
 		}
 	} else {
 		//dom overlayMarker

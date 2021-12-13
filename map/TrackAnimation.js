@@ -1,23 +1,37 @@
 import * as turf from '@turf/turf'
 import { getVectorContext } from 'ol/render'
+import JCMarker from './JCMarker'
+
+/**
+ * 轨迹回放动画对象
+ * @param {*} vectorLayer // 图层
+ * @param {*} marker // 执行动画的 marker
+ * @param {*} type //  marker 对应的源事件
+ * @param {*} eventName //  marker对应的动画事件名
+ * @param {*} speed // 执行动画的车辆速度
+ * @param {*} path	// 执行动画的车辆轨迹坐标数组
+ * @param {*} lineFeature // 轨迹祥矢量对象
+ * @param {*} circlable	// 是否循环播放
+ */
+
 class TrackAnimation {
 	constructor(data) {
-		const { vectorLayer, trackVectorLayer, type, eventName, marker, speed, path, lineFeature, circlable } = data
+		const { vectorLayer, type, eventName, marker, speed, path, lineFeature, circlable } = data
 		//初始化 - 动画相关参数配置
 		this.status = 'init' // 动画的状态
 		this.startPos = null //  动画本次的起点
 		this.endPos = null // 动画上次的停止点
 		this.distance = 0 // 本次动画进度
 		this.lastTime = null // 动画上次执行时间
+
 		this.position = null // 运动矢量图形对象
 		this.isArrived = false // 是否到达终点
 		this.moveFeature = null // 动画效果函数
 		// 初始传入
-		this.trackVectorLayer = trackVectorLayer
-
 		this.vectorLayer = vectorLayer // 图层
-		this.type = type //  marker对应的监听事件名
+		this.type = type //  marker 对应的监听事件名
 		this.marker = marker // 执行的动画的marker
+		this.geoMarker = new JCMarker(marker.getOriginOptions()) // 实际执行的动画的marker
 		this.eventName = eventName //  marker对应的动画事件名
 		this.speed = speed // 行驶速度
 		this.path = path // 执行路径
@@ -25,10 +39,9 @@ class TrackAnimation {
 		this.circlable = circlable // 是否循环播放
 
 		this.moveCallBack = null //  marker 对应的动画监听回调
-
 		this.proportion = null // 更新进度
 
-		this.iconAngle = this.marker.originOptions.angle
+		this.iconAngle = this.marker.getOriginOptions().angle // 图标角度
 		this.startAngle = 0 //  动画本次的起点
 		this.endAngle = 0 // 动画上次的停止点
 		this.alreadyAngle = 0 // 本次回调累积角度变化
@@ -52,27 +65,29 @@ class TrackAnimation {
 		this.entAngle = this.iconAngle
 
 		this.passedPath.push(this.endPos)
+
 		// 设置动画效果的执行函数
 		this.moveFeature = event => this.moveAnimate(event)
 		// 移除动画执行函数
-		this.trackVectorLayer.un('postrender', this.moveFeature)
+		this.vectorLayer.un('postrender', this.moveFeature)
 	}
 
 	//开始 - 重新执行动画
 	startMove() {
-		// console.log(this.marker)
+		// 克隆当前 maker的矢量图形
+		this.position = this.marker.getGeometry().clone()
 		this.isArrived = false
 		// 设置当前动画状态
 		this.status = 'moving'
 		// this.lastTime = Date.now()
-		// 克隆当前 maker的矢量图形
-		this.position = this.marker.getGeometry().clone()
+
 		// 执行动画监听
-		this.trackVectorLayer.on('postrender', this.moveFeature)
+		this.vectorLayer.on('postrender', this.moveFeature)
 		// 隐藏小车前一刻位置同时触发事件
-		// this.marker.setGeometry(null)
-		// console.log(this.marker.olTarget)
-		this.trackVectorLayer.getSource().addFeature(this.marker.olTarget)
+
+		this.marker.setOpacity(0.01)
+		this.marker.setAngle(this.geoMarker.getAngle())
+		this.marker.setGeometry(this.position)
 	}
 
 	//停止 - 停止执行动画
@@ -80,9 +95,13 @@ class TrackAnimation {
 		// 设置当前动画状态
 		this.status = 'stopMove'
 		// 将小车固定在当前位置
-		this.marker.setGeometry(this.position)
+
+		// this.marker.setGeometry(this.position)
+		this.marker.setOpacity(1)
+		// this.marker.setAngle(this.geoMarker.getAngle())
+
 		// 移除动画监听
-		this.trackVectorLayer.un('postrender', this.moveFeature)
+		this.vectorLayer.un('postrender', this.moveFeature)
 	}
 
 	//继续 - 继续执行动画
@@ -118,17 +137,12 @@ class TrackAnimation {
 	}
 	// 动画监听
 	onMoveAnimate(angle) {
-		// console.log(this.distance);
 		const inLineGeometry = this.lineGeometry.intersectsCoordinate(this.endPos)
 
 		if (this.alreadyAngle > 0 && inLineGeometry) {
 			this.alreadyAngle = 0
 			this.passedPath.push(this.endPos)
 		}
-
-		this.startAngle = this.endAngle //  动画本次的起点角度
-
-		this.endAngle = angle // 动画上次的停止点角度
 
 		this.alreadyAngle += parseInt(Math.abs(Math.abs(this.endAngle) - Math.abs(this.startAngle)).toFixed(2))
 
@@ -173,34 +187,27 @@ class TrackAnimation {
 		this.startPos = this.endPos
 		this.endPos = currentCoordinate
 
-		let point1 = turf.point(this.startPos)
-		let point2 = turf.point(this.endPos)
-		let bearing = turf.bearing(point1, point2)
+		const bearing = computedAngle(this.startPos, this.endPos)
 
 		// 去除停止继续后,startPos，endPos 坐标相同,导致角度为0，闪烁的问题
 		if (this.startPos[0] !== this.endPos[0] || this.startPos[1] !== this.endPos[1]) {
-			// 此时为 动画执行过程中 坐标不同,
-			this.marker.setAngle(bearing + this.iconAngle)
-			this.marker.setPosition(this.endPos)
-			console.log(this.marker.getPosition())
-		}
+			this.startAngle = this.endAngle
+			this.endAngle = bearing + this.iconAngle
 
+			this.marker.setAngle(this.endAngle)
+			this.geoMarker.setAngle(this.endAngle)
+		}
+		this.geoMarker.setPosition(this.endPos)
 		this.position.setCoordinates(this.endPos)
 		// 获取渲染图层的画布
-
 		const vectorContext = getVectorContext(event)
-		const style = this.marker.getOlStyle()
-		const feature = this.marker.olTarget.clone()
-		feature.setGeometry(this.position)
-		style.setZIndex(2)
-		vectorContext.drawFeature(feature, style)
-		// vectorContext.setStyle(this.marker.getOlStyle())
-		// vectorContext.drawGeometry(this.position)
+		const style = this.geoMarker.getOlStyle()
+		this.geoMarker.setGeometry(this.position)
 
-		// console.log(vectorContext)
+		vectorContext.drawFeature(this.geoMarker, style)
 
 		// 动画监听
-		this.onMoveAnimate(bearing + this.iconAngle)
+		this.onMoveAnimate()
 
 		//是否循环
 		if (!this.circlable) {
@@ -212,6 +219,13 @@ class TrackAnimation {
 		// 用来触发Map监听postcompose事件，直到监听事件结束。
 		this.vectorLayer.map.render()
 	}
+}
+
+function computedAngle(startPos, endPos) {
+	let point1 = turf.point(startPos)
+	let point2 = turf.point(endPos)
+	let bearing = turf.bearing(point1, point2)
+	return bearing
 }
 
 export default TrackAnimation
