@@ -306,3 +306,20 @@ graphEdit.onclick = () => {
 	graph.editPaint()
 	// }
 }
+
+let rotateShape = document.querySelector('.rotate-box')
+rotateShape.firstElementChild.classList.add('ol-unselectable', 'ol-control')
+rotateShape.style.position = 'absolute'
+rotateShape.style.top = '65px'
+rotateShape.style.left = '30px'
+
+let costomControl = new JC.Control({
+  element: rotateShape,
+  target: document.querySelector('#map')
+})
+map.addControl(costomControl)
+
+let contextMenu = new JC.ContextMenu()
+map.on('contextmenu', e => {
+  contextMenu.open(map, e.coordinate)
+})
