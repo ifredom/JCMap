@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="./assets/style/index.css">
   <title>JCMap</title>
@@ -16,6 +16,10 @@
 
 <body>
   <div id="app">
+    <div style="padding:20px;text-align: left;">
+      <button style="margin-left: 20px;">主要</button>
+      <button style="margin-left: 20px;"><a href="./demos/trackPlayback.html">轨迹回放</a></button>
+    </div>
     <div style="display: none">
       <div class="single" id="single" style="white-space: nowrap;">
         <div><span>名称</span><input style="width: 50%;" id="singleName" autocomplete="off" /></div>
@@ -28,23 +32,6 @@
     <div id="map" style="height: 600px"></div>
   </div>
 
-  <div class="input-card" id="replayingHistorical" style="display: none;">
-    <label for="speed">
-      speed:&nbsp;
-      <input id="speed" type="range" min="10" max="999" step="10" value="100" />
-    </label>
-    <label for="distance">
-      distance:&nbsp;
-      <input id="distance" type="range" min="0" max="1000" step="10" value="0" />
-    </label>
-    <div>
-
-      <input type="button" class="btn" value="开始动画" id="start" />
-      <input type="button" class="btn" value="暂停动画" id="pause" />
-      <input type="button" class="btn" value="继续动画" id="resume" />
-      <input type="button" class="btn" value="停止动画" id="stop" />
-    </div>
-  </div>
   <div class="graph-select">
     <label for="selected">新增图形</label>
     <select name="selected" id="selected">
@@ -60,11 +47,10 @@
       <div class="rotate-top"></div>
     </div>
   </div>
-  <!-- <script type="module" src="/main.js"></script> -->
+  <script type="module" src="/main.js"></script>
   <!-- <script type="module" src="/ol.js"></script> -->
   <!-- <script type="module" src="/markerAnimation.js"></script> -->
-  <!-- 历史轨迹 -->
-  <script type="module" src="/replaying-historical-running.js"></script>
+
 </body>
 
 </html>

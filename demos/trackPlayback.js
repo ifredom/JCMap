@@ -1,7 +1,5 @@
 import * as turf from '@turf/turf'
-import JC from './map/index.js'
-
-const replayingHistorical = document.getElementById('replayingHistorical')
+import JC from '../map/index.js'
 
 const speedInput = document.getElementById('speed')
 const distanceInput = document.getElementById('distance')
@@ -10,8 +8,6 @@ const startButton = document.getElementById('start')
 const pauseButton = document.getElementById('pause')
 const resumeButton = document.getElementById('resume')
 const stopButton = document.getElementById('stop')
-
-replayingHistorical.style.display = 'block'
 
 const map = new JC.Map('map', {
 	center: [116.48538303047181, 39.99969219049072],

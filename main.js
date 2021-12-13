@@ -1,5 +1,5 @@
 import JC from './map/index.js'
-import './style.css'
+import './assets/style/style.css'
 import img0 from './assets/image/map/m0.png'
 import img1 from './assets/image/map/m1.png'
 import img2 from './assets/image/map/m2.png'
@@ -214,43 +214,43 @@ rectangle1.on('click', e => {
 
 let Single = new JC.InfoWindow({
 	// content: document.querySelector('#single'),
-  // content: `<div>123</div>`,
-  title: '标记点',
-  content: '这是一个标记点喔',
+	// content: `<div>123</div>`,
+	title: '标记点',
+	content: '这是一个标记点喔',
 	// offset: [-100, -146],
 	offset: [0, 0],
-  width: 200,
-  height: 100
+	width: 200,
+	height: 100
 })
 // map.addOverlays(Single)
 let marker5 = new JC.Marker({
 	position: [116.46873189838723, 39.99656413395958],
 	// offset: [-10, -20],
-  extData: {'name': '大林'},
-  content: buildContent()
+	extData: { name: '大林' },
+	content: buildContent()
 })
 
 let marker6 = new JC.Marker({
 	position: [116.47023189838723, 39.99156413395958],
 	// offset: [-10, -20],
-  extData: {'name': '大鹏'},
-  content: buildContent()
+	extData: { name: '大鹏' },
+	content: buildContent()
 })
 map.add(marker5, marker6)
 
-marker5.on('click', (e) => {
-  Single.open(map, e.target)
-  // let d = document.querySelector('.control')
-  // Single.setContent(d)
-  Single.setContent(e.target.getExtentData().name)
+marker5.on('click', e => {
+	Single.open(map, e.target)
+	// let d = document.querySelector('.control')
+	// Single.setContent(d)
+	Single.setContent(e.target.getExtentData().name)
 })
 
-marker6.on('click', (e) => {
-  Single.open(map, e.target)
-  // Single.setContent(document.querySelector('#edit'))
-  Single.setContent(e.target.getExtentData().name)
+marker6.on('click', e => {
+	Single.open(map, e.target)
+	// Single.setContent(document.querySelector('#edit'))
+	Single.setContent(e.target.getExtentData().name)
 })
-// Single.open(map, [116.357969621871, 39.87414636555371]) 
+// Single.open(map, [116.357969621871, 39.87414636555371])
 
 const clusterermarker1 = new JC.Marker({
 	position: [116.47648317130837, 40.00343952433769],
@@ -266,14 +266,11 @@ const clusterermarker2 = new JC.Marker({
 markerClusterer.add(clusterermarker1, clusterermarker2)
 
 clusterermarker1.on('click', e => {
-
 	clusterermarker1.setAnimation('JCMAP_ANIMATION_BOUNCE')
 	setTimeout(function () {
 		clusterermarker1.setAnimation('JCMAP_ANIMATION_NONE')
 	}, 1000)
-
 })
-
 
 map.on('click', e => {
 	console.log(e.coordinate)
@@ -314,12 +311,12 @@ rotateShape.style.top = '65px'
 rotateShape.style.left = '30px'
 
 let costomControl = new JC.Control({
-  element: rotateShape,
-  target: document.querySelector('#map')
+	element: rotateShape,
+	target: document.querySelector('#map')
 })
 map.addControl(costomControl)
 
 let contextMenu = new JC.ContextMenu()
 map.on('contextmenu', e => {
-  contextMenu.open(map, e.coordinate)
+	contextMenu.open(map, e.coordinate)
 })
