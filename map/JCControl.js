@@ -7,7 +7,10 @@ import { Control } from 'ol/control';
 class JCControl extends Control {
   constructor (option) {
     const { element, target } = option || {}
-
+    element.firstElementChild.classList.add('ol-unselectable', 'ol-control')
+    element.style.position = 'absolute'
+    element.style.top = '65px'
+    element.style.left = '30px'
     super({
       element: element,
       target: target
