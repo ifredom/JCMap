@@ -134,7 +134,7 @@ class TrackAnimation {
 		return this.distance
 	}
 	// 动画监听
-	onMoveAnimate(angle) {
+	onMoveAnimate() {
 		const inLineGeometry = this.lineGeometry.intersectsCoordinate(this.endPos)
 
 		if (this.alreadyAngle > 0 && inLineGeometry) {
