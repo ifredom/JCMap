@@ -151,7 +151,7 @@ function createMarkerStyle(style) {
 		rotateWithView: style.rotateWithView || defaultStyle.rotateWithView,
 		angle: style.angle || defaultStyle.angle
 	})
-	console.log(style)
+	// console.log(style)
 	const textStyle = createSingleTextStyle({
 		label: style.label || defaultStyle.label,
 		font: style.font || defaultStyle.font,
@@ -262,7 +262,7 @@ function JCMarker({ map, ...options }) {
 		'contextmenu',
 		'moving'
 	] // 支持的事件
-
+	let clickTimeId = null //单击事件定时器
 	this.JCTYPE = !!markerOptions.content ? 'OVERLAYMARKER' : 'MARKER'
 
 	this.olTarget = createMarker(markerOptions, this.JCTYPE)
@@ -274,6 +274,8 @@ function JCMarker({ map, ...options }) {
 	this._listion = ''
 
 	this.animation = ''
+
+	this.JCEvents = new Map() // 存储事件
 
 	this.getOriginOptions = () => deepClone(options)
 	// console.log(this.originOptions)
@@ -443,27 +445,24 @@ function JCMarker({ map, ...options }) {
 		return this.options.angle
 	}
 
-	if (this.JCTYPE === 'MARKER') {
-		//矢量marker
+	//事件监听
+	this.on = (eventName, callBack = () => {}) => {
+		if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
+		if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
+		if (eventName === 'moving') {
+			const vectorLayer = this.map.vectorLayer
+			const eventName = 'moving'
+			const id = this.getId()
+			vectorLayer &&
+				vectorLayer.dispatchEvent({
+					type: eventName,
+					eventName: 'JCMarker(moving)' + id,
+					moveCallBack: callBack,
+					status: 'moveCallBack'
+				})
+		}
 
-		this.JCEvents = new Map() // 存储事件
-
-		//事件监听
-		this.on = (eventName, callBack = () => {}) => {
-			if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
-			// if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
-			if (eventName === 'moving') {
-				const vectorLayer = this.map.vectorLayer
-				const eventName = 'moving'
-				const id = this.getId()
-				vectorLayer &&
-					vectorLayer.dispatchEvent({
-						type: eventName,
-						eventName: 'JCMarker(moving)' + id,
-						moveCallBack: callBack,
-						status: 'moveCallBack'
-					})
-			}
+		if (this.JCTYPE === 'MARKER' || eventName === 'moving') {
 			const eventObject = {
 				eventName: 'JCMarker(' + eventName + ')' + this.getId(),
 				callBack,
@@ -499,7 +498,87 @@ function JCMarker({ map, ...options }) {
 				this.JCEvents.set(currentEventObject.eventName, eventObject)
 			}
 			this.olTarget.set('JCEvents', this.JCEvents)
+		} else {
+			const element = this.getElement()
+			const eventObject = {
+				eventName,
+				callBack,
+				target: element,
+				handler: () => {}
+			}
+
+			const clickHandler = (eventName, e, callBack) => {
+				clickTimeId && clearTimeout(clickTimeId)
+				clickTimeId = setTimeout(() => {
+					callBack({
+						type: eventName,
+						target: this,
+						event: e
+					})
+				}, 200)
+			}
+
+			const dblclickHandler = (eventName, e, callBack) => {
+				clickTimeId && clearTimeout(clickTimeId)
+				callBack({
+					type: eventName,
+					target: this,
+					event: e
+				})
+			}
+
+			const contextmenuHandler = (eventName, e, callBack) => {
+				callBack({
+					type: eventName,
+					target: this,
+					event: e
+				})
+			}
+
+			//事件绑定函数
+			const bindEvent = eventObject => {
+				const { eventName, target, callBack } = eventObject
+
+				switch (eventName) {
+					case 'click':
+						eventObject.handler = e => clickHandler(eventName, e, callBack)
+						break
+					case 'dblclick':
+						eventObject.handler = e => dblclickHandler(eventName, e, callBack)
+						break
+					case 'contextmenu':
+						eventObject.handler = e => contextmenuHandler(eventName, e, callBack)
+						break
+					default:
+						break
+				}
+				target.addEventListener(eventName, eventObject.handler)
+			}
+
+			// 未绑定过事件
+			if (!this.overlayMarkerEvents.has(eventObject.target)) {
+				this.overlayMarkerEvents.set(eventObject.target, [eventObject]) //保存监听事件并执行
+				bindEvent(eventObject) //绑定事件
+			} else {
+				//绑定过事件
+				const currentEventArray = this.overlayMarkerEvents.get(eventObject.target)
+				const currentEventObject = currentEventArray.find(e => e.eventName === eventName)
+				// 未绑定过此事件
+				if (!currentEventObject) {
+					currentEventArray.push(eventObject)
+					bindEvent(eventObject)
+				} else {
+					//绑定过此事件，移除之前事件绑定再覆盖
+					eventObject.target.removeEventListener(eventName, currentEventObject.handler)
+					this.overlayMarkerEvents.set(eventObject.target, [eventObject]) //保存监听事件并执行
+					bindEvent(eventObject) //绑定事件
+				}
+			}
 		}
+	}
+
+	if (this.JCTYPE === 'MARKER') {
+		//矢量marker
 
 		//事件移除
 		this.off = (eventName, callBack = () => {}) => {
@@ -580,91 +659,7 @@ function JCMarker({ map, ...options }) {
 		}
 	} else {
 		//dom overlayMarker
-
-		let clickTimeId = null //单击事件定时器
-
 		this.overlayMarkerEvents = new Map() // 存储事件
-
-		//事件注册
-		this.on = (eventName, callBack) => {
-			if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
-			if (!events.includes(eventName)) return console.warn('无效的事件：' + eventName)
-			const element = this.getElement()
-			const eventObject = {
-				eventName,
-				callBack,
-				target: element,
-				handler: () => {}
-			}
-
-			const clickHandler = (eventName, e, callBack) => {
-				clickTimeId && clearTimeout(clickTimeId)
-				clickTimeId = setTimeout(() => {
-					callBack({
-						type: eventName,
-						target: this,
-						event: e
-					})
-				}, 200)
-			}
-
-			const dblclickHandler = (eventName, e, callBack) => {
-				clickTimeId && clearTimeout(clickTimeId)
-				callBack({
-					type: eventName,
-					target: this,
-					event: e
-				})
-			}
-
-			const contextmenuHandler = (eventName, e, callBack) => {
-				callBack({
-					type: eventName,
-					target: this,
-					event: e
-				})
-			}
-
-			//事件绑定函数
-			const bindEvent = eventObject => {
-				const { eventName, target, callBack } = eventObject
-
-				switch (eventName) {
-					case 'click':
-						eventObject.handler = e => clickHandler(eventName, e, callBack)
-						break
-					case 'dblclick':
-						eventObject.handler = e => dblclickHandler(eventName, e, callBack)
-						break
-					case 'contextmenu':
-						eventObject.handler = e => contextmenuHandler(eventName, e, callBack)
-						break
-					default:
-						break
-				}
-				target.addEventListener(eventName, eventObject.handler)
-			}
-
-			// 未绑定过事件
-			if (!this.overlayMarkerEvents.has(eventObject.target)) {
-				this.overlayMarkerEvents.set(eventObject.target, [eventObject]) //保存监听事件并执行
-				bindEvent(eventObject) //绑定事件
-			} else {
-				//绑定过事件
-				const currentEventArray = this.overlayMarkerEvents.get(eventObject.target)
-				const currentEventObject = currentEventArray.find(e => e.eventName === eventName)
-				// 未绑定过此事件
-				if (!currentEventObject) {
-					currentEventArray.push(eventObject)
-					bindEvent(eventObject)
-				} else {
-					//绑定过此事件，移除之前事件绑定再覆盖
-					eventObject.target.removeEventListener(eventName, currentEventObject.handler)
-					this.overlayMarkerEvents.set(eventObject.target, [eventObject]) //保存监听事件并执行
-					bindEvent(eventObject) //绑定事件
-				}
-			}
-		}
 
 		//事件移除
 		this.off = eventName => {
