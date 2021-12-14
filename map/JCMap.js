@@ -321,12 +321,13 @@ function JCMap(target = 'map', options = {}) {
 			map.once(eventName, e => callBack && callBack(e))
 		} else if (eventName === 'moveend') {
 			map.on(eventName, e => callBack && callBack(e))
-		} else {
+		} else if (eventName === 'pointermove') {
+      map.on(eventName, e => callBack && callBack(e))
+    } else {
 			const eventHandler = (e, olMap, eventObject, callBack) => {
 				clickTimeId && clearTimeout(clickTimeId)
 				clickTimeId = setTimeout(() => {
 					if (olMap.hasFeatureAtPixel(e.pixel)) {
-						console.log(eventObject)
 						// 获取点击的图层，以及要素
 						const [olFeature, olLayer] = olMap.forEachFeatureAtPixel(e.pixel, (feature, layer) => [feature, layer])
 						const JCEvents = olFeature.get('JCEvents') || new Map()
@@ -490,6 +491,10 @@ function JCMap(target = 'map', options = {}) {
 				INFOWINDOW: () => {
 					this.addOverlay(target.olTarget)
 				},
+        // 右键菜单栏
+        ContextMenu: () => {
+          this.addOverlay(target.olTarget)
+        },
 				unknown: () => {}
 			}
 			Array.isArray(target) ? this.add(...target) : targetSwitch[JCTYPE]()
@@ -657,18 +662,18 @@ function JCMap(target = 'map', options = {}) {
 	 */
 	this.defaultEvents = () => {
 		if (this.olTarget) {
-			this.olTarget.on('pointermove', e => {
-				let pixel = this.olTarget.getEventPixel(e.originalEvent)
+      this.on('pointermove', e => {
+        let pixel = this.olTarget.getEventPixel(e.originalEvent)
 				let feature = this.olTarget.forEachFeatureAtPixel(pixel, function (feature) {
 					return feature
 				})
 				if (!feature) {
 					this.olTarget.getTargetElement().style.cursor = 'auto'
 				} else {
+          
 					this.olTarget.getTargetElement().style.cursor = 'pointer'
 				}
-			})
-
+      }, 0)
 			this.on('click')
 			this.on('dblclick')
 		}

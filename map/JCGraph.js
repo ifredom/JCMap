@@ -14,8 +14,8 @@ import { Translate } from 'ol/interaction'
 import { transform, fromLonLat } from 'ol/proj'
 import { getDistance } from 'ol/sphere'
 import Modify from 'ol/interaction/Modify'
-import { never, platformModifierKeyOnly, primaryAction } from 'ol/events/condition'
-import {  OlFeature, OlDraw } from './inherit'
+import { always, never, platformModifierKeyOnly, primaryAction } from 'ol/events/condition'
+import { OlFeature, OlDraw } from './inherit'
 
 /**
 	 * 矢量图形类
@@ -243,9 +243,6 @@ import {  OlFeature, OlDraw } from './inherit'
         this.drawFeature = this.buildFeature(e.feature)
         e.feature.set('JCTYPE', 'OlDraw')
         window.dispatchEvent(targets.costomEvent)
-        // 按道理应该可以连续绘制的，所以将此处代码提到deactivate方法上去
-        // this.olTarget.setActive(false)
-		    // this.stopPaint()
       })
     }
     this.initGraph(options) // 初始化矢量图层样式
@@ -334,10 +331,6 @@ import {  OlFeature, OlDraw } from './inherit'
     this.olTarget.setStyle(this.commonStyle(option))
     this.graphTool.Point.style = this.commonStyle(option)
     this.source.addFeature(this.olTarget)
-    // if (this.olTarget) {
-    //   this.olTarget.on = this.on.bind(this.olTarget)
-    //   this.olTarget.off = this.off.bind(this.olTarget)
-    // }
     return this
   }
   /**
@@ -351,7 +344,9 @@ import {  OlFeature, OlDraw } from './inherit'
       finalPath.push(tmpPoint)
     }
     const tmp = new LineString(finalPath)
-    this.olTarget = new OlFeature(tmp)
+    this.olTarget = new OlFeature({
+      geometry: tmp
+    })
     this.olTarget.set('extData', extData)
     if (extData.id) {
       this.olTarget.setId(extData.id)
@@ -480,60 +475,60 @@ import {  OlFeature, OlDraw } from './inherit'
         return primaryAction(event) && !platformModifierKeyOnly(event)
       },
       deleteCondition: never,
-      insertVertexCondition: never,
+      insertVertexCondition: always,
       style: function (feature) {
+        let type = _this.judgeShape(feature.get('geometries')[0])
+        console.log(type);
+        if (type !== 'Line'){
         feature.get('features').forEach(function (modifyFeature) {
-          const modifyGeometry = modifyFeature.get('modifyGeometry')
-          if (modifyGeometry) {
-            const point = feature.getGeometry().getCoordinates()
-            let modifyPoint = modifyGeometry.point
-            if (!modifyPoint) {
-              // save the initial geometry and vertex position
-              modifyPoint = point
-              modifyGeometry.point = modifyPoint
-              modifyGeometry.geometry0 = modifyGeometry.geometry
-              // get anchor and minimum radius of vertices to be used
-              const result = _this.calculateCenter(modifyGeometry.geometry0)
-              modifyGeometry.center = result.center
-              modifyGeometry.minRadius = result.minRadius
-              // let typeName = _this.judgeShape(modifyGeometry.geometry0)
-              // if (typeName === 'Circle') {
-              //   geometry.translate(dx, dy)
-              // }
-            }
+            const modifyGeometry = modifyFeature.get('modifyGeometry')
+            if (modifyGeometry) {
+              const point = feature.getGeometry().getCoordinates()
+              let modifyPoint = modifyGeometry.point
+              if (!modifyPoint) {
+                // save the initial geometry and vertex position
+                modifyPoint = point
+                modifyGeometry.point = modifyPoint
+                modifyGeometry.geometry0 = modifyGeometry.geometry
+                // get anchor and minimum radius of vertices to be used
+                const result = _this.calculateCenter(modifyGeometry.geometry0)
+                modifyGeometry.center = result.center
+                modifyGeometry.minRadius = result.minRadius
+              }
 
-            const center = modifyGeometry.center
-            const minRadius = modifyGeometry.minRadius
-            let dx, dy
-            dx = modifyPoint[0] - center[0]
-            dy = modifyPoint[1] - center[1]
-            const initialRadius = Math.sqrt(dx * dx + dy * dy)
-            if (initialRadius > minRadius) {
-              const initialAngle = Math.atan2(dy, dx)
-              dx = point[0] - center[0]
-              dy = point[1] - center[1]
-              const currentRadius = Math.sqrt(dx * dx + dy * dy)
-              if (currentRadius > 0) {
-                const currentAngle = Math.atan2(dy, dx)
-                
-                const geometry = modifyGeometry.geometry0.clone()
-                geometry.scale(currentRadius / initialRadius, undefined, center)
-                const typeName = modifyGeometry.geometry0.getType()
-                if (typeName === 'Polygon') {
-                  let shapeName = _this.judgeShape(modifyGeometry.geometry0)
-                  if (shapeName !== 'Rectangle') {
-                    geometry.rotate(currentAngle - initialAngle, center)
+              const center = modifyGeometry.center
+              const minRadius = modifyGeometry.minRadius
+              let dx, dy
+              dx = modifyPoint[0] - center[0]
+              dy = modifyPoint[1] - center[1]
+              const initialRadius = Math.sqrt(dx * dx + dy * dy)
+              if (initialRadius > minRadius) {
+                const initialAngle = Math.atan2(dy, dx)
+                dx = point[0] - center[0]
+                dy = point[1] - center[1]
+                const currentRadius = Math.sqrt(dx * dx + dy * dy)
+                if (currentRadius > 0) {
+                  const currentAngle = Math.atan2(dy, dx)
+                  
+                  const geometry = modifyGeometry.geometry0.clone()
+                  geometry.scale(currentRadius / initialRadius, undefined, center)
+                  const typeName = modifyGeometry.geometry0.getType()
+                  if (typeName === 'Polygon') {
+                    let shapeName = _this.judgeShape(modifyGeometry.geometry0)
+                    if (shapeName !== 'Rectangle') {
+                      geometry.rotate(currentAngle - initialAngle, center)
+                    }
+                  } else if (typeName === 'Circle') {
+                    geometry.translate(dx, dy)
+                  } else if (typeName === 'Point') {
+                    geometry.translate(dx, dy)
                   }
-                } else if (typeName === 'Circle') {
-                  geometry.translate(dx, dy)
-                } else if (typeName === 'Point') {
-                  geometry.translate(dx, dy)
+                  modifyGeometry.geometry = geometry
                 }
-                modifyGeometry.geometry = geometry
               }
             }
-          }
         })
+      }
         return defaultStyle(feature)
       }
     })
@@ -546,22 +541,30 @@ import {  OlFeature, OlDraw } from './inherit'
     })
     this.map.addGraph(trans)
     modify.on('modifystart', e => {
+      let _this = this
       e.features.forEach(function (feature) {
-        feature.set('modifyGeometry', { geometry: feature.getGeometry().clone() }, true)
+        let shape = _this.judgeShape(feature.getGeometry())
+        if (shape === 'Line' || shape === 'Polygon' || shape === 'Circle') {
+          // 当类型为线、多边形（矩形除外）、圆形时，允许新增点
+        } else {
+          // 克隆图形，不能新增点
+          feature.set('modifyGeometry', { geometry: feature.getGeometry().clone() }, true)
+        }
       })
     })
 
     modify.on('modifyend', e => {
+      let _this = this
       e.features.forEach(function (feature) {
         const modifyGeometry = feature.get('modifyGeometry')
         if (modifyGeometry) {
           feature.setGeometry(modifyGeometry.geometry)
           feature.unset('modifyGeometry', true)
-          let targets = _this.JCEvents.get('JCGraph(modifyend)')
-          _this.drawFeature = _this.buildFeature(feature)
-          feature.set('JCTYPE', 'OlDraw')
-          window.dispatchEvent(targets.costomEvent)
         }
+        let targets = _this.JCEvents.get('JCGraph(modifyend)')
+        _this.drawFeature = _this.buildFeature(feature)
+        feature.set('JCTYPE', 'OlDraw')
+        window.dispatchEvent(targets.costomEvent)
       })
     })
   }
