@@ -78,25 +78,8 @@ let polyline = new JC.Polyline({
 	extData: null // 自定义信息
 })
 
-// console.log(polyline);
-
-var passedPolyline = new JC.Polyline({
-	map: map,
-	// path: lineArr,
-	strokeColor: '#000', //线颜色
-	// strokeOpacity: 1,     //线透明度
-	strokeWeight: 6, //线宽
-	// strokeStyle: "solid"  //线样式
-	zIndex: 8
-})
-
-// marker.setAnimation('AMAP_ANIMATION_BOUNCE');
-
-// passedPolyline.setPath(lineArr);
 marker.on('moving', function (e) {
-	// console.log('moving', e)
-	// console.log(marker.getRatio());
-	distanceInput.value = marker.getRatio() * 10
+	distanceInput && (distanceInput.value = marker.getRatio() * 10)
 })
 
 marker.on('click', function () {
@@ -110,17 +93,17 @@ marker.on('dblclick', function () {
 
 function startAnimation() {
 	animating = 'start'
-	marker.moveAlong(lineArr, Number(speedInput.value))
+	marker.moveAlong(lineArr, Number(speedInput ? speedInput.value : 100))
 }
 
-speedInput.onchange = e => {
+speedInput && (speedInput.onchange = e => {
 	marker.updateMoveSpeed(e.target.value)
-}
+})
 
-distanceInput.onchange = e => {
+distanceInput && (distanceInput.onchange = e => {
 	marker.moveAlong(lineArr, Number(speedInput.value))
 	marker.updateMoveDistance(e.target.value / 1000)
-}
+})
 
 function pauseAnimation() {
 	marker.pauseMove()
@@ -150,13 +133,6 @@ resumeButton.addEventListener('click', function () {
 stopButton.addEventListener('click', function () {
 	stopAnimation()
 })
-
-// map.on('click', e => {
-// 	console.log(e.coordinate)
-// })
-// map.on('dblclick', e => {
-// 	console.log('dblclick', e.coordinate)
-// })
 
 // 2. 事件绑定，隐藏旧的图形，并提高层级
 // 3. 设置驶过轨迹线 ， 通过获取到的分段驶过线，分段设置动画

@@ -12,13 +12,9 @@ import JCContextMenu from './JCContextMenu'
 
 export default {
 	Map: JCMap,
-	// Point: _JCPoint,
 	Marker: JCMarker,
 	MarkerCluster: JCMarkerCluster,
-	// ZoomSlider: ZoomSlider,
-	// Event: new Event(),
 	VectorGraph: JCGraph, // 矢量图形类
-	// Search: _JCSearch, // 搜索类
 	InfoWindow: JCInfoWindow, // 信息框类
 	Polyline: JCPolyline, // 带箭头轨迹线类
 	Control: JCControl, // 自定义控件类
