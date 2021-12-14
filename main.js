@@ -269,16 +269,16 @@ clusterermarker1.on('click', e => {
 map.on('click', e => {
 	console.log(e.coordinate)
 
-	const marker = new JC.Marker({
-		map,
-		position: e.coordinate,
-		content: buildContent()
-	})
+	// const marker = new JC.Marker({
+	// 	map,
+	// 	position: e.coordinate,
+	// 	content: buildContent()
+	// })
 
-	marker.setAnimation('JCMAP_ANIMATION_BOUNCE')
-	window.animationMarkerTimer = setTimeout(function () {
-		marker.setAnimation('JCMAP_ANIMATION_NONE')
-	}, 1000)
+	// marker.setAnimation('JCMAP_ANIMATION_BOUNCE')
+	// window.animationMarkerTimer = setTimeout(function () {
+	// 	marker.setAnimation('JCMAP_ANIMATION_NONE')
+	// }, 1000)
 })
 
 let graphSelect = document.querySelector('#selected')
@@ -292,16 +292,10 @@ graphSelect.onchange = () => {
 
 let graphEdit = document.querySelector('#edit')
 graphEdit.onclick = () => {
-	// if (graphSelect.value) {
 	graph.editPaint()
-	// }
 }
 
 let rotateShape = document.querySelector('.rotate-box')
-rotateShape.firstElementChild.classList.add('ol-unselectable', 'ol-control')
-rotateShape.style.position = 'absolute'
-rotateShape.style.top = '65px'
-rotateShape.style.left = '30px'
 
 let costomControl = new JC.Control({
 	element: rotateShape,
@@ -310,6 +304,27 @@ let costomControl = new JC.Control({
 map.addControl(costomControl)
 
 let contextMenu = new JC.ContextMenu()
+
+let contextMenuPositon = []
 map.on('contextmenu', e => {
 	contextMenu.open(map, e.coordinate)
+  contextMenuPositon = e.coordinate
 })
+
+contextMenu.addMenu({
+  title: '添加标点',
+  callBack: () => {
+    const marker = new JC.Marker({
+      map,
+      position: contextMenuPositon,
+      content: buildContent()
+    })
+  
+    marker.setAnimation('JCMAP_ANIMATION_BOUNCE')
+    window.animationMarkerTimer = setTimeout(function () {
+      marker.setAnimation('JCMAP_ANIMATION_NONE')
+    }, 1000)
+  }
+})
+
+// contextMenu.removeMenu('放大一级')

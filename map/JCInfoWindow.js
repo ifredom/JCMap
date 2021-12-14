@@ -144,7 +144,6 @@ import { OlInfoWindow } from './inherit'
    * 显示信息框
    */
   open = (map, e) => {
-    console.log(this.olTarget.getElement().classList);
     let position = e.getPosition()
     this.olTarget.setPosition(position)
     let id = e.getId()
@@ -164,61 +163,38 @@ import { OlInfoWindow } from './inherit'
   on (eventName, callBack = () => {}) {
     if (!eventName || typeof eventName !== 'string') throw new Error('请传入正确的 eventName！')
     if (!this.events.includes(eventName)) return console.warn('无效的事件：' + eventName)
-    // 特殊事件监听 这是实例 以后再做通用兼容
-    let dom = this.olTarget.getElement()
-    // 获取输入框的值
-    let val = ''
-    dom.querySelector('#singleName').oninput = () => {
-      val = dom.querySelector('#singleName').value
+
+    const eventObject = {
+      eventName:  'JCInfoWindow(' + eventName + ')',
+      callBack,
+      handler: e => {
+        e.callBack({
+          type: e.eventName,
+          target: e.target,
+          event: e.event
+        })
+      }
     }
-    // 第一个按钮 保存按钮
-    let saveButton = dom.querySelector('.saveSingle')
-    saveButton.addEventListener('click', () => {
-      callBack({
-        type: 'save',
-        data: {
-          position: val
-        }
-      })
-    })
-    // 第二个按钮 取消按钮
-    let deleteButton = dom.querySelector('.deleteSingle')
-    deleteButton.addEventListener('click', () => {
-      callBack({
-        type: 'delete'
-      })
-    })
-    // const eventObject = {
-    //   eventName:  'JCInfoWindow(' + eventName + ')',
-    //   callBack,
-    //   handler: e => {
-    //     e.callBack({
-    //       type: e.eventName,
-    //       target: e.target,
-    //       event: e.event
-    //     })
-    //   }
-    // }
 
     // 未绑定过事件
-    // if (!this.JCEvents.has(eventObject.eventName)) {
-    //   //监听事件 - JCMap 处理成 cliclk
-    //   this.olTarget.on(eventObject.eventName, eventObject.handler)
-    //   //储存事件
-    //   this.JCEvents.set(eventObject.eventName, eventObject)
-    // } else {
-    //   const currentEventObject = this.JCEvents.get(eventObject.eventName)
+    if (!this.JCEvents.has(eventObject.eventName)) {
+      //监听事件 - JCMap 处理成 cliclk
+      this.olTarget.on(eventObject.eventName, eventObject.handler)
+      //储存事件
+      this.JCEvents.set(eventObject.eventName, eventObject)
+    } else {
+      const currentEventObject = this.JCEvents.get(eventObject.eventName)
 
-    //   // 移除事件
-    //   this.olTarget.un(currentEventObject.eventName, currentEventObject.handler)
+      // 移除事件
+      this.olTarget.un(currentEventObject.eventName, currentEventObject.handler)
 
-    //   // 重新设置监听事件
-    //   this.olTarget.on(currentEventObject.eventName, eventObject.handler)
+      // 重新设置监听事件
+      this.olTarget.on(currentEventObject.eventName, eventObject.handler)
 
-    //   //储存新事件
-    //   this.JCEvents.set(currentEventObject.eventName, eventObject)
-    // }
-    // this.olTarget && this.olTarget.set('JCEvents', this.JCEvents)
+      //储存新事件
+      this.JCEvents.set(currentEventObject.eventName, eventObject)
+    }
+    this.olTarget && this.olTarget.set('JCEvents', this.JCEvents)
   }
 }
 

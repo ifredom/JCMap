@@ -228,7 +228,6 @@ import { OlFeature, OlDraw } from './inherit'
         // 绘制类型
         type: penValue,
         geometryFunction: geometryFunction,
-        // geometryName: '林鹏',
         freehand: freehandFlag, // 手绘模式
         stopClick: true,
         // 最大点数
@@ -237,6 +236,11 @@ import { OlFeature, OlDraw } from './inherit'
       // 将draw对象添加到map中，然后就可以进行图形绘制了
       this.map.addGraph(this.drawTarget)
       this.drawTarget.setActive(true)
+      this.drawTarget.addEventListener('drawstart', e => {
+        document.oncontextmenu = () => {
+          this.drawTarget && this.drawTarget.finishDrawing()
+        }
+      })
       this.drawTarget.addEventListener('drawend', e => {
         // 将当前绘制的矢量图形 通过done事件触发抛出去
         let targets = this.JCEvents.get('JCGraph(done)')
@@ -245,6 +249,7 @@ import { OlFeature, OlDraw } from './inherit'
         window.dispatchEvent(targets.costomEvent)
       })
     }
+
     this.initGraph(options) // 初始化矢量图层样式
    }
   /**
@@ -478,7 +483,6 @@ import { OlFeature, OlDraw } from './inherit'
       insertVertexCondition: always,
       style: function (feature) {
         let type = _this.judgeShape(feature.get('geometries')[0])
-        console.log(type);
         if (type !== 'Line'){
         feature.get('features').forEach(function (modifyFeature) {
             const modifyGeometry = modifyFeature.get('modifyGeometry')
@@ -657,7 +661,6 @@ import { OlFeature, OlDraw } from './inherit'
           eve.callBack = callBack
           eventObject.costomEvent = eve
           window.addEventListener(eventName, e => e.callBack && e.callBack(this.drawFeature))
-          // this.drawTarget.set('JCEvents', this.JCEvents)
         } else {
           //监听事件 - JCMap 处理成 cliclk
 				  this.olTarget.on(eventObject.eventName, eventObject.handler)
