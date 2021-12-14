@@ -8,14 +8,11 @@ const defaultOptions = {
 	id: null, //id
 	position: [0, 0], // 坐标经纬度
 	angle: 0, //角度
-	content: '', // overlayMarker 内容
+	content: undefined, // overlayMarker 内容
 	offset: [0, 0], //偏移量
-	zIndex: 3, // 矢量图形层级
-	extData: {}, //自定义信息
+	zIndex: 3, // 图形层级
+	extData: undefined, //自定义信息
 	projection: 'EPSG:4326',
-	overlayMarker: {
-		zIndex: 9
-	},
 	// 默认 marker icon 样式
 	icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAZCAYAAADe1WXtAAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHrSURBVEjHrdW9a1NxFMbxT9qmNWmaRqlFhE6CLuIL1DcUHDqJm/0HBEUk3RQXpW7dXdysWlAEHQSlo4IoIoggFCko4lJEEaq296aNtvk5JIG2NGmSOjzbuV9+9zzPOUcIwUbCvg7uYGtD9RsVdDCSJh7iT5ofONEyFLkeJvcw/5EQCE8JvRTSjKG9KSiOdvMtz0KxAqzqK+E4cZZ3GNgQikQXV7PET9bAVmqZMMbfNPM4UxOK/iwvB5mfqQNcqTeEHcQ93EVqFRRDaWZHKS41CKzqN2GYQoYv2BtCoJNrvRRe1PnwPeFGpZ+1am5TSrGQ5CJc2E1UqlH8nJCuKFN5WS3wIIUko5DIMjVOab3CEUIbASFLeFwD+Kgct09or/b0cI54rsWXRoQ+Yhxb5X4PDy9TbKWnlyj28mC9SO1MEX9u0v0P5b+YQ9+64e/i+iniZqBHiJLk603Ulm6+P2sQeI9Slmm01Z19DO8iWmog9LmyOYcaWihZ3t5kuR40z2KWiWa21P4eCj/rTFjFnG1N7dMME3kW1wJLhANE7ZxvZUlvTxFNr4GOl82ZQqKlc9LJlZNEVeBseVRjHGz5RiGZYWayAj3HQoZbmz58OD1A9JqQ4hdym4ZWIvaqn8UEZ//Lia5GrJP79cxZqX+cR1gC9S9TwAAAAABJRU5ErkJggg=='
 }
@@ -27,7 +24,6 @@ const getDefaultStyle = () => ({
 	rotateWithView: true, // 是否跟随视图旋转
 	angle: 0, // 图片旋转角度
 	//text style
-	font: 'normal 12px sans-serif',
 	label: '',
 	fontSize: '12px',
 	fontFamily: 'sans-serif',
@@ -89,8 +85,8 @@ function createSingleTextStyle(style) {
 			lineDash: [], // 线间隔模式 这个变化与分辨率有关 默认为undefined Internet Explorer 10和更低版本不支持
 			lineDashOffset: 0, // 线段间隔偏移 默认0
 			miterLimit: 10 // 默认10
-		})
-		// padding: style.padding,
+		}),
+		padding: style.padding
 		// textBaseline: style.textBaseline, // 似乎无效
 		// textAlign: style.textAlign, //文本对齐方式,似乎无效，设置会让文本消失
 	}
@@ -98,7 +94,26 @@ function createSingleTextStyle(style) {
 
 // 处理 Marker 参数
 function getMarkerOptions(defaultOptions, options) {
+	// 1. 只存在 icon
+	// 2. 存在content 或者 存在 icon 和 label为对象
+
 	const assignOptions = Object.assign({}, defaultOptions, options)
+
+	// 处理 label 为对象被合并的情况
+	if (typeof options.label === 'object') {
+		if (options.label.offset && Array.isArray(options.label.offset) && !options.label.offset.length) {
+			options.label.offset = [0, 0]
+		}
+		assignOptions.label = deepClone(options.label)
+	}
+	// 去除默认的icon
+	if (options.content && !options.icon) {
+		delete assignOptions.icon
+	}
+
+	if (Array.isArray(assignOptions.offset) && assignOptions.offset.length !== 2) {
+		assignOptions.offset = [0, 0]
+	}
 
 	const {
 		projection,
@@ -106,38 +121,37 @@ function getMarkerOptions(defaultOptions, options) {
 		content, // overlayMarker 内容
 		offset, //偏移量
 		angle, //角度
+		label,
 		extData //自定义信息
 	} = assignOptions
 
-	assignOptions.position && delete assignOptions.position
-	assignOptions.content && delete assignOptions.content
-	assignOptions.offset && delete assignOptions.offset
-	assignOptions.angle && delete assignOptions.angle
-	assignOptions.extData && delete assignOptions.extData
-	const style = JSON.parse(JSON.stringify(assignOptions))
+	;(!Array.isArray(position) || !position.length) && delete assignOptions.position
+	content === undefined && delete assignOptions.content
+	;(!Array.isArray(offset) || !offset.length) && delete assignOptions.offset
+	!angle && delete assignOptions.angle
+	extData === undefined && delete assignOptions.extData
+	label === undefined && delete assignOptions.label
 
-	// assignOptions.id && console.log({
-	//   geometry: new OlPoint(position),
-	//   content,
-	//   position,
-	//   offset,
-	//   angle,
-	//   extData,
-	//   id: extData.id ? extData.id : null,
-	//   overlayMarker: null,
-	//   style: style, // 获取到样式
-	// });
-	return {
+	const style = deepClone(assignOptions)
+
+	const markerOptions = {
 		geometry: new OlPoint(position),
 		content,
 		position,
 		offset,
 		angle,
 		extData,
-		id: extData.id ? extData.id : null,
+		label,
+		id: extData && extData.id ? extData.id : null,
 		overlayMarker: null,
 		style: style // 获取到样式
 	}
+
+	content === undefined && delete markerOptions.content
+	label === undefined && delete markerOptions.label
+	extData === undefined && delete markerOptions.extData
+
+	return markerOptions
 }
 
 // Marker  样式处理函数
@@ -151,7 +165,7 @@ function createMarkerStyle(style) {
 		rotateWithView: style.rotateWithView || defaultStyle.rotateWithView,
 		angle: style.angle || defaultStyle.angle
 	})
-	// console.log(style)
+
 	const textStyle = createSingleTextStyle({
 		label: style.label || defaultStyle.label,
 		font: style.font || defaultStyle.font,
@@ -182,21 +196,72 @@ function createMarkerStyle(style) {
 }
 
 // 创建 OverlayMarker Element
-function createOverlayMarkerElement(content, id, angle, style) {
+function createOverlayMarkerElement(options) {
+	const { content, angle, id, zIndex, icon, label, offset } = options
+	const isLabelHTML = typeof label === 'object'
+	// offset  OverlayMarker自身已经处理过偏移
+	console.log(label)
+	// container节点处理
 	const container = document.createElement('div')
-	container.innerHTML = content
-	container.style.zIndex = style.zIndex
-	container.style.transform = `rotate(${angle}deg)`
-	// vertical - align
+	container.setAttribute('class', `jcmap-marker`)
 	container.setAttribute('id', `jcmap-marker-${id}`)
+	// container.style.position = 'absolute'
+	container.style.zIndex = zIndex
+
+	//icon 图标节点处理
+	const iconImg = document.createElement('img')
+	//icon 图标容器节点处理
+	const iconContainer = document.createElement('div')
+	//label 节点处理
+	const labelContainer = document.createElement('div')
+	//content 节点处理
+	const contentContainer = document.createElement('div')
+
+	if (icon) {
+		iconImg.src = icon
+		iconContainer.setAttribute('class', `jcmap-marker-icon`)
+		// iconContainer.style.position = 'absolute'
+		if (angle) {
+			iconContainer.style.transform = `rotate(${angle}deg)`
+		}
+	}
+
+	if (content) {
+		contentContainer.setAttribute('class', `jcmap-marker-content`)
+		// contentContainer.style.position = 'absolute'
+		contentContainer.innerHTML = content
+		if (angle) {
+			container.style.transform = `rotate(${angle}deg)`
+		}
+	}
+
+	if (isLabelHTML) {
+		labelContainer.setAttribute('class', `jcmap-marker-label`)
+		// labelContainer.style.position = 'absolute'
+		if (label.offset) {
+			labelContainer.style.left = label.offset[0] - offset[0] + 'px'
+			labelContainer.style.top = label.offset[1] - offset[1] + 'px'
+		}
+
+		labelContainer.innerHTML = label.content
+		console.log(labelContainer.style.left)
+	}
+
+	iconContainer.appendChild(iconImg)
+	icon && !content && container.appendChild(iconContainer)
+	content && container.appendChild(contentContainer)
+	isLabelHTML && container.appendChild(labelContainer)
+
 	return container
 }
 
 // 创建 OverlayMarker
 function createOverlayMarker(options) {
-	const { content = '', position = [0, 0], offset = [0, 0], id = '', angle = 0 } = options
+	const { position = [0, 0], offset = [0, 0], id = '', content, angle, label, style } = options
+	console.log(offset)
+	//创建Dom
+	const element = createOverlayMarkerElement({ content, angle, offset, label, ...style })
 
-	const element = createOverlayMarkerElement(content, id, angle, options.style.overlayMarker)
 	const overlayMarker = new OverlayMarker({
 		id,
 		position,
@@ -208,7 +273,7 @@ function createOverlayMarker(options) {
 		autoPanAnimation: {
 			duration: 250
 		},
-		positioning: 'center-center', // 图形位于点的中心
+		// positioning: 'top-left', // 图形位于点的中心
 		autoPanMargin: 20, // 平移动画开启后，距离可视区域边距
 		className: 'ol-overlay-container ol-selectable' // all OverlayMarker className
 	})
@@ -224,6 +289,8 @@ function createMarker(options, type) {
 	if (!options.id) {
 		const uid = getUid(marker)
 		options.id = uid
+		options.style.id = uid
+
 		marker.setId(uid)
 		marker.set('id', uid)
 	}
@@ -231,12 +298,14 @@ function createMarker(options, type) {
 	if (type === 'MARKER') {
 		// 设置marker样式, Feature 初始化传入样式无效
 		const style = marker.get('style') || {}
+
 		marker.setStyle(createMarkerStyle({ ...style, angle: options.angle, offset: options.offset }))
 	} else {
+		console.log(options)
 		const overlayMarker = createOverlayMarker(options)
 		options.overlayMarker = overlayMarker
 		// 去除默认图形样式
-		marker.setStyle(new Style()) // 在源聚合图层里应该存在clone geometry
+		marker.setStyle(new Style()) // 在源聚合图层里应该存在clone geometryc
 		marker.set('overlayMarker', overlayMarker)
 	}
 
@@ -263,7 +332,8 @@ function JCMarker({ map, ...options }) {
 		'moving'
 	] // 支持的事件
 	let clickTimeId = null //单击事件定时器
-	this.JCTYPE = !!markerOptions.content ? 'OVERLAYMARKER' : 'MARKER'
+
+	this.JCTYPE = !!markerOptions.content || typeof markerOptions.label === 'object' ? 'OVERLAYMARKER' : 'MARKER'
 
 	this.olTarget = createMarker(markerOptions, this.JCTYPE)
 
@@ -710,12 +780,14 @@ function JCMarker({ map, ...options }) {
 		}
 
 		/**
-		 * 设置 content / html
+		 * 设置 content
 		 */
-		this.setElement = function (content = '') {
+		this.setContent = function (content) {
 			this.options.content = content // 目前无效
 			const id = this.options.id
-			this.options.overlayMarker.setElement(createOverlayMarkerElement(content, id))
+			const element = createOverlayMarkerElement({ content, id })
+
+			this.options.overlayMarker.setElement(element)
 		}
 		/**
 		 * 获取 content str
@@ -759,6 +831,8 @@ function JCMarker({ map, ...options }) {
 			const reg = /(rotate\([\-\+]?((\d+)(deg))\))/i
 			this.options.angle = angle
 			this.olTarget.set('angle', angle)
+
+			console.log(angle)
 			this.getElement().style.transform = `rotate(${angle}deg)`
 			// return transform ? transform.match(reg)[3] / 1 : 0
 		}

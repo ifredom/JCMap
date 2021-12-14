@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <link rel="icon" href="" />
+  <title>video测试</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" />
+
+  <!--引入vue-->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+
+  <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+
+  <script type="text/javascript" src="https://lib.cvtsp.com/video/CVNetVideoJs/1.3.0/CvNetVideo.js"></script>
+</head>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  #net-video {
+    width: 100%;
+    height: 100vh;
+  }
+
+  .action-bar {
+    width: 400px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    bottom: 0px;
+    left: 50%;
+    margin-left: -200px;
+    padding: 10px 20px;
+    background: #fff;
+    border-radius: 10px;
+    z-index: 100;
+    border: 1px solid #dcdfe6;
+    box-shadow: 0 0 50px 0 rgb(82 63 105 / 15%);
+    transform: translateY(-50%);
+  }
+
+  .action-bar-2 {
+    bottom: -100px !important;
+    transition: all 1s;
+  }
+
+  .collapse-btn {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    margin-left: -16px;
+    transition: all 1s;
+  }
+
+  .collapse-btn-2 {
+    transform: rotate(180deg);
+    transition: all 1s;
+  }
+</style>
+
+<body>
+  <div id="app">
+    <div id="net-video"></div>
+    <div class="action-bar" :class="{ 'action-bar-2': isCollpase }">
+      <div class="collapse-btn" :class="{ 'collapse-btn-2': isCollpase }">
+        <el-button circle icon="el-icon-arrow-down" @click="collapseActionBar" />
+      </div>
+
+      <el-button @click="connect">实时视频</el-button>
+      <el-button @click="startSpeak" :disabled="speakDisabled">语音对讲</el-button>
+      <el-button @click="downloadVideo" :disabled="downloadDisabled">下载视频</el-button>
+    </div>
+  </div>
+</body>
+
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+  new Vue({
+    el: "#app",
+    data() {
+      return {
+        urlParams: {},
+        isCollpase: false,
+        speakDisabled: false,
+        downloadDisabled: false,
+        autoDisconnectTimer: null,
+      };
+    },
+    mounted() {
+      this.parsingUrl();
+      this.init();
+      window.addEventListener("resize", this.windowResize);
+    },
+    beforeDestroy() {
+      this.autoDisconnectTimer && clearInterval(this.autoDisconnectTimer);
+      CvNetVideo.Stop(-1);
+      window.removeEventListener("resize", this.windowResize);
+    },
+    methods: {
+      collapseActionBar() {
+        this.isCollpase = !this.isCollpase;
+      },
+      //URL参数解析
+      parsingUrl() {
+        let obj = new Object();
+        let url = window.location.search.substring(1);
+        let aParams = url.split("&");
+        aParams.forEach((item) => {
+          let aParam = item.split("=");
+          obj[aParam[0]] = decodeURIComponent(aParam[1]);
+        });
+        this.urlParams = Object.assign({}, obj);
+        console.log(this.urlParams);
+      },
+      windowResize() {
+        let isFullscreen =
+          document.fullScreen ||
+          document.mozFullScreen ||
+          document.webkitIsFullScreen;
+        if (!isFullscreen) {
+          CvNetVideo.Resize(
+            document.body.clientWidth,
+            document.body.clientHeight
+          );
+        }
+      },
+      parsingUrl() {
+        let obj = new Object();
+        let url = window.location.search.substring(1);
+        let aParams = url.split("&");
+        aParams.forEach((item) => {
+          let aParam = item.split("=");
+          obj[aParam[0]] = decodeURIComponent(aParam[1]);
+        });
+        this.urlParams = Object.assign({}, obj);
+        console.log(this.urlParams);
+      },
+      //初始化视频插件
+      init() {
+        CvNetVideo.Init(document.querySelector("#net-video"), 4, {});
+      },
+      //视频连接
+      connect() {
+        const {
+          sim,
+          Channel,
+          videoId,
+          hasAudio = true,
+          streamType = 1,
+          protocol = 1,
+          clusterHost,
+          clusterPort,
+        } = this.urlParams;
+        CvNetVideo.StartRealTimeVideo(
+          sim,
+          Channel,
+          videoId,
+          hasAudio,
+          streamType,
+          {
+            clusterHost: clusterHost,
+            clusterPort: clusterPort,
+            seekMode: "-1",
+            protocol: protocol,
+          }
+        );
+      },
+      startSpeak() {
+        const {
+          sim,
+          Channel,
+          protocol = 1,
+          clusterHost,
+          clusterPort,
+        } = this.urlParams;
+        let vedio = CvNetVideo.StartSpeek(sim, Channel, {
+          clusterHost: clusterHost,
+          clusterPort: clusterPort,
+          protocol: protocol,
+        });
+        // let vedio = CvNetVideo.StartSpeek("013777883241", 1, {
+        //   clusterHost: "et.test.cvtsp.com",
+        //   clusterPort: "15001",
+        //   protocol: 0,
+        // });
+        if (!vedio) {
+          Message.error(
+            "未能获取到麦克风，请确认当前页面是https且未设置阻止。"
+          );
+          return;
+        }
+        this.speakDisabled = true;
+        this.$alert(" 对讲中...", "提示", {
+          confirmButtonText: "关闭对讲",
+        })
+          .then(() => {
+            this.stopSpeak();
+          })
+          .catch(() => {
+            this.stopSpeak();
+          });
+      },
+      stopSpeak() {
+        this.speakDisabled = false;
+        CvNetVideo.StopSpeak();
+      },
+      sendAjax(type, url, data, dataType = "json") {
+        return new Promise((resolve, reject) => {
+          $.ajax({
+            type,
+            url,
+            dataType,
+            headers: {
+              "Content-Type": "application/json;charset=utf8",
+            },
+            data: JSON.stringify(data),
+            success: function (result, status, xhr) {
+              resolve(result, status, xhr);
+            },
+            error: function (xhr) {
+              reject(xhr);
+            },
+          });
+        });
+      },
+      sendDownVideoOrder(downloadParam) {
+        sendAjax("post", "/jc-gov-portal/video/down/9B01", downloadParam)
+          .then((result) => {
+            if (result.code == 1) {
+              Message.success("开始下载视频");
+            } else {
+              Message.error("下发视频下载失败！");
+            }
+          })
+          .catch((xhr) => {
+            Message.error(
+              "错误提示： " + JSON.stringify(xhr) + " " + xhr.statusText
+            );
+          })
+          .finally(() => {
+            this.downloadDisabled = false;
+          });
+      },
+      downloadVideo() {
+        this.downloadDisabled = true;
+        const downloadParam = {};
+        sendAjax("post", "/jc-gov-portal/video/down/check9B01", downloadParam)
+          .then((res) => {
+            if (res.code == 1) {
+              this.sendDownVideoOrder(downloadParam);
+            } else if (res.code == 300) {
+              MessageBox.confirm(
+                "当前通道有文件正在下载中, 点击确定取消之前下载任务执行新的下载，点击取消等待之前下载任务完成?",
+                "提示",
+                {
+                  confirmButtonText: "确定",
+                  cancelButtonText: "取消",
+                  type: "warning",
+                }
+              )
+                .then(() => {
+                  this.sendDownVideoOrder(downloadParam);
+                })
+                .catch(() => {
+                  this.downloadDisabled = false;
+                });
+            } else {
+              Message.error("下载失败！");
+            }
+          })
+          .catch((xhr) => {
+            Message.error(
+              `错误提示：${JSON.stringify(xhr)}${xhr.statusText}`
+            );
+            this.downloadDisabled = false;
+          });
+      },
+      //自动断开链接
+      autoDisconnect() {
+        window.timerP = 0;
+        let args = arguments[0];
+        let times = args.times;
+        this.autoDisconnectTimer && clearInterval(this.autoDisconnectTimer);
+        this.autoDisconnectTimer = setInterval(() => {
+          ++window.timerP;
+          if (window.timerP * 1000 >= times) {
+            window.timerP = 0;
+
+            //关闭所有视频
+            CvNetVideo.Stop(-1);
+
+            this.$alert("长时间未操作，已自动断开视频连接", "提示", {
+              confirmButtonText: "确定",
+            })
+              .then(() => {
+                window.timerP = 0;
+              })
+              .catch(() => {
+                window.timerP = 0;
+              });
+          }
+        }, 1000);
+      },
+    },
+  });
+</script>
+
+</html>

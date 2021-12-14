@@ -37,8 +37,9 @@ const marker = new JC.Marker({
 	map: map,
 	position: [116.478935, 39.997761],
 	// icon: 'https://webapi.amap.com/images/car.png',
-	content: `<div><img src="https://webapi.amap.com/images/car.png" alt="" style="vertical-align:middle;"></div>`,
-	angle: -90
+	angle: -90,
+	offset: [-26, -13],
+	content: `<div><img src="https://webapi.amap.com/images/car.png" alt="" style="vertical-align:middle;"></div>`
 })
 
 let animating = ''

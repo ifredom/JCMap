@@ -313,3 +313,5 @@ let contextMenu = new JC.ContextMenu()
 map.on('contextmenu', e => {
 	contextMenu.open(map, e.coordinate)
 })
+
+// ------------------- 分割线 -----------------------
