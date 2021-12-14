@@ -36,9 +36,8 @@ console.log('line 30% 长度 位置的点对象 ：', along.geometry, bearing)
 const marker = new JC.Marker({
 	map: map,
 	position: [116.478935, 39.997761],
-	icon: 'https://webapi.amap.com/images/car.png',
-	offset: [-26, -13],
-	autoRotation: true,
+	// icon: 'https://webapi.amap.com/images/car.png',
+	content: `<div><img src="https://webapi.amap.com/images/car.png" alt="" style="vertical-align:middle;"></div>`,
 	angle: -90
 })
 

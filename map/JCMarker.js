@@ -52,7 +52,7 @@ function createSingleIconStyle(style) {
 		anchorOrigin: 'top-left', // 原点位置偏移方向
 		anchorXUnits: 'fraction', // 基于原点位置百分比
 		anchorYUnits: 'fraction', // 基于原点位置像素
-		offset: [0, 0], // 偏移量设置，相对于原点
+		offset: style.offset, // 偏移量设置，相对于原点
 		scale: 1, // 图标缩放比例
 		opacity: 1, // 透明度
 		src: style.icon,
@@ -147,10 +147,11 @@ function createMarkerStyle(style) {
 	// console.log('defaultStyle---',defaultStyle);
 	const iconStyle = createSingleIconStyle({
 		icon: style.icon || defaultStyle.icon,
+		offset: style.offset || defaultStyle.offset,
 		rotateWithView: style.rotateWithView || defaultStyle.rotateWithView,
 		angle: style.angle || defaultStyle.angle
 	})
-
+	console.log(style)
 	const textStyle = createSingleTextStyle({
 		label: style.label || defaultStyle.label,
 		font: style.font || defaultStyle.font,
@@ -181,19 +182,21 @@ function createMarkerStyle(style) {
 }
 
 // 创建 OverlayMarker Element
-function createOverlayMarkerElement(content, id, style) {
+function createOverlayMarkerElement(content, id, angle, style) {
 	const container = document.createElement('div')
 	container.innerHTML = content
 	container.style.zIndex = style.zIndex
+	container.style.transform = `rotate(${angle}deg)`
+	// vertical - align
 	container.setAttribute('id', `jcmap-marker-${id}`)
 	return container
 }
 
 // 创建 OverlayMarker
 function createOverlayMarker(options) {
-	const { content = '', position = [0, 0], offset = [0, 0], id = '' } = options
+	const { content = '', position = [0, 0], offset = [0, 0], id = '', angle = 0 } = options
 
-	const element = createOverlayMarkerElement(content, id, options.style.overlayMarker)
+	const element = createOverlayMarkerElement(content, id, angle, options.style.overlayMarker)
 	const overlayMarker = new OverlayMarker({
 		id,
 		position,
@@ -228,7 +231,7 @@ function createMarker(options, type) {
 	if (type === 'MARKER') {
 		// 设置marker样式, Feature 初始化传入样式无效
 		const style = marker.get('style') || {}
-		marker.setStyle(createMarkerStyle({ ...style, angle: options.angle }))
+		marker.setStyle(createMarkerStyle({ ...style, angle: options.angle, offset: options.offset }))
 	} else {
 		const overlayMarker = createOverlayMarker(options)
 		options.overlayMarker = overlayMarker
@@ -433,6 +436,13 @@ function JCMarker({ map, ...options }) {
 		return 0
 	}
 
+	/**
+	 * 获取角度
+	 */
+	this.getAngle = function () {
+		return this.options.angle
+	}
+
 	if (this.JCTYPE === 'MARKER') {
 		//矢量marker
 
@@ -516,7 +526,7 @@ function JCMarker({ map, ...options }) {
 			this.olTarget.set('extData', extData)
 		}
 
-		// 设置 Marker 坐标
+		// 设置 Marker 角度
 		this.setAngle = function (angle = 0) {
 			this.options.angle = angle
 			this.olTarget.set('angle', angle)
@@ -526,9 +536,6 @@ function JCMarker({ map, ...options }) {
 				.setRotation((Math.PI / 180) * angle)
 		}
 
-		this.getAngle = function () {
-			return this.options.angle
-		}
 		// 设置 Marker 坐标
 		this.setPosition = function (position) {
 			if (!position) return
@@ -559,9 +566,15 @@ function JCMarker({ map, ...options }) {
 			this.options.style = style
 			this.olTarget.setStyle(createMarkerStyle(style))
 		}
-		this.setOlStyle = function (style = {}) {
+		/**
+		 * 设置 Feature 样式
+		 */
+		this.setOlStyle = function (style) {
 			this.olTarget.setStyle(style)
 		}
+		/**
+		 * 设置 Feature Image 样式 透明度
+		 */
 		this.setOpacity = function (opacity = 1) {
 			this.getOlStyle().getImage().setOpacity(opacity)
 		}
@@ -722,7 +735,7 @@ function JCMarker({ map, ...options }) {
 			if (!position) return
 			this.options.position = position
 			this.olTarget.set('position', position)
-			this.olTarget.setPosition('position', position)
+			this.getOverlayMarker().setPosition(position)
 		}
 
 		// 设置 Marker 弹跳动画
@@ -737,6 +750,22 @@ function JCMarker({ map, ...options }) {
 			if (!animationName || animationName === 'JCMAP_ANIMATION_NONE') {
 				this.getElement().classList.toggle(animationName)
 			}
+		}
+		/**
+		 * 设置 Feature Image 样式 透明度
+		 */
+		this.setOpacity = function (opacity = 1) {
+			this.getElement().style.opacity = opacity
+		}
+
+		// 设置 Marker 角度
+		this.setAngle = function (angle = 0) {
+			const transform = this.getElement().style.transform
+			const reg = /(rotate\([\-\+]?((\d+)(deg))\))/i
+			this.options.angle = angle
+			this.olTarget.set('angle', angle)
+			this.getElement().style.transform = `rotate(${angle}deg)`
+			// return transform ? transform.match(reg)[3] / 1 : 0
 		}
 	}
 	// 初始化添加map

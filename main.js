@@ -1,11 +1,5 @@
 import JC from './map/index.js'
 import './assets/style/style.css'
-import img0 from './assets/image/map/m0.png'
-import img1 from './assets/image/map/m1.png'
-import img2 from './assets/image/map/m2.png'
-import img3 from './assets/image/map/m3.png'
-
-// 单位还可以设置为degrees, radians, miles, or kilometers
 
 // https://openlayers.org/en/latest/examples/data/icon.png
 const imgBase64 =
@@ -278,7 +272,6 @@ map.on('click', e => {
 	const marker = new JC.Marker({
 		map,
 		position: e.coordinate,
-		// icon:img0,
 		content: buildContent()
 	})
 

@@ -85,7 +85,9 @@ class TrackAnimation {
 		this.vectorLayer.on('postrender', this.moveFeature)
 		// 隐藏小车前一刻位置同时触发事件
 
-		this.marker.setOpacity(0.01)
+		if (this.marker.JCTYPE !== 'OVERLAYMARKER') {
+			this.marker.setOpacity(0.01)
+		}
 		this.marker.setAngle(this.geoMarker.getAngle())
 		this.marker.setGeometry(this.position)
 	}
@@ -94,12 +96,8 @@ class TrackAnimation {
 	stopMove() {
 		// 设置当前动画状态
 		this.status = 'stopMove'
-		// 将小车固定在当前位置
-
-		// this.marker.setGeometry(this.position)
+		// 回复车辆状态
 		this.marker.setOpacity(1)
-		// this.marker.setAngle(this.geoMarker.getAngle())
-
 		// 移除动画监听
 		this.vectorLayer.un('postrender', this.moveFeature)
 	}
@@ -197,6 +195,7 @@ class TrackAnimation {
 			this.marker.setAngle(this.endAngle)
 			this.geoMarker.setAngle(this.endAngle)
 		}
+		this.marker.setPosition(this.endPos)
 		this.geoMarker.setPosition(this.endPos)
 		this.position.setCoordinates(this.endPos)
 		// 获取渲染图层的画布
