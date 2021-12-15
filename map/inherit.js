@@ -49,6 +49,7 @@ function Marker(options) {
 function OverlayMarker(options) {
   Overlay.call(this, options);
   this.JCTYPE = "OverlayMarker";
+  this.getElement().style.cursor = 'pointer'
 }
 
 // OlCluster 继承 Cluster
@@ -62,11 +63,13 @@ function OlCluster(options) {
 function OlInfoWindow(options) {
   Overlay.call(this, options);
   this.JCTYPE = "OlInfoWindow";
+  this.getElement().style.cursor = 'pointer'
 }
 // 右键菜单类 OlContextMenu 继承 Overlay
 function OlContextMenu(options) {
   Overlay.call(this, options)
   this.JCTYPE = 'OlContextMenu'
+  this.getElement().style.cursor = 'pointer'
 }
 function OlLineString(options) {
   LineString.call(this, options);
