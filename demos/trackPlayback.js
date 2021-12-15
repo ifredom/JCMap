@@ -39,9 +39,16 @@ const marker = new JC.Marker({
 	// icon: 'https://webapi.amap.com/images/car.png',
 	angle: -90,
 	offset: [-26, -13],
-	content: `<div><img src="https://webapi.amap.com/images/car.png" alt="" style="vertical-align:middle;"></div>`
+	content: `<img src="https://webapi.amap.com/images/car.png" alt="" style="vertical-align:middle;">`
 })
 
+const marker2 = new JC.Marker({
+	map: map,
+	position: [116.478935, 39.997761],
+	angle: -90,
+	// offset: [-26, -13],
+	icon: 'https://webapi.amap.com/images/car.png'
+})
 let animating = ''
 
 const lineArr = [
@@ -97,14 +104,16 @@ function startAnimation() {
 	marker.moveAlong(lineArr, Number(speedInput ? speedInput.value : 100))
 }
 
-speedInput && (speedInput.onchange = e => {
-	marker.updateMoveSpeed(e.target.value)
-})
+speedInput &&
+	(speedInput.onchange = e => {
+		marker.updateMoveSpeed(e.target.value)
+	})
 
-distanceInput && (distanceInput.onchange = e => {
-	marker.moveAlong(lineArr, Number(speedInput.value))
-	marker.updateMoveDistance(e.target.value / 1000)
-})
+distanceInput &&
+	(distanceInput.onchange = e => {
+		marker.moveAlong(lineArr, Number(speedInput.value))
+		marker.updateMoveDistance(e.target.value / 1000)
+	})
 
 function pauseAnimation() {
 	marker.pauseMove()
@@ -135,5 +144,4 @@ stopButton.addEventListener('click', function () {
 	stopAnimation()
 })
 
-// 2. 事件绑定，隐藏旧的图形，并提高层级
 // 3. 设置驶过轨迹线 ， 通过获取到的分段驶过线，分段设置动画

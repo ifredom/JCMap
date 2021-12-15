@@ -41,36 +41,36 @@ const marker = new JC.Marker({
 })
 
 // content 会覆盖 icon
-// const marker1 = new JC.Marker({
-// 	map: map,
-// 	position: [111.75027560859681, 40.81268047174071],
-// 	icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
-// 	content: `<img src="${onlineImg}" alt="" style="vertical-align:middle;">`
-// 	// offset: [-40, -40]
-// })
+const marker1 = new JC.Marker({
+	map: map,
+	position: [111.75027560859681, 40.81268047174071],
+	icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
+	content: `<img src="${onlineImg}" alt="" style="vertical-align:middle;">`
+	// offset: [-40, -40]
+})
 
 const marker2 = new JC.Marker({
 	map: map,
 	position: [116.12283420234681, 43.93279765924071],
 	icon: 'https://webapi.amap.com/images/car.png',
-	offset: [-26, -34],
+	offset: [-26, -13],
 	angle: 180,
 	label: {
 		content: `<div class='info'>我是 marker 的 label 标签 2</div>`,
-		offset: [-132, -68]
+		offset: [-132, -50]
 	}
 })
 
-// const marker3 = new JC.Marker({
-// 	map: map,
-// 	position: [122.14334201484681, 43.51531719049071],
-// 	content: `<img src="${onlineImg}" alt="" style="vertical-align:middle;">`,
-// 	offset: [-26, -34],
-// 	label: {
-// 		content: `<div class='info'>我是 marker 的 label 标签 3</div>`,
-// 		offset: [-132, -68]
-// 	}
-// })
+const marker3 = new JC.Marker({
+	map: map,
+	position: [122.14334201484681, 43.51531719049071],
+	content: `<img src="${onlineImg}" alt="" style="vertical-align:middle;">`,
+	offset: [-26, -34],
+	label: {
+		content: `<div class='info'>我是 marker 的 label 标签 3</div>`,
+		offset: [-132, -68]
+	}
+})
 
 const vehicleDom = document.getElementById('vehicle')
 

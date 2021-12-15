@@ -41,7 +41,8 @@ class TrackAnimation {
 		this.moveCallBack = null //  marker 对应的动画监听回调
 		this.proportion = null // 更新进度
 
-		this.iconAngle = this.marker.getOriginOptions().angle // 图标角度
+		this.iconAngle = this.marker.getOriginOptions().angle || 0 // 图标角度
+
 		this.startAngle = 0 //  动画本次的起点
 		this.endAngle = 0 // 动画上次的停止点
 		this.alreadyAngle = 0 // 本次回调累积角度变化
@@ -191,10 +192,10 @@ class TrackAnimation {
 		if (this.startPos[0] !== this.endPos[0] || this.startPos[1] !== this.endPos[1]) {
 			this.startAngle = this.endAngle
 			this.endAngle = bearing + this.iconAngle
-
 			this.marker.setAngle(this.endAngle)
 			this.geoMarker.setAngle(this.endAngle)
 		}
+
 		this.marker.setPosition(this.endPos)
 		this.geoMarker.setPosition(this.endPos)
 		this.position.setCoordinates(this.endPos)

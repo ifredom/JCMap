@@ -40,6 +40,18 @@ const getDefaultStyle = () => ({
 	padding: [5, 5, 5, 5]
 })
 
+// JCMarker 共享数据
+
+function JCMarkerBus() {
+	this.zIndexs = {}
+
+	this.maxZIndex = 1
+
+	this.isMoving = false
+}
+
+let _JCMarkerBus = new JCMarkerBus()
+
 // marker Icon 样式处理
 function createSingleIconStyle(style) {
 	const sIconStyle = {
@@ -200,12 +212,11 @@ function createOverlayMarkerElement(options) {
 	const { content, angle, id, zIndex, icon, label, offset } = options
 	const isLabelHTML = typeof label === 'object'
 	// offset  OverlayMarker自身已经处理过偏移
-	console.log(label)
 	// container节点处理
 	const container = document.createElement('div')
 	container.setAttribute('class', `jcmap-marker`)
 	container.setAttribute('id', `jcmap-marker-${id}`)
-	// container.style.position = 'absolute'
+	container.style.position = 'absolute'
 	container.style.zIndex = zIndex
 
 	//icon 图标节点处理
@@ -220,24 +231,26 @@ function createOverlayMarkerElement(options) {
 	if (icon) {
 		iconImg.src = icon
 		iconContainer.setAttribute('class', `jcmap-marker-icon`)
-		// iconContainer.style.position = 'absolute'
+		iconContainer.style.position = 'absolute'
 		if (angle) {
+			iconContainer.style['transform-origin'] = `${-offset[0]}px ${-offset[1]}px 0`
 			iconContainer.style.transform = `rotate(${angle}deg)`
 		}
 	}
 
 	if (content) {
 		contentContainer.setAttribute('class', `jcmap-marker-content`)
-		// contentContainer.style.position = 'absolute'
+		contentContainer.style.position = 'absolute'
 		contentContainer.innerHTML = content
 		if (angle) {
+			container.style['transform-origin'] = `${-offset[0]}px ${-offset[1]}px 0`
 			container.style.transform = `rotate(${angle}deg)`
 		}
 	}
 
 	if (isLabelHTML) {
 		labelContainer.setAttribute('class', `jcmap-marker-label`)
-		// labelContainer.style.position = 'absolute'
+		labelContainer.style.position = 'absolute'
 		if (label.offset) {
 			labelContainer.style.left = label.offset[0] - offset[0] + 'px'
 			labelContainer.style.top = label.offset[1] - offset[1] + 'px'
@@ -312,16 +325,6 @@ function createMarker(options, type) {
 	return marker
 }
 
-// JCMarker 共享数据
-
-function JCMarkerBus() {
-	this.zIndexs = {}
-
-	this.maxZIndex = 1
-}
-
-let _JCMarkerBus = new JCMarkerBus()
-
 function JCMarker({ map, ...options }) {
 	const markerOptions = getMarkerOptions(defaultOptions, options)
 	const events = [
@@ -348,7 +351,6 @@ function JCMarker({ map, ...options }) {
 	this.JCEvents = new Map() // 存储事件
 
 	this.getOriginOptions = () => deepClone(options)
-	// console.log(this.originOptions)
 
 	this.getId = function () {
 		return this.options.id
@@ -366,6 +368,11 @@ function JCMarker({ map, ...options }) {
 		return this.olTarget.getStyle()
 	}
 
+	// 获取 overlayMarker
+	this.getOverlayMarker = function () {
+		return this.olTarget.get('overlayMarker')
+	}
+
 	// 获取自定义信息
 	this.getExtentData = function () {
 		return this.options.extData
@@ -381,9 +388,19 @@ function JCMarker({ map, ...options }) {
 		return this.options.offset
 	}
 
-	// 获取 overlayMarker
-	this.getOverlayMarker = function () {
-		return this.olTarget.get('overlayMarker')
+	this.setOffset = function (offset = [0, 0]) {
+		this.options.offset = offset
+
+		this.olTarget.set('offset', offset)
+
+		this.getOverlayMarker().setOffset(offset)
+	}
+
+	/**
+	 * 获取角度
+	 */
+	this.getAngle = function () {
+		return this.options.angle
 	}
 
 	// 删除 overlayMarker
@@ -440,14 +457,28 @@ function JCMarker({ map, ...options }) {
 	// 行驶动画
 	this.moveAlong = (path = [], speed = 60, circlable = false) => {
 		if (!path.length || !Array.isArray(path)) return false
+		_JCMarkerBus.isMoving = true
+
 		const vectorLayer = this.map.vectorLayer
 		const type = 'moving'
 		const JCEventName = 'JCMarker(moving)' + this.getId()
 		const lineFeature = vectorLayer.forEachFeature(feature => {
 			return feature.get('linePath') === path && feature
 		})
-		const isExitMarkerMove = vectorLayer.JCEvents.has(JCEventName)
 
+		// const overlayElement = this.getOverlayElement()
+		// const markerElement = overlayElement.querySelector('.jcmap-marker')
+		// const contentElement = overlayElement.querySelector('.jcmap-marker-content')
+
+		// const iconElement = overlayElement.querySelector('.jcmap-marker-icon')
+		// const labelElement = overlayElement.querySelector('.jcmap-marker-label')
+
+		// markerElement && (markerElement.style.position = '')
+		// contentElement && (contentElement.style.position = '')
+		// iconElement && (iconElement.style.position = '')
+		// labelElement && (labelElement.style.position = '')
+
+		// const isExitMarkerMove = vectorLayer.JCEvents.has(JCEventName)
 		//是否在此线上行驶动画-可能不准确
 		// const canMoveAlong = lineFeature && lineFeature.getGeometry().intersectsCoordinate(this.getPosition())
 		// console.log('canMoveAlong---',canMoveAlong,this.getPosition())
@@ -506,13 +537,6 @@ function JCMarker({ map, ...options }) {
 			return ratio
 		}
 		return 0
-	}
-
-	/**
-	 * 获取角度
-	 */
-	this.getAngle = function () {
-		return this.options.angle
 	}
 
 	//事件监听
@@ -800,9 +824,11 @@ function JCMarker({ map, ...options }) {
 		// 设置 Marker 坐标
 		this.setPosition = function (position) {
 			if (!position) return
+			const geometry = this.olTarget.getGeometry()
 			this.options.position = position
 			this.olTarget.set('position', position)
 			this.getOverlayMarker().setPosition(position)
+			geometry && geometry.setCoordinates(position)
 		}
 
 		// 设置 Marker 弹跳动画
@@ -831,8 +857,6 @@ function JCMarker({ map, ...options }) {
 			const reg = /(rotate\([\-\+]?((\d+)(deg))\))/i
 			this.options.angle = angle
 			this.olTarget.set('angle', angle)
-
-			console.log(angle)
 			this.getElement().style.transform = `rotate(${angle}deg)`
 			// return transform ? transform.match(reg)[3] / 1 : 0
 		}
