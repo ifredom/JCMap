@@ -670,7 +670,6 @@ function JCMap(target = 'map', options = {}) {
 				if (!feature) {
 					this.olTarget.getTargetElement().style.cursor = 'auto'
 				} else {
-          
 					this.olTarget.getTargetElement().style.cursor = 'pointer'
 				}
       }, 0)

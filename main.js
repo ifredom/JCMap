@@ -30,12 +30,31 @@ new JC.Marker({
 // 随机创建n个要素聚合物
 const markerClusterer = inintMarkerClusterer(map)
 
+let tmpMarkers = []
+for (let i = 1; i <= 200; i++) {
+  let coordinates = [120.0 + Math.random(), 30.0 + Math.random()]
+
+  let marker = new JC.Marker({
+    position: coordinates,
+    offset: [-30, -20],
+    content: buildContent()
+  })
+  tmpMarkers.push(marker)
+
+  marker.on('click', e => {
+    console.log('Markers---click--------', e)
+  })
+}
+markerClusterer.setMarkers(tmpMarkers)
+
+
 const [marker1, marker2] = inintMarkers(map)
 
 function inintMarkers(map) {
 	let marker1 = new JC.Marker({
 		position: [118.44524715557696, 33.461747354231065],
-		offset: [-30, -20]
+		offset: [-30, -20],
+    icon: './assets/style/map_online.png'
 	})
 
 	let marker2 = new JC.Marker({
@@ -68,20 +87,7 @@ function inintMarkers(map) {
 function inintMarkerClusterer(map) {
 	// 随机创建1000个要素
 	let markers = []
-	for (let i = 1; i <= 200; i++) {
-		let coordinates = [120.0 + Math.random(), 30.0 + Math.random()]
-
-		let marker = new JC.Marker({
-			position: coordinates,
-			offset: [-30, -20]
-			// content: buildContent()
-		})
-		markers.push(marker)
-
-		marker.on('click', e => {
-			console.log('Markers---click--------', e)
-		})
-	}
+	
 
 	for (let i = 1; i <= 200; i++) {
 		let coordinates = [110.07 + Math.random(), 31.07 + Math.random()]
@@ -219,7 +225,7 @@ let Single = new JC.InfoWindow({
 // map.addOverlays(Single)
 let marker5 = new JC.Marker({
 	position: [116.46873189838723, 39.99656413395958],
-	// offset: [-10, -20],
+	offset: [-10, -20],
 	extData: { name: '大林' },
 	content: buildContent()
 })
@@ -236,7 +242,7 @@ marker5.on('click', e => {
 	Single.open(map, e.target)
 	// let d = document.querySelector('.control')
 	// Single.setContent(d)
-	Single.setContent(e.target.getExtentData().name)
+	// Single.setContent(e.target.getExtentData().name)
 })
 
 marker6.on('click', e => {
@@ -316,6 +322,7 @@ contextMenu.addMenu({
 	callBack: () => {
 		const marker = new JC.Marker({
 			map,
+      offset: [-26, -60],
 			position: contextMenuPositon,
 			content: buildContent()
 		})
@@ -328,3 +335,4 @@ contextMenu.addMenu({
 })
 
 // contextMenu.removeMenu('放大一级')
+// map.setFitView()

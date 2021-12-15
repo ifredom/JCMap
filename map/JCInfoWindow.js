@@ -149,7 +149,7 @@ import { OlInfoWindow } from './inherit'
     let id = e.getId()
     this.olTarget.set('id', id)
     this.olTarget.getElement().setAttribute('id', `JC-Overlay-${id}`)
-    this.olTarget.getElement().setAttribute('class', `jc-infoWindow-display`)
+    this.olTarget.getElement().classList.add('jc-infoWindow-display')
     map.add(this)
   }
   /**
