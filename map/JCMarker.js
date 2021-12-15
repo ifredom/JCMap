@@ -2,7 +2,7 @@
 import { Fill, Icon, Stroke, Style, Text } from 'ol/style'
 import { Marker, OlPoint, OverlayMarker } from './inherit'
 import { getUid } from 'ol/util'
-import { deepClone } from './utils'
+import { deepClone, isObject, isString } from './utils'
 const defaultOptions = {
 	// 坐标系
 	id: null, //id
@@ -56,11 +56,11 @@ let _JCMarkerBus = new JCMarkerBus()
 function createSingleIconStyle(style) {
 	const sIconStyle = {
 		crossOrigin: 'anonymous', // 图片跨域允许
-		anchor: [0.5, 0.5], // 原点位置
+		anchor: style.offset.map(n => -n), // 图标的原点位置,-即中心点
 		anchorOrigin: 'top-left', // 原点位置偏移方向
-		anchorXUnits: 'fraction', // 基于原点位置百分比
-		anchorYUnits: 'fraction', // 基于原点位置像素
-		offset: style.offset, // 偏移量设置，相对于原点
+		anchorXUnits: 'pixels', // 基于原点位置百分比
+		anchorYUnits: 'pixels', // 基于原点位置像素
+		// displacement: style.offset.map(n => -n), // 偏移量设置，相对于原点
 		scale: 1, // 图标缩放比例
 		opacity: 1, // 透明度
 		src: style.icon,
@@ -68,6 +68,7 @@ function createSingleIconStyle(style) {
 		rotateWithView: style.rotateWithView, // 是否跟随视图旋转
 		rotation: (Math.PI / 180) * style.angle // 旋转角度
 	}
+	console.log(style)
 	return sIconStyle
 }
 
@@ -255,9 +256,7 @@ function createOverlayMarkerElement(options) {
 			labelContainer.style.left = label.offset[0] - offset[0] + 'px'
 			labelContainer.style.top = label.offset[1] - offset[1] + 'px'
 		}
-
 		labelContainer.innerHTML = label.content
-		console.log(labelContainer.style.left)
 	}
 
 	iconContainer.appendChild(iconImg)
@@ -286,7 +285,7 @@ function createOverlayMarker(options) {
 		autoPanAnimation: {
 			duration: 250
 		},
-		// positioning: 'top-left', // 图形位于点的中心
+		positioning: 'top-left', // 图形位于点的中心
 		autoPanMargin: 20, // 平移动画开启后，距离可视区域边距
 		className: 'ol-overlay-container ol-selectable' // all OverlayMarker className
 	})
@@ -314,7 +313,6 @@ function createMarker(options, type) {
 
 		marker.setStyle(createMarkerStyle({ ...style, angle: options.angle, offset: options.offset }))
 	} else {
-		console.log(options)
 		const overlayMarker = createOverlayMarker(options)
 		options.overlayMarker = overlayMarker
 		// 去除默认图形样式
@@ -807,18 +805,64 @@ function JCMarker({ map, ...options }) {
 		 * 设置 content
 		 */
 		this.setContent = function (content) {
-			this.options.content = content // 目前无效
-			const id = this.options.id
-			const element = createOverlayMarkerElement({ content, id })
-
-			this.options.overlayMarker.setElement(element)
+			if (!content) return
+			const angle = this.options.angle || 0
+			const offset = this.options.offset || [0, 0]
+			this.options.content = content
+			this.olTarget.set('content', content)
+			const contentElement = this.getElement().querySelector('.jcmap-marker-content')
+			contentElement.innerHTML = content
+			if (angle) {
+				container.style['transform-origin'] = `${-offset[0]}px ${-offset[1]}px 0`
+				container.style.transform = `rotate(${angle}deg)`
+			}
 		}
+
 		/**
 		 * 获取 content str
 		 * @returns
 		 */
 		this.getContent = function () {
 			return this.options.content
+		}
+
+		/**
+		 * 设置 label Content
+		 */
+		this.setLabel = function (label) {
+			if (!label) return
+			const labelElement = this.getElement().querySelector('.jcmap-marker-label')
+			const offset = this.options.offset || [0, 0]
+			if (isObject(label)) {
+				this.options.label = label
+				this.olTarget.set('label', label)
+				if (labelElement) {
+					//设置偏移
+					if (label.offset) {
+						labelElement.style.left = label.offset[0] - offset[0] + 'px'
+						labelElement.style.top = label.offset[1] - offset[1] + 'px'
+					}
+					//设置内容
+					labelElement.innerHTML = label.content || ''
+				} else {
+					//不存在 labelElement时
+				}
+			} else if (isString(label)) {
+				this.options.label = {
+					content: label,
+					offset: [0, 0]
+				}
+				this.olTarget.set('label', label)
+				if (labelElement) {
+					//设置偏移
+					if (label.offset) {
+						labelElement.style.left = label.offset[0] - offset[0] + 'px'
+						labelElement.style.top = label.offset[1] - offset[1] + 'px'
+					}
+					//设置内容
+					labelElement.innerHTML = label.content || ''
+				}
+			}
 		}
 
 		// 设置 Marker 坐标

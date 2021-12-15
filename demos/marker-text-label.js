@@ -33,8 +33,9 @@ const marker = new JC.Marker({
 	// 上面为默认配置
 	position: [116.478935, 39.997761],
 	icon: 'https://webapi.amap.com/images/car.png',
+	offset: [-26, -13],
 	label: '矢量图标的label信息',
-	labelYOffset: -40,
+	labelYOffset: -42,
 	padding: [5, 5, 5, 5],
 	labelBgColor: 'skyblue', // 背景颜色
 	angle: -90
@@ -44,9 +45,12 @@ const marker = new JC.Marker({
 const marker1 = new JC.Marker({
 	map: map,
 	position: [111.75027560859681, 40.81268047174071],
-	icon: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
-	content: `<img src="${onlineImg}" alt="" style="vertical-align:middle;">`
-	// offset: [-40, -40]
+	icon: onlineImg,
+	offset: [-40, -40],
+	label: {
+		content: buildMarkerContent(),
+		offset: [-40, -60]
+	}
 })
 
 const marker2 = new JC.Marker({
@@ -65,46 +69,37 @@ const marker3 = new JC.Marker({
 	map: map,
 	position: [122.14334201484681, 43.51531719049071],
 	content: `<img src="${onlineImg}" alt="" style="vertical-align:middle;">`,
-	offset: [-26, -34],
+	offset: [-40, -40],
 	label: {
 		content: `<div class='info'>我是 marker 的 label 标签 3</div>`,
-		offset: [-132, -68]
+		offset: [-132, -74]
 	}
 })
 
 const vehicleDom = document.getElementById('vehicle')
 
+// 车牌显示
 vehicleDom.onchange = function (e) {
-	console.log('111', e.target.checked)
 	isShowAllLpn = e.target.checked
-	marker1.setContent(buildMarkerContent())
+	marker1.setLabel({
+		content: buildMarkerContent(),
+		offset: [-40, -60]
+	})
 }
 
 function buildMarkerContent() {
+	if (!isShowAllLpn) {
+		return false
+	}
 	let item = {
 		lpn: '川A123456789',
 		colName: '黄色',
 		id: '113123'
 	}
-	let lpnAndCol = ''
-	if (isShowAllLpn) {
-		lpnAndCol = item.lpn + '(' + item.colName + ')'
-	} else {
-		lpnAndCol = ''
-	}
+
+	let lpnAndCol = item.lpn + '(' + item.colName + ')'
 
 	let content =
-		'<div class="self-marker-box">' +
-		'  <div class="marker-title">' +
-		'    <span class="lpn">' +
-		lpnAndCol +
-		'</span>' +
-		'  </div>' +
-		'  <img id="marker_img_' +
-		item.id +
-		'" class="marker-img" src="' +
-		onlineImg +
-		'" alt="">' +
-		'</div>'
+		'<div class="self-marker-box">' + '  <div class="marker-title">' + '    <span class="lpn">' + lpnAndCol + '</span>' + '  </div>' + '</div>'
 	return content
 }

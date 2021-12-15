@@ -1,4 +1,20 @@
 /**
+ * 判断数据类型函数
+ * @param {*} value  any
+ */
+export function toRawType(value) {
+	return Object.prototype.toString.call(value).slice(8, -1)
+}
+
+/** Object 类型 **/
+export function isObject(val) {
+	return toRawType(val) === 'Object'
+}
+/** 字符串 类型 **/
+export function isString(val) {
+	return typeof val === 'string' || val instanceof String
+}
+/**
  * 16进制颜色转为RGB格式
  * @param {*} sHex  16进制颜色
  * @param {*} opacity 透明度
