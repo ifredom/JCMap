@@ -76,6 +76,11 @@ const marker3 = new JC.Marker({
 	}
 })
 
+// 点击置顶
+marker3.on('click', () => {
+	marker3.setTop()
+})
+
 const vehicleDom = document.getElementById('vehicle')
 
 // 车牌显示

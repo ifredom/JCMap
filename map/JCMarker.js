@@ -464,18 +464,6 @@ function JCMarker({ map, ...options }) {
 			return feature.get('linePath') === path && feature
 		})
 
-		// const overlayElement = this.getOverlayElement()
-		// const markerElement = overlayElement.querySelector('.jcmap-marker')
-		// const contentElement = overlayElement.querySelector('.jcmap-marker-content')
-
-		// const iconElement = overlayElement.querySelector('.jcmap-marker-icon')
-		// const labelElement = overlayElement.querySelector('.jcmap-marker-label')
-
-		// markerElement && (markerElement.style.position = '')
-		// contentElement && (contentElement.style.position = '')
-		// iconElement && (iconElement.style.position = '')
-		// labelElement && (labelElement.style.position = '')
-
 		// const isExitMarkerMove = vectorLayer.JCEvents.has(JCEventName)
 		//是否在此线上行驶动画-可能不准确
 		// const canMoveAlong = lineFeature && lineFeature.getGeometry().intersectsCoordinate(this.getPosition())
@@ -802,6 +790,14 @@ function JCMarker({ map, ...options }) {
 		}
 
 		/**
+		 * 获取 content str
+		 * @returns
+		 */
+		this.getContent = function () {
+			return this.options.content
+		}
+
+		/**
 		 * 设置 content
 		 */
 		this.setContent = function (content) {
@@ -816,14 +812,6 @@ function JCMarker({ map, ...options }) {
 				container.style['transform-origin'] = `${-offset[0]}px ${-offset[1]}px 0`
 				container.style.transform = `rotate(${angle}deg)`
 			}
-		}
-
-		/**
-		 * 获取 content str
-		 * @returns
-		 */
-		this.getContent = function () {
-			return this.options.content
 		}
 
 		/**
@@ -897,12 +885,9 @@ function JCMarker({ map, ...options }) {
 
 		// 设置 Marker 角度
 		this.setAngle = function (angle = 0) {
-			const transform = this.getElement().style.transform
-			const reg = /(rotate\([\-\+]?((\d+)(deg))\))/i
 			this.options.angle = angle
 			this.olTarget.set('angle', angle)
 			this.getElement().style.transform = `rotate(${angle}deg)`
-			// return transform ? transform.match(reg)[3] / 1 : 0
 		}
 	}
 	// 初始化添加map
